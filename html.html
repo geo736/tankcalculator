@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tank Volume Calculator</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <h1>Tank Volume Calculator</h1>
+    <form>
+        <label for="tank-shape">Select Tank Shape:</label>
+        <select id="tank-shape">
+            <option value="cylinder">Cylinder</option>
+            <option value="rectangular">Rectangular</option>
+            <option value="cone">Cone</option>
+        </select>
+        <label for="input-unit">Select Input Unit:</label>
+        <select id="input-unit">
+            <option value="meters">Meters</option>
+            <option value="feet">Feet</option>
+            <option value="inches">Inches</option>
+        </select>
+        <label for="output-unit">Select Output Unit:</label>
+        <select id="output-unit">
+            <option value="liters">Liters</option>
+            <option value="gallons">Gallons</option>
+            <option value="cubic-feet">Cubic Feet</option>
+        </select>
+        <label for="radius">Radius:</label>
+        <input type="number" id="radius" placeholder="Enter radius">
+        <label for="height">Height:</label>
+        <input type="number" id="height" placeholder="Enter height">
+        <label for="length">Length:</label>
+        <input type="number" id="length" placeholder="Enter length">
+        <label for="width">Width:</label>
+        <input type="number" id="width" placeholder="Enter width">
+        <button id="calculate">Calculate Volume</button>
+        <p id="result"></p>
+    </form>
+    <script src="script.js"></script>
+</body>
+</html>
