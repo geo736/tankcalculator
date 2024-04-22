@@ -52,3 +52,13 @@ function calculateVolume() {
     switch (outputUnit) {
         case 'liters':
             volume *= 1000;
+                    case 'gallons':
+            volume *= 3.785;
+            break;
+        case 'cubic-feet':
+            volume *= 28.316;
+            break;
+    }
+
+    resultParagraph.textContent = `The volume of the tank is ${volume.toFixed(2)} ${outputUnit}.`;
+}
