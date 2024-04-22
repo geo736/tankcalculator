@@ -47,3 +47,8 @@ function calculateVolume() {
             width /= 39.3701;
             break;
     }
+
+    // Convert volume to output unit
+    switch (outputUnit) {
+        case 'liters':
+            volume *= 1000;
