@@ -32,7 +32,7 @@ window.CALCULATORS = [
     icon: '<circle cx="12" cy="12" r="8"/><path d="M12 4v16M4 12h16M6.3 6.3l11.4 11.4M17.7 6.3 6.3 17.7"/>' },
   { slug: 'fish-hauling', name: 'Fish Hauling', cat: 'aquaculture', tags: ['aquaculture', 'aquaponics'], status: 'soon',
     icon: '<path d="M2 7h12v9H2zM14 10h4l3 3v3h-7"/><circle cx="6" cy="18" r="1.6"/><circle cx="17" cy="18" r="1.6"/>' },
-  { slug: 'water-velocity', name: 'Pipe Water Velocity', cat: 'aquaculture', tags: ['aquaculture', 'aquaponics', 'hydroponics'], status: 'soon',
+  { slug: 'water-velocity', name: 'Pipe Water Velocity', blurb: 'Flow speed and pipe sizing', cat: 'aquaculture', tags: ['aquaculture', 'aquaponics', 'hydroponics'], status: 'live',
     icon: '<path d="M3 8h18M3 16h18"/><path d="M7 12h8l-2-2M15 12l-2 2"/>' },
   { slug: 'fish-tank-volume', name: 'Fish Tank Volume', cat: 'aquaculture', tags: ['aquaculture', 'aquaponics'], status: 'soon',
     icon: '<path d="M4 6v12a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V6"/><path d="M8 13c1.5-2 4-2.5 6-1l2-1v4l-2-1c-2 1.5-4.5 1-6-1z"/>' },
