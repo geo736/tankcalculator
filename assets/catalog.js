@@ -18,7 +18,7 @@ window.CALCULATORS = [
     icon: '<path d="M13 3 6 13h5l-1 8 7-10h-5z"/>' },
   { slug: 'ph-adjustment', name: 'pH Adjustment', cat: 'hydroponics', tags: ['hydroponics', 'aquaponics'], status: 'soon',
     icon: '<path d="M9 3h6"/><path d="M10 3v6L5 19a1.5 1.5 0 0 0 1.3 2h11.4a1.5 1.5 0 0 0 1.3-2L14 9V3"/><path d="M7.5 15h9"/>' },
-  { slug: 'daily-light-integral', name: 'Daily Light Integral', cat: 'hydroponics', tags: ['hydroponics', 'aquaponics'], status: 'soon',
+  { slug: 'daily-light-integral', name: 'Daily Light Integral', blurb: 'Plant light per day vs crop', cat: 'hydroponics', tags: ['hydroponics', 'aquaponics'], status: 'live',
     icon: '<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/>' },
   { slug: 'dissolved-oxygen', name: 'Dissolved Oxygen', blurb: 'Oxygen saturation and % DO', cat: 'aquaculture', tags: ['aquaculture', 'aquaponics', 'hydroponics'], status: 'live',
     icon: '<circle cx="8" cy="15" r="4"/><circle cx="16" cy="9" r="3"/><circle cx="17" cy="18" r="2"/>' },
