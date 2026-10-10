@@ -24,7 +24,7 @@ window.CALCULATORS = [
     icon: '<circle cx="8" cy="15" r="4"/><circle cx="16" cy="9" r="3"/><circle cx="17" cy="18" r="2"/>' },
   { slug: 'hydrostatic-pressure', name: 'Hydrostatic Pressure', blurb: 'Water pressure and wall force', cat: 'aquaculture', tags: ['aquaculture', 'aquaponics', 'hydroponics'], status: 'live',
     icon: '<path d="M5 4v16h14"/><path d="M5 4l14 16"/><path d="M9 14h4"/>' },
-  { slug: 'growing-media-fill', name: 'Growing Media Fill', cat: 'aquaponics', tags: ['aquaponics', 'hydroponics'], status: 'soon',
+  { slug: 'growing-media-fill', name: 'Growing Media Fill', blurb: 'Media bags, weight and cost', cat: 'aquaponics', tags: ['aquaponics', 'hydroponics'], status: 'live',
     icon: '<path d="M3 9h18l-2 11H5z"/><circle cx="9" cy="14" r="1.5"/><circle cx="14" cy="15" r="1.5"/>' },
   { slug: 'iron-addition', name: 'Iron Addition', cat: 'aquaponics', tags: ['aquaponics', 'hydroponics'], status: 'soon',
     icon: '<path d="M7 3h10l-1 6H8z"/><path d="M12 13v4"/><circle cx="12" cy="19" r="2"/>' },
