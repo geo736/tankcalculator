@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>pH Adjustment Calculator</title>
+  <meta name="description" content="Estimate how much phosphoric, nitric, sulfuric or citric acid lowers irrigation or nutrient water to a target pH, based on alkalinity and carbonate chemistry.">
+  <link rel="stylesheet" href="../assets/style.css">
+  <style>
+    .viz .ph-band { fill: var(--water); fill-opacity: .14; }
+    .viz .ph-band-text { fill: var(--water-deep); font-size: 12px; font-weight: 600; font-family: var(--font); }
+    .viz .ph-pk { stroke: var(--water-deep); stroke-width: 1; stroke-dasharray: 2 4; opacity: .7; }
+    .viz .ph-grid { stroke: var(--border); stroke-width: 1; }
+    .viz .ph-axis { stroke: var(--text-muted); stroke-width: 1.5; fill: none; }
+    .viz .ph-curve { stroke: var(--accent); stroke-width: 3; fill: none; stroke-linejoin: round; stroke-linecap: round; }
+    .viz .ph-pt-cur { fill: var(--surface); stroke: var(--tank-stroke); stroke-width: 2.5; }
+    .viz .ph-pt-tgt { fill: var(--accent); stroke: var(--surface); stroke-width: 2; }
+    .viz .ph-label { fill: var(--text); font-size: 12px; font-weight: 600; font-family: var(--font); }
+    @media (prefers-color-scheme: dark) {
+      :root:not([data-theme="light"]) .viz .ph-band-text { fill: var(--water-top); }
+    }
+    :root[data-theme="dark"] .viz .ph-band-text { fill: var(--water-top); }
+    .result-main .sub { font-size: .9rem; color: var(--text-muted); margin-top: 2px; }
+    .notice.safety { margin-top: 12px; margin-bottom: 0; }
+  </style>
+</head>
+<body>
+  <header class="site-header">
+    <div class="wrap">
+      <a class="brand" href="../">
+        <span class="brand-mark" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3c3 4 6 7 6 11a6 6 0 0 1-12 0c0-4 3-7 6-11z"/></svg>
+        </span>
+        Tank Calculator
+      </a>
+      <nav><a href="../">All calculators</a></nav>
+    </div>
+  </header>
+
+  <main class="wrap">
+    <div class="crumbs"><a href="../">Home</a> / pH Adjustment</div>
+    <h1 class="page-title">pH Adjustment Calculator</h1>
+    <p class="page-lede">Estimate how much acid it takes to bring irrigation or nutrient water down to a target pH. The dose depends mostly on the water's alkalinity (its bicarbonate content), not on the starting pH, so this calculator uses carbonate chemistry rather than a fixed "drops per gallon" rule.</p>
+
+    <div class="calc-layout">
+      <!-- Calculator -->
+      <section class="card" aria-labelledby="calc-heading">
+        <h2 id="calc-heading">Calculator</h2>
+
+        <div class="field">
+          <label for="vol">Water volume</label>
+          <div class="input-row"><input id="vol" type="number" inputmode="decimal" min="0" step="any"><select class="unit-select" data-unit-group="volume" data-unit-for="vol" data-unit-default="L" aria-label="Water volume unit"></select></div>
+        </div>
+
+        <div class="field">
+          <label for="alk">Alkalinity</label>
+          <div class="input-row"><input id="alk" type="number" inputmode="decimal" min="0" step="any"><select class="unit-select" data-unit-group="alkalinity" data-unit-for="alk" data-unit-default="caco3" aria-label="Alkalinity unit"></select></div>
+          <div class="field-hint" id="alk-hint">Total alkalinity from a water test or lab report.</div>
+        </div>
+
+        <div class="two-col">
+          <div class="field">
+            <label for="ph0">Current pH</label>
+            <div class="input-row"><input id="ph0" type="number" inputmode="decimal" min="3" max="11" step="0.1"></div>
+          </div>
+          <div class="field">
+            <label for="ph1">Target pH</label>
+            <div class="input-row"><input id="ph1" type="number" inputmode="decimal" min="3" max="9" step="0.1"></div>
+          </div>
+        </div>
+
+        <div class="field">
+          <label for="temp">Water temperature <span style="font-weight:400;color:var(--text-muted)">(optional)</span></label>
+          <div class="input-row"><input id="temp" type="number" inputmode="decimal" step="any"><select class="unit-select" data-unit-group="temperature" data-unit-for="temp" data-unit-default="C" aria-label="Water temperature unit"></select></div>
+          <div class="field-hint" id="temp-hint"></div>
+        </div>
+
+        <div class="field">
+          <label for="acid">Acid product</label>
+          <select id="acid">
+            <option value="phos75">Phosphoric acid 75%</option>
+            <option value="phos85">Phosphoric acid 85%</option>
+            <option value="nitric67">Nitric acid 67%</option>
+            <option value="sulf35">Sulfuric acid 35% (battery acid)</option>
+            <option value="sulf93">Sulfuric acid 93%</option>
+            <option value="citric">Citric acid, anhydrous (powder)</option>
+          </select>
+        </div>
+
+        <hr class="divider">
+
+        <div class="notice" id="notice" hidden></div>
+
+        <div class="field">
+          <label for="out-vol">Show acid amount in</label>
+          <select class="unit-select-out" id="out-vol" data-unit-group="volume" data-unit-default="mL" aria-label="Acid volume unit"></select>
+          <select class="unit-select-out" id="out-mass" data-unit-group="mass" data-unit-default="g" aria-label="Acid mass unit" hidden></select>
+        </div>
+
+        <div class="result-main" aria-live="polite">
+          <div class="label">Acid to add</div>
+          <div class="value" id="r-amount">–</div>
+          <div class="sub" id="r-unit"></div>
+        </div>
+
+        <ul class="result-list">
+          <li><span>Dose per 100 L</span><span class="v" id="r-per100">–</span></li>
+          <li><span>Dose per US gallon</span><span class="v" id="r-pergal">–</span></li>
+          <li><span>Dose per 1,000 US gal</span><span class="v" id="r-floz">–</span></li>
+          <li><span>Acid needed (H⁺)</span><span class="v" id="r-h">–</span></li>
+          <li><span>Alkalinity neutralized</span><span class="v" id="r-removed">–</span></li>
+          <li><span>Alkalinity left at target</span><span class="v" id="r-left">–</span></li>
+          <li><span>Nutrient added by the acid</span><span class="v" id="r-nut">–</span></li>
+          <li><span>Protons released per acid molecule</span><span class="v" id="r-nbar">–</span></li>
+        </ul>
+
+        <div class="notice safety" role="note"><strong>Estimate only.</strong> Add about two-thirds of the dose, mix well, wait a few minutes and measure the pH, then add the rest in small steps. Always add acid to water, never water to acid. Wear goggles and chemical-resistant gloves, and dilute strong acids before they reach fish or plants.</div>
+
+        <div class="share-bar">
+          <button class="btn btn-primary" type="button" id="btn-share">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="m8.6 13.5 6.8 4M15.4 6.5l-6.8 4"/></svg>
+            Share
+          </button>
+          <button class="btn" type="button" id="btn-link">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.5.5l3-3a5 5 0 0 0-7-7l-1.7 1.7"/><path d="M14 11a5 5 0 0 0-7.5-.5l-3 3a5 5 0 0 0 7 7l1.7-1.7"/></svg>
+            Copy link
+          </button>
+          <button class="btn" type="button" id="btn-copy">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h10a1 1 0 0 1 1 1v1"/></svg>
+            Copy results
+          </button>
+          <button class="btn" type="button" id="btn-reset">Reset</button>
+        </div>
+      </section>
+
+      <!-- Visualization -->
+      <section class="card viz-card" aria-labelledby="viz-heading">
+        <h2 id="viz-heading">Visualization</h2>
+        <svg class="viz" id="viz" viewBox="0 0 480 320" role="img" aria-label="Titration curve of the water: pH against acid added, from the current pH to the target pH, with the bicarbonate buffer zone shaded"></svg>
+        <p class="viz-caption" id="viz-caption"></p>
+      </section>
+    </div>
+
+    <article class="article">
+      <h2>How the pH adjustment calculator works</h2>
+      <p>Most tap, well and rain-fed water is buffered by dissolved <strong>bicarbonate</strong> (HCO₃⁻), measured as <em>alkalinity</em>. When you add acid, the bicarbonate soaks up the hydrogen ions and turns into dissolved carbon dioxide, so the pH barely moves at first. Two waters at the same pH 7.8 can need very different amounts of acid: at 20 °C, 1,000 L with 40 mg/L alkalinity needs about 50 mL of 75% phosphoric acid to reach pH 5.8, while 1,000 L with 300 mg/L needs about 375 mL. That is why the calculator asks for alkalinity.</p>
+      <p>The calculator first works out how much total dissolved carbonate the water holds from its alkalinity and current pH. It then finds how much alkalinity would remain at the target pH with that same amount of carbonate. The difference is the acid needed, in milliequivalents (mmol of H⁺) per litre. Finally it converts that to millilitres of liquid acid (or grams of citric acid) using the acid's strength, density and molar mass, and how many protons each molecule gives up at the target pH.</p>
+      <p>The curve on the right is the water's titration curve: pH (up) against acid added (across). The shaded band is the bicarbonate buffer zone, within one pH unit of pK₁ (about 6.35 at 25 °C), where the curve is flattest and each drop of acid moves the pH least. Below about pH 5 the bicarbonate is used up and the curve drops steeply, which is why overshooting is easy.</p>
+
+      <h3>Why it matters for hydroponics and aquaponics</h3>
+      <ul>
+        <li><strong>Hydroponics:</strong> most crops take up nutrients best at a root-zone pH of about 5.5–6.5 (a widely used range, not a hard limit). High-alkalinity water slowly pushes the pH up and can cause iron and manganese deficiency, so growers inject acid into irrigation water. North Carolina State University recommends acidifying to about pH 5.8, or neutralizing about 80% of the alkalinity (Bailey &amp; Bilderback, 1997).</li>
+        <li><strong>Aquaponics:</strong> nitrification produces acid, so aquaponic systems usually drift down, not up, and the FAO manual recommends a compromise pH of 6–7 for fish, plants and bacteria together (Somerville et al., 2014). Acid is mainly needed for alkaline top-up water. Add it to the top-up water in a separate container, never directly into the fish tank.</li>
+        <li><strong>The acid is also a fertilizer.</strong> Nitric acid adds nitrate-N, phosphoric acid adds phosphorus and sulfuric acid adds sulfate-S. With high alkalinity this can be a large share of the recipe, so subtract it from your fertilizer.</li>
+      </ul>
+
+      <h3>Formulas</h3>
+      <p>Alkalinity converts between units with 1 meq/L = 50.04 mg/L as CaCO₃ = 61.02 mg/L as HCO₃⁻. With h = 10<sup>−pH</sup> and the carbonate constants K₁, K₂ and water constant K<sub>w</sub>, the bicarbonate and carbonate fractions of total carbonate C<sub>T</sub> are:</p>
+      <div class="formula">α₁ = h·K₁ / (h² + h·K₁ + K₁·K₂)
+α₂ = K₁·K₂ / (h² + h·K₁ + K₁·K₂)
+Alk = C<sub>T</sub>·(α₁ + 2α₂) + K<sub>w</sub>/h − h        (all in mol/L)</div>
+      <p>Solve for C<sub>T</sub> at the current pH, keep C<sub>T</sub> constant (the CO₂ formed stays in solution while you dose), and evaluate alkalinity at the target pH:</p>
+      <div class="formula">C<sub>T</sub>   = (Alk₀ − K<sub>w</sub>/h₀ + h₀) / (α₁,₀ + 2α₂,₀)
+H⁺ needed = Alk₀ − Alk(target pH, C<sub>T</sub>)          (eq/L)</div>
+      <p>Each acid molecule gives up n̄ protons at the target pH, found from its dissociation constants. For a triprotic acid with constants K<sub>a1</sub>, K<sub>a2</sub>, K<sub>a3</sub>:</p>
+      <div class="formula">n̄ = (K<sub>a1</sub>h² + 2K<sub>a1</sub>K<sub>a2</sub>h + 3K<sub>a1</sub>K<sub>a2</sub>K<sub>a3</sub>) / (h³ + K<sub>a1</sub>h² + K<sub>a1</sub>K<sub>a2</sub>h + K<sub>a1</sub>K<sub>a2</sub>K<sub>a3</sub>)
+mol acid   = H⁺ needed × V / n̄
+mL product = mol acid × M / (w × ρ)</div>
+      <p>where V is the water volume in litres, M the molar mass, w the mass fraction (0.75 for 75%) and ρ the density in g/mL. Nutrient added (mg/L) = mol acid per litre × atomic mass of N, P or S × 1000.</p>
+      <p><strong>Phosphoric acid acts as a monoprotic acid here.</strong> Its first proton (pK<sub>a1</sub> 2.16) is fully released above pH 4, but its second (pK<sub>a2</sub> 7.21) mostly stays on, so n̄ is about 1.00 at pH 4.5, 1.04 at pH 5.8, 1.06 at pH 6.0 and 1.16 at pH 6.5, rising to 1.38 at pH 7. The calculator uses the exact n̄ for your target pH rather than rounding to 1. Nitric acid always gives 1 proton and sulfuric acid gives 2 (its second pK<sub>a</sub> is 1.99). Citric acid gives about 2.1 at pH 5.8, not the 3 often assumed, because its third pK<sub>a</sub> is 6.40.</p>
+      <p>The carbonate constants change with temperature. The calculator uses the equations of Plummer &amp; Busenberg (1982) for K₁ and K₂ and the Harned–Owen equation for K<sub>w</sub> given by Stumm &amp; Morgan (1996). At 25 °C they give pK₁ = 6.35, pK₂ = 10.33 and pK<sub>w</sub> = 14.00. If you leave the temperature blank, 25 °C is used. The effect is small: pK₁ is 6.46 at 10 °C and 6.33 at 30 °C.</p>
+
+      <h3>Acid data used</h3>
+      <table>
+        <thead><tr><th>Product</th><th>Density</th><th>Molar mass</th><th>pK<sub>a</sub> (25 °C)</th></tr></thead>
+        <tbody>
+          <tr><td>Phosphoric acid 75%</td><td>1.579 g/mL</td><td>97.99 g/mol</td><td>2.16, 7.21, 12.32</td></tr>
+          <tr><td>Phosphoric acid 85%</td><td>1.685 g/mL</td><td>97.99 g/mol</td><td>2.16, 7.21, 12.32</td></tr>
+          <tr><td>Nitric acid 67%</td><td>1.40 g/mL</td><td>63.01 g/mol</td><td>strong</td></tr>
+          <tr><td>Sulfuric acid 35%</td><td>1.26 g/mL</td><td>98.08 g/mol</td><td>strong, 1.99</td></tr>
+          <tr><td>Sulfuric acid 93%</td><td>1.83 g/mL</td><td>98.08 g/mol</td><td>strong, 1.99</td></tr>
+          <tr><td>Citric acid, anhydrous</td><td>solid</td><td>192.12 g/mol</td><td>3.13, 4.76, 6.40</td></tr>
+        </tbody>
+      </table>
+      <p>Densities are typical values at 20–25 °C. Check your product label or safety data sheet, because commercial strengths vary. Citric acid monohydrate (210.14 g/mol) needs 9.4% more by weight than the anhydrous figure shown.</p>
+
+      <h3>Example</h3>
+      <p>A 1,000 L reservoir is filled with water at pH 7.8 and 20 °C with an alkalinity of 150 mg/L as CaCO₃ (3.00 meq/L). The target is pH 5.8, using 75% phosphoric acid.</p>
+      <ul>
+        <li>At 20 °C, pK₁ = 6.38 and pK₂ = 10.38. At pH 7.8, 96.1% of the carbonate is bicarbonate, so C<sub>T</sub> = 3.10 mmol/L.</li>
+        <li>At pH 5.8 only 20.8% is still bicarbonate, leaving an alkalinity of 0.64 meq/L (32 mg/L CaCO₃).</li>
+        <li>Acid needed = 3.00 − 0.64 = <strong>2.36 meq/L</strong>, which neutralizes 79% of the alkalinity, close to the 80% that NC State recommends.</li>
+        <li>Phosphoric acid gives n̄ = 1.04 protons at pH 5.8, so 2.36 ÷ 1.04 = 2.27 mmol/L, or 2.27 mol in 1,000 L = 222.5 g of pure H₃PO₄.</li>
+        <li>222.5 g ÷ 0.75 = 296.7 g of product; ÷ 1.579 g/mL = <strong>about 188 mL</strong> (18.8 mL per 100 L).</li>
+        <li>This adds 2.27 mmol/L × 30.97 = <strong>70 mg/L of phosphorus</strong>. That is more than double the 31 mg/L P in Hoagland solution (Hoagland &amp; Arnon, 1950), so with water this alkaline many growers use nitric acid for part of the dose and reduce the nitrate in the fertilizer to match.</li>
+      </ul>
+
+      <h3>Checking against extension tables</h3>
+      <p>Extension tables give fixed doses per meq/L of alkalinity. For 1,000 US gallons of water at pH 7.5 with 1 meq/L alkalinity taken to pH 5.8 at 25 °C, this calculator gives 6.6 fl oz of 67% nitric acid (NC State tables: about 6.8 fl oz) and 0.26 g of citric acid per gallon (NC State: 0.26 g per gallon per meq/L for pH 5.8).</p>
+
+      <h3>Limitations and assumptions</h3>
+      <ul>
+        <li><strong>It is an estimate.</strong> Water tests have errors of 10% or more, and acid strengths vary. Add the acid in steps and measure.</li>
+        <li><strong>Activity is ignored.</strong> Concentrations are used instead of activities. In a full-strength nutrient solution (ionic strength around 0.02–0.03 mol/L) this shifts the apparent pK₁ by a few hundredths of a unit and pK₂ by about a tenth, a small error compared with test accuracy.</li>
+        <li><strong>CO₂ stays in solution.</strong> The dose is for the pH right after mixing. If the water is aerated, CO₂ escapes over hours and the pH drifts up again even though the alkalinity has been removed; this is normal and does not mean more acid is needed.</li>
+        <li><strong>Only carbonate buffering is counted.</strong> Fertilizers already dissolved (especially phosphate, ammonium and organic matter) add some buffering, so a nutrient solution can need somewhat more acid than its source water. Measure alkalinity of the water you are actually treating.</li>
+        <li><strong>pH limits:</strong> results are given for current pH 3–11 and target pH 3–9. Below pH 4 the acid itself, not the alkalinity, sets the dose.</li>
+      </ul>
+
+      <h3>Safety</h3>
+      <ul>
+        <li>Always add acid to water, slowly, never water to concentrated acid. Concentrated sulfuric acid releases a lot of heat when mixed.</li>
+        <li>Wear splash goggles and acid-resistant gloves. Keep acids in their original, labelled containers away from children.</li>
+        <li>Never mix acids with chlorine products (bleach) or with concentrated fertilizer stock solutions.</li>
+        <li>Dilute the dose in a bucket of water first and add it slowly to the reservoir while it circulates. In aquaponics, treat top-up water before it reaches the fish.</li>
+      </ul>
+
+      <h2>Sources</h2>
+      <ol class="sources">
+        <li>Bailey, D. &amp; Bilderback, T. (1997). <em>Alkalinity Control for Irrigation Water Used in Nurseries and Greenhouses</em>. Horticulture Information Leaflet 558. Raleigh: North Carolina State University Cooperative Extension.</li>
+        <li>Stumm, W. &amp; Morgan, J. J. (1996). <em>Aquatic Chemistry: Chemical Equilibria and Rates in Natural Waters</em> (3rd ed.). New York: Wiley-Interscience.</li>
+        <li>Plummer, L. N. &amp; Busenberg, E. (1982). The solubilities of calcite, aragonite and vaterite in CO₂–H₂O solutions between 0 and 90 °C, and an evaluation of the aqueous model for the system CaCO₃–CO₂–H₂O. <em>Geochimica et Cosmochimica Acta</em>, 46(6), 1011–1040.</li>
+        <li>Haynes, W. M. (ed.). <em>CRC Handbook of Chemistry and Physics</em> (97th ed., 2016). Boca Raton: CRC Press. Sections “Concentrative Properties of Aqueous Solutions” and “Dissociation Constants of Inorganic Acids and Bases” / “of Organic Acids and Bases”.</li>
+        <li>Kidder, G. &amp; Hanlon, E. A. (1998, reviewed 2009). <em>Neutralizing Excess Bicarbonates from Irrigation Water</em>. SL-142. Gainesville: University of Florida IFAS Extension.</li>
+        <li>Hoagland, D. R. &amp; Arnon, D. I. (1950). <em>The Water-Culture Method for Growing Plants without Soil</em>. Circular 347. Berkeley: California Agricultural Experiment Station.</li>
+        <li>Somerville, C., Cohen, M., Pantanella, E., Stankus, A. &amp; Lovatelli, A. (2014). <em>Small-scale aquaponic food production: Integrated fish and plant farming</em>. FAO Fisheries and Aquaculture Technical Paper No. 589. Rome: FAO. <a href="https://www.fao.org/3/i4021e/i4021e.pdf" rel="noopener" target="_blank">fao.org</a></li>
+      </ol>
+    </article>
+  </main>
+
+  <footer class="site-footer">
+    <div class="wrap">Calculations are estimates. Check the sources above before relying on a result.</div>
+  </footer>
+
+  <script src="../assets/share.js"></script>
+  <script src="../assets/units.js"></script>
+  <script src="../assets/ph-adjustment.js"></script>
+</body>
+</html>

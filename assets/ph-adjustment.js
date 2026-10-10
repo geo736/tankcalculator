@@ -143,6 +143,7 @@
 
     if (ph1 < 4) notes.push('Below pH 4 the dose is set by the acid itself, not the alkalinity, so small errors in pH make large errors in dose. Plants and fish are damaged at this pH.');
     if (ph1 < 5 && ph1 >= 4) notes.push('A target below pH 5 removes almost all buffering; pH can then swing quickly. Most crops are grown at pH 5.5–6.5.');
+    if (acid.nut === 'P' && r.nutMgL > 31) notes.push('This adds ' + fmt(r.nutMgL, 0) + ' mg/L phosphorus, more than the 31 mg/L in Hoagland solution. Consider nitric acid for part of the dose and adjust your fertilizer.');
     if (tempNote === 'clamped') notes.push('Temperature was limited to 0–50 °C for the carbonate constants.');
     if (alkRaw > 500) notes.push('Alkalinity above 500 mg/L CaCO₃ is unusual; check the units on your water test.');
     return r;
@@ -237,8 +238,10 @@
       ? fmt(perL * ML_PER_USGAL / ML_PER_FLOZ) + ' fl oz per 1,000 US gal'
       : fmt(perL * ML_PER_USGAL / 28.349523125) + ' oz per 1,000 US gal';
     $('r-h').textContent = fmt(r.acidEq * 1000, 2) + ' mmol/L · ' + fmt(r.molH) + ' mol total';
-    const removedMg = r.acidEq * 1000 * MG_CACO3_PER_MEQ;
-    $('r-removed').textContent = fmt(removedMg, 0) + ' mg/L CaCO₃ (' + fmt(r.alkEq > 0 ? r.acidEq / r.alkEq * 100 : 0, 0) + '% of start)';
+    const neutral = Math.min(r.acidEq, r.alkEq);
+    const freeAcid = r.acidEq - neutral;
+    $('r-removed').textContent = fmt(neutral * 1000 * MG_CACO3_PER_MEQ, 0) + ' mg/L CaCO₃ (' + fmt(r.alkEq > 0 ? neutral / r.alkEq * 100 : 0, 0) + '% of start)' +
+      (freeAcid > 1e-6 ? ' + ' + fmt(freeAcid * 1000, 2) + ' meq/L free acid' : '');
     const left = Math.max(0, r.alkLeftEq);
     $('r-left').textContent = fmt(left * 1000 * MG_CACO3_PER_MEQ, 0) + ' mg/L CaCO₃ (' + fmt(left * 1000, 2) + ' meq/L)';
     $('r-nut').textContent = nutrientText(r);
@@ -277,7 +280,7 @@
     const CT = r.ok ? r.CT : 0;
     const alkEq = r.ok ? r.alkEq : 0;
     const phLow = Math.max(3, Math.min(ph1 - 0.8, 4.3));
-    const yMax = Math.ceil(Math.max(ph0, ph1, c.pK1 + 1) + 0.2);
+    const yMax = Math.ceil(Math.max(ph0, ph1, c.pK1 + 1) + 0.4);
     const yMin = Math.floor(phLow);
     function acidTo(pH) { return Math.max(0, alkEq - alkAt(pH, CT, c)) * 1000; } // meq/L
     let xMax = r.ok ? acidTo(phLow) * 1.05 : 1;

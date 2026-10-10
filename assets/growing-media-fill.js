@@ -175,7 +175,7 @@
     $('media-hint').textContent = m.hint;
     $('preset-hint').textContent = mediaSel.value === 'custom'
       ? 'Use your supplier’s figures.'
-      : (presetEdited() ? 'Edited from the preset. ' : 'Typical values for ' + m.name.toLowerCase() + ' (rule of thumb). ') +
+      : (presetEdited() ? 'Edited from the preset. ' : 'Typical values for ' + m.name + ' (rule of thumb). ') +
         'Check the bag label or data sheet.';
 
     const problems = [];
@@ -235,8 +235,8 @@
   // ---------- SVG drawing ----------
   const NS = 'http://www.w3.org/2000/svg';
   const VW = 480, VH = 320;
-  const BED = { l: 70, r: 300, t: 40, b: 270 };  // bed drawing area
-  const BAGS = { l: 336, r: 472, t: 40, b: 290 }; // bag stack area
+  const BED = { l: 62, r: 286, t: 50, b: 280 };  // bed drawing area
+  const BAGS = { l: 360, r: 476, t: 40, b: 290 }; // bag stack area
 
   function el(name, attrs, text, parent) {
     const e = document.createElementNS(NS, name);
@@ -296,8 +296,23 @@
     }
   }
 
+  // Draw, then crop the viewBox to the drawing so flat beds do not leave empty bands.
   function drawViz(r, m) {
     while (svg.firstChild) svg.removeChild(svg.firstChild);
+    svg.setAttribute('viewBox', '0 0 ' + VW + ' ' + VH);
+    drawScene(r, m);
+    let box = null;
+    try { box = svg.getBBox(); } catch (e) { box = null; }
+    if (box && box.height > 0) {
+      const minH = 180;
+      let h = Math.min(VH, Math.max(minH, box.height + 24));
+      let y = box.y + box.height / 2 - h / 2;
+      y = Math.max(0, Math.min(VH - h, y));
+      svg.setAttribute('viewBox', '0 ' + y.toFixed(1) + ' ' + VW + ' ' + h.toFixed(1));
+    }
+  }
+
+  function drawScene(r, m) {
     const defs = el('defs', {});
     makePattern(defs, mediaSel.value, m);
 
@@ -310,7 +325,7 @@
     const s = Math.min(availW / span, availH / H);
     const w = span * s, h = H * s;
     const x0 = BED.l + (availW - w) / 2;
-    const yb = BED.t + (availH + h) / 2;
+    const yb = BED.b;
     const yTop = yb - h;
     const dS = r.d * s;
     const yFill = yb - dS;
@@ -334,8 +349,8 @@
     label(x0 + w / 2, yb + 28, (shape === 'rect' ? 'L ' + typed('length') : 'D ' + typed('diameter')));
     if (r.H > 0) {
       el('path', { class: 'dim', d: 'M' + (x0 - 12) + ',' + yb + ' L' + (x0 - 12) + ',' + yTop });
-      label(x0 - 16, yTop + 12, 'H', 'end');
-      label(x0 - 16, yTop + 26, typed('height'), 'end');
+      label(x0 - 16, yb - h / 2 - 3, 'H', 'end');
+      label(x0 - 16, yb - h / 2 + 11, typed('height'), 'end');
     }
     if (dS > 0) {
       const xl = x0 + w + 6;
@@ -344,7 +359,7 @@
       label(xl + 12, Math.max(yFill + 4, Math.min(yb - 4, (yFill + yb) / 2)) - 4, 'fill', 'start', 'depth-text');
       label(xl + 12, Math.max(yFill + 4, Math.min(yb - 4, (yFill + yb) / 2)) + 10, inUnitOf('fill', r.d), 'start', 'depth-text');
     }
-    label(x0 + w / 2, yTop - 10, m.name + (r.beds > 1 ? ' · ×' + r.beds + ' beds' : ''));
+    label(x0 + w / 2, yTop - (shape === 'round' ? Math.min(10, w * 0.12) : 0) - 10, m.name + (r.beds > 1 ? ' · ×' + r.beds + ' beds' : ''));
 
     // ----- bag stack -----
     if (!(r.bags > 0) || !isFinite(r.bags)) return;
@@ -352,10 +367,10 @@
     const shown = Math.min(r.bags, maxShown);
     const cols = shown <= 4 ? 2 : shown <= 9 ? 3 : 4;
     const rows = Math.ceil(shown / cols);
-    const bw = 26, bh = 32, gx = 8, gy = 8;
+    const bw = 24, bh = 30, gx = 5, gy = 6;
     const gridW = cols * bw + (cols - 1) * gx;
     const bx0 = BAGS.l + (BAGS.r - BAGS.l - gridW) / 2;
-    const by0 = BAGS.b - 30; // bottom of stack (leave room for the caption)
+    const by0 = yb; // stack sits on the same floor as the bed
     // fraction of the last bag actually used
     const lastFrac = r.bags <= maxShown ? (r.buyL - (r.bags - 1) * r.bagL) / r.bagL : 1;
     for (let i = 0; i < shown; i++) {
@@ -377,8 +392,8 @@
       el('path', { class: 'tank-line', d: 'M' + (x + 8) + ',' + (y + 6) + ' L' + (x + bw / 2) + ',' + (y + 1) + ' L' + (x + bw - 8) + ',' + (y + 6), 'stroke-width': 1.5 });
     }
     const topRowY = by0 - rows * bh - (rows - 1) * gy;
-    label((BAGS.l + BAGS.r) / 2, Math.max(16, topRowY - 10), r.bags + (r.bags === 1 ? ' bag' : ' bags') + (r.bags > maxShown ? ' (24 shown)' : ''));
-    label((BAGS.l + BAGS.r) / 2, by0 + 18, typed('bag') + ' each');
+    label((BAGS.l + BAGS.r) / 2, topRowY - 10, r.bags + (r.bags === 1 ? ' bag' : ' bags') + (r.bags > maxShown ? ' (24 shown)' : ''));
+    label((BAGS.l + BAGS.r) / 2, by0 + 28, typed('bag') + ' each');
   }
 
   // ---------- Results text ----------
