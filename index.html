@@ -25,114 +25,80 @@
       <p>Aquaponics, aquaculture and hydroponics calculators. Each one shows a live picture of the result, explains the math, and lists its sources. Every result can be copied or shared as a link.</p>
     </section>
 
-    <div class="filters" role="group" aria-label="Filter calculators">
-      <button class="chip" type="button" data-filter="all" aria-pressed="true">All</button>
-      <button class="chip" type="button" data-filter="aquaponics" aria-pressed="false">Aquaponics</button>
-      <button class="chip" type="button" data-filter="aquaculture" aria-pressed="false">Aquaculture</button>
-      <button class="chip" type="button" data-filter="hydroponics" aria-pressed="false">Hydroponics</button>
+    <div class="toolbar">
+      <div class="filters" role="group" aria-label="Filter calculators">
+        <button class="chip" type="button" data-filter="all" aria-pressed="true">All</button>
+        <button class="chip" type="button" data-filter="aquaponics" aria-pressed="false">Aquaponics</button>
+        <button class="chip" type="button" data-filter="aquaculture" aria-pressed="false">Aquaculture</button>
+        <button class="chip" type="button" data-filter="hydroponics" aria-pressed="false">Hydroponics</button>
+      </div>
+      <label class="search">
+        <span class="visually-hidden">Search calculators</span>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-4-4"/></svg>
+        <input id="search" type="search" placeholder="Search calculators" autocomplete="off">
+      </label>
     </div>
 
-    <section class="app-grid" aria-label="Calculators">
-      <a class="app-tile" href="calculators/tank-volume.html" data-cat="aquaponics" data-tags="aquaponics aquaculture hydroponics">
-        <span class="app-icon" aria-hidden="true">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5v13a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V5"/><path d="M4 11c2.7 1.3 5.3-1.3 8 0s5.3 1.3 8 0"/></svg>
-        </span>
-        <span class="app-name">Tank Volume</span>
-        <span class="app-cat">All systems</span>
-      </a>
-
-      <div class="app-tile" aria-disabled="true" data-cat="aquaculture" data-tags="aquaculture aquaponics">
-        <span class="badge">Soon</span>
-        <span class="app-icon" aria-hidden="true">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12c3-4 7-5 11-3l5-3v12l-5-3c-4 2-8 1-11-3z"/><circle cx="8" cy="11" r=".8" fill="currentColor"/></svg>
-        </span>
-        <span class="app-name">Fish Stocking Density</span>
-        <span class="app-cat">Aquaculture</span>
-      </div>
-
-      <div class="app-tile" aria-disabled="true" data-cat="aquaculture" data-tags="aquaculture aquaponics">
-        <span class="badge">Soon</span>
-        <span class="app-icon" aria-hidden="true">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="7" cy="16" r="2"/><circle cx="13" cy="18" r="1.5"/><circle cx="16" cy="12" r="2"/><path d="M10 4h8l-2 5h-4z"/></svg>
-        </span>
-        <span class="app-name">Feeding Rate</span>
-        <span class="app-cat">Aquaculture</span>
-      </div>
-
-      <div class="app-tile" aria-disabled="true" data-cat="aquaponics" data-tags="aquaponics">
-        <span class="badge">Soon</span>
-        <span class="app-icon" aria-hidden="true">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20V10"/><path d="M12 13c-3 0-5-2-5-5 3 0 5 2 5 5z"/><path d="M12 11c0-3 2-5 5-5 0 3-2 5-5 5z"/><path d="M4 20h16"/></svg>
-        </span>
-        <span class="app-name">Grow Bed Ratio</span>
-        <span class="app-cat">Aquaponics</span>
-      </div>
-
-      <div class="app-tile" aria-disabled="true" data-cat="aquaponics" data-tags="aquaponics aquaculture hydroponics">
-        <span class="badge">Soon</span>
-        <span class="app-icon" aria-hidden="true">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-3-6.7"/><path d="M21 4v5h-5"/></svg>
-        </span>
-        <span class="app-name">Pump &amp; Turnover</span>
-        <span class="app-cat">Aquaponics</span>
-      </div>
-
-      <div class="app-tile" aria-disabled="true" data-cat="hydroponics" data-tags="hydroponics">
-        <span class="badge">Soon</span>
-        <span class="app-icon" aria-hidden="true">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M13 3 6 13h5l-1 8 7-10h-5z"/></svg>
-        </span>
-        <span class="app-name">Nutrient EC</span>
-        <span class="app-cat">Hydroponics</span>
-      </div>
-
-      <div class="app-tile" aria-disabled="true" data-cat="hydroponics" data-tags="hydroponics aquaponics">
-        <span class="badge">Soon</span>
-        <span class="app-icon" aria-hidden="true">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 3h6"/><path d="M10 3v6L5 19a1.5 1.5 0 0 0 1.3 2h11.4a1.5 1.5 0 0 0 1.3-2L14 9V3"/><path d="M7.5 15h9"/></svg>
-        </span>
-        <span class="app-name">pH Adjustment</span>
-        <span class="app-cat">Hydroponics</span>
-      </div>
-
-      <div class="app-tile" aria-disabled="true" data-cat="hydroponics" data-tags="hydroponics aquaponics">
-        <span class="badge">Soon</span>
-        <span class="app-icon" aria-hidden="true">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>
-        </span>
-        <span class="app-name">Daily Light Integral</span>
-        <span class="app-cat">Hydroponics</span>
-      </div>
-
-      <div class="app-tile" aria-disabled="true" data-cat="aquaculture" data-tags="aquaculture aquaponics">
-        <span class="badge">Soon</span>
-        <span class="app-icon" aria-hidden="true">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="8" cy="15" r="4"/><circle cx="16" cy="9" r="3"/><circle cx="17" cy="18" r="2"/></svg>
-        </span>
-        <span class="app-name">Dissolved Oxygen</span>
-        <span class="app-cat">Aquaculture</span>
-      </div>
-    </section>
+    <section class="app-grid" id="app-grid" aria-label="Calculators"></section>
+    <p class="empty" id="empty" hidden>No calculators match your search.</p>
   </main>
 
   <footer class="site-footer">
     <div class="wrap">Calculations are estimates. Check the sources on each calculator before relying on a result.</div>
   </footer>
 
+  <script src="assets/catalog.js"></script>
   <script>
     (function () {
+      var CAT_LABEL = { aquaculture: 'Aquaculture', aquaponics: 'Aquaponics', hydroponics: 'Hydroponics' };
+      var grid = document.getElementById('app-grid');
+      var search = document.getElementById('search');
       var chips = document.querySelectorAll('.chip');
-      var tiles = document.querySelectorAll('.app-tile');
+      var filter = 'all';
+
+      // Live calculators first, then the ones still being built; keep catalog order inside each group.
+      var items = window.CALCULATORS.slice().sort(function (a, b) {
+        return (a.status === 'live' ? 0 : 1) - (b.status === 'live' ? 0 : 1);
+      });
+
+      items.forEach(function (c) {
+        var live = c.status === 'live';
+        var tile = document.createElement(live ? 'a' : 'div');
+        tile.className = 'app-tile';
+        tile.setAttribute('data-cat', c.cat);
+        if (live) tile.href = 'calculators/' + c.slug + '.html';
+        else tile.setAttribute('aria-disabled', 'true');
+        tile.innerHTML =
+          (live ? '' : '<span class="badge">Soon</span>') +
+          '<span class="app-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">' + c.icon + '</svg></span>' +
+          '<span class="app-name"></span><span class="app-cat"></span>';
+        tile.querySelector('.app-name').textContent = c.name;
+        tile.querySelector('.app-cat').textContent = c.blurb || CAT_LABEL[c.cat];
+        tile._item = c;
+        grid.appendChild(tile);
+      });
+
+      function apply() {
+        var q = search.value.trim().toLowerCase();
+        var shown = 0;
+        Array.prototype.forEach.call(grid.children, function (t) {
+          var c = t._item;
+          var ok = (filter === 'all' || c.tags.indexOf(filter) !== -1) &&
+            (!q || (c.name + ' ' + (c.blurb || '') + ' ' + c.tags.join(' ')).toLowerCase().indexOf(q) !== -1);
+          t.hidden = !ok;
+          if (ok) shown++;
+        });
+        document.getElementById('empty').hidden = shown > 0;
+      }
+
       chips.forEach(function (chip) {
         chip.addEventListener('click', function () {
-          var f = chip.getAttribute('data-filter');
+          filter = chip.getAttribute('data-filter');
           chips.forEach(function (c) { c.setAttribute('aria-pressed', String(c === chip)); });
-          tiles.forEach(function (t) {
-            var tags = (t.getAttribute('data-tags') || '').split(' ');
-            t.hidden = f !== 'all' && tags.indexOf(f) === -1;
-          });
+          apply();
         });
       });
+      search.addEventListener('input', apply);
     })();
   </script>
 </body>
