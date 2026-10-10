@@ -61,7 +61,12 @@
   // Concentration in mg/L shown in a unit; mg/L below 1 g/L, otherwise g/L unless the user picked another unit.
   function fmtConc(mgL, unitId) {
     const u = unitId || (Math.abs(mgL) >= 1000 ? 'gL' : 'mgL');
-    return fmt(CalcUnits.convert('concentration', mgL, 'mgL', u)) + ' ' + CalcUnits.label('concentration', u);
+    return fmt(CalcUnits.convert('concentration', mgL, 'mgL', u)) + ' ' + CalcUnits.label('concentration', u).replace(/ \(pp[mt]\)/, '');
+  }
+  // "a → b" in one shared unit
+  function pair(a, b) {
+    const u = Math.max(Math.abs(a), Math.abs(b)) >= 1000 ? 'gL' : 'mgL';
+    return fmt(CalcUnits.convert('concentration', a, 'mgL', u)) + ' → ' + fmtConc(b, u);
   }
   function autoConc(mgL) { return fmtConc(mgL, Math.abs(mgL) >= 1000 ? 'gL' : 'mgL'); }
   function typed(id) {
@@ -215,10 +220,10 @@
     $('r-salt').textContent = ok ? fmtMass(r.saltKg, out) : '–';
     $('r-cups').textContent = ok ? (g > 0 ? kitchen(g) : 'none') : '–';
     $('r-dose').textContent = ok ? '+' + autoConc(r.dose) + (r.dose > 0 && r.purity < 100 ? ' (' + fmtMass(r.pureKg, g >= 1000 ? 'kg' : 'g') + ' pure NaCl)' : '') : '–';
-    $('r-level').textContent = ok ? autoConc(r.saltNow) + ' → ' + autoConc(r.saltAfter) : '–';
-    $('r-cl').textContent = ok ? autoConc(r.clNow) + ' → ' + autoConc(r.clAfter) : '–';
-    if (mode === 'nitrite') {
-      $('r-ratio').textContent = ok && r.no2n > 0
+    $('r-level').textContent = ok ? pair(r.saltNow, r.saltAfter) : '–';
+    $('r-cl').textContent = ok ? pair(r.clNow, r.clAfter) : '–';
+    {
+      $('r-ratio').textContent = mode === 'nitrite' && ok && r.no2n > 0
         ? fmt(r.clNow / r.no2n, 1) + ' → ' + fmt(r.clAfter / r.no2n, 1) + ' : 1'
         : '–';
     }
@@ -251,7 +256,7 @@
 
   function captionText(r, zone) {
     if (!r.ok) return 'Enter the inputs to draw the tank and gauge';
-    const what = mode === 'nitrite' ? 'Chloride ' + autoConc(r.clNow) + ' → ' + autoConc(r.clAfter) : 'Salt ' + autoConc(r.saltNow) + ' → ' + autoConc(r.saltAfter);
+    const what = mode === 'nitrite' ? 'Chloride ' + pair(r.clNow, r.clAfter) : 'Salt ' + pair(r.saltNow, r.saltAfter);
     const legend = mode === 'therapy' ? 'green band = ' + PRESETS[presetSel.value].name + ' guidance'
       : mode === 'nitrite' ? 'amber = below 6 : 1, green = target ratio or more'
         : 'shaded bands = Venice salinity classes';
@@ -421,8 +426,8 @@
     lines.push('Salt purity: ' + $('purity').value + '%');
     if (!r.ok) { lines.push(r.errors.join(' ')); return lines.join('\n'); }
     lines.push('Salt to add: ' + fmtMass(r.saltKg, outSel.value) + ' (' + fmtMass(r.saltKg, 'g') + ')' + (r.saltKg > 0 ? ', ' + kitchen(r.saltKg * 1000) + ' of fine table salt' : ''));
-    lines.push('Salt level: ' + autoConc(r.saltNow) + ' -> ' + autoConc(r.saltAfter));
-    lines.push('Chloride: ' + autoConc(r.clNow) + ' -> ' + autoConc(r.clAfter));
+    lines.push('Salt level: ' + pair(r.saltNow, r.saltAfter));
+    lines.push('Chloride: ' + pair(r.clNow, r.clAfter));
     if (mode === 'nitrite' && r.no2n > 0) lines.push('Cl : NO2-N ratio: ' + fmt(r.clNow / r.no2n, 1) + ' -> ' + fmt(r.clAfter / r.no2n, 1) + ' : 1');
     const z = zoneInfo(r);
     lines.push('Guidance: ' + z.text);
