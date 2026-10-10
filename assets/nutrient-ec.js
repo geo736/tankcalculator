@@ -136,7 +136,9 @@
     const imb = (r.cat + r.an) > 0 ? (r.cat - r.an) / (r.cat + r.an) * 100 : 0;
     if (has && Math.abs(imb) > 10) {
       msgs.push('Cations and anions differ by ' + fmt(Math.abs(imb), 0) + '% (' + (imb > 0 ? 'cations' : 'anions') +
-        ' in excess). A real solution is electrically neutral, so check for a missing ion (often bicarbonate, chloride or sulfate) or a nitrate entered in the wrong form.');
+        ' in excess). A real solution is electrically neutral, so check for a missing ' +
+        (imb > 0 ? 'anion (often bicarbonate, chloride or sulfate)' : 'cation (often calcium, potassium, magnesium or sodium)') +
+        ', a typing error, or nitrate entered in the wrong form.');
     }
     if (has && r.est > 5) msgs.push('Above about 5 mS/cm the simple ion sum becomes less reliable, and few crops tolerate this EC.');
     notice.textContent = msgs.join(' ');

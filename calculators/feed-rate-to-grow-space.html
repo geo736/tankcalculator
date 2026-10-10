@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Feed Rate to Grow Space Calculator</title>
+  <meta name="description" content="Balance fish and plants in aquaponics with the feed rate ratio: find the grow area a daily fish feed supports, the feed a grow area needs, and the fish biomass behind it.">
+  <link rel="stylesheet" href="../assets/style.css">
+  <style>
+    .status { font-size: .9rem; font-weight: 600; margin-top: 6px; }
+    .status.ok { color: var(--accent-strong); }
+    .status.warn { color: var(--warn-text); }
+    .result-main .sub { font-size: .9rem; color: var(--text-muted); margin-top: 2px; }
+    .viz .bed-zone { fill: var(--accent); fill-opacity: .18; }
+    .viz .bed-min { fill: var(--accent); fill-opacity: .32; stroke: var(--accent); stroke-width: 1.5; }
+    .viz .bed-max { fill: none; stroke: var(--accent); stroke-width: 1.5; stroke-dasharray: 5 4; }
+    .viz .bed-user { fill: none; stroke: var(--text); stroke-width: 2.5; }
+    .viz .plant { stroke: var(--accent); stroke-width: 2; fill: none; stroke-linecap: round; }
+    .viz .fish { fill: var(--water-deep); }
+    .viz .feed-arrow { stroke: var(--text-muted); stroke-width: 2; fill: none; stroke-linecap: round; stroke-linejoin: round; }
+    .viz .pellet { fill: var(--warn-text); }
+    .viz .bar-bg { fill: var(--surface-2); stroke: var(--border); stroke-width: 1; }
+    .viz .bar-zone { fill: var(--accent); fill-opacity: .55; }
+    .viz .marker { fill: var(--text); }
+    .viz .marker-line { stroke: var(--text); stroke-width: 2; }
+    .viz .marker-text { fill: var(--text); font-size: 12px; font-weight: 700; font-family: var(--font); }
+    .viz .name-text { fill: var(--text); font-size: 12px; font-weight: 600; font-family: var(--font); }
+    .viz .zone-text { fill: var(--accent-strong); font-size: 11px; font-weight: 600; font-family: var(--font); }
+  </style>
+</head>
+<body>
+  <header class="site-header">
+    <div class="wrap">
+      <a class="brand" href="../">
+        <span class="brand-mark" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3c3 4 6 7 6 11a6 6 0 0 1-12 0c0-4 3-7 6-11z"/></svg>
+        </span>
+        Tank Calculator
+      </a>
+      <nav><a href="../">All calculators</a></nav>
+    </div>
+  </header>
+
+  <main class="wrap">
+    <div class="crumbs"><a href="../">Home</a> / Feed Rate to Grow Space</div>
+    <h1 class="page-title">Feed Rate to Grow Space Calculator</h1>
+    <p class="page-lede">Balance the fish and the plants in an aquaponic system with the feed rate ratio. Find how much growing area your daily fish feed can fertilize, how much feed a grow area needs, and roughly how many kilograms of fish that feed supports.</p>
+
+    <div class="calc-layout">
+      <!-- Calculator -->
+      <section class="card" aria-labelledby="calc-heading">
+        <h2 id="calc-heading">Calculator</h2>
+
+        <div class="field">
+          <span class="label" id="mode-label">What do you know?</span>
+          <div class="segmented" role="group" aria-labelledby="mode-label" id="mode-group" style="grid-template-columns: repeat(2, 1fr);">
+            <button type="button" data-mode="feed" aria-pressed="true">
+              <svg viewBox="0 0 34 26" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="8" cy="18" r="2.5"/><circle cx="15" cy="20" r="2"/><circle cx="13" cy="13" r="2.2"/><path d="M20 13h10m-3-3 3 3-3 3"/></svg>
+              Daily feed → area
+            </button>
+            <button type="button" data-mode="area" aria-pressed="false">
+              <svg viewBox="0 0 34 26" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M3 8h14v12H3z"/><path d="M7 8V5M10 8V4M13 8V5"/><path d="M20 14h10m-3-3 3 3-3 3"/></svg>
+              Grow area → feed
+            </button>
+          </div>
+        </div>
+
+        <div class="field">
+          <label for="crop">Crop type (feed rate ratio)</label>
+          <select id="crop">
+            <option value="leafy">Leafy greens: 40–50 g/m²/day (FAO)</option>
+            <option value="fruiting">Fruiting vegetables: 50–80 g/m²/day (FAO)</option>
+            <option value="raft">Raft / DWC, UVI system: 60–100 g/m²/day (Rakocy)</option>
+            <option value="custom">Custom range…</option>
+          </select>
+          <div class="field-hint">Ratios are design guidelines for a 32% protein fish feed, not exact limits.</div>
+        </div>
+
+        <div class="two-col" id="custom-fields" hidden>
+          <div class="field">
+            <label for="rmin">Ratio, low end</label>
+            <div class="input-row"><input id="rmin" type="number" inputmode="decimal" min="0" step="any"><select class="unit-select" data-unit-group="feedratio" data-unit-for="rmin" data-unit-default="gm2d" aria-label="Low ratio unit"></select></div>
+          </div>
+          <div class="field">
+            <label for="rmax">Ratio, high end</label>
+            <div class="input-row"><input id="rmax" type="number" inputmode="decimal" min="0" step="any"><select class="unit-select" data-unit-group="feedratio" data-unit-for="rmax" data-unit-default="gm2d" aria-label="High ratio unit"></select></div>
+          </div>
+        </div>
+
+        <div class="field">
+          <label for="feed" id="feed-label">Daily fish feed (per day)</label>
+          <div class="input-row"><input id="feed" type="number" inputmode="decimal" min="0" step="any"><select class="unit-select" data-unit-group="mass" data-unit-for="feed" data-unit-default="g" aria-label="Daily feed unit"></select></div>
+          <div class="field-hint" id="feed-hint">Total dry feed given to all fish each day.</div>
+        </div>
+
+        <div class="field">
+          <label for="amethod" id="area-label">Your grow area (optional, to check)</label>
+          <select id="amethod">
+            <option value="total">Enter total area</option>
+            <option value="dims">Enter bed length × width</option>
+          </select>
+        </div>
+        <div class="field" data-for="total">
+          <div class="input-row"><input id="area" type="number" inputmode="decimal" min="0" step="any" aria-labelledby="area-label"><select class="unit-select" data-unit-group="area" data-unit-for="area" data-unit-default="m2" aria-label="Grow area unit"></select></div>
+          <div class="field-hint" id="area-hint">Planted surface of all grow beds, rafts or channels.</div>
+        </div>
+        <div class="two-col" data-for="dims">
+          <div class="field">
+            <label for="blen">Bed length</label>
+            <div class="input-row"><input id="blen" type="number" inputmode="decimal" min="0" step="any"><select class="unit-select" data-unit-group="length" data-unit-for="blen" data-unit-default="m" aria-label="Bed length unit"></select></div>
+          </div>
+          <div class="field">
+            <label for="bwid">Bed width</label>
+            <div class="input-row"><input id="bwid" type="number" inputmode="decimal" min="0" step="any"><select class="unit-select" data-unit-group="length" data-unit-for="bwid" data-unit-default="m" aria-label="Bed width unit"></select></div>
+          </div>
+          <div class="field">
+            <label for="nbeds">Number of beds</label>
+            <div class="input-row"><input id="nbeds" type="number" inputmode="numeric" min="1" step="1"><span class="unit">beds</span></div>
+          </div>
+        </div>
+
+        <div class="field">
+          <label for="pct">Feeding rate (% of fish body weight per day)</label>
+          <div class="input-row"><input id="pct" type="number" inputmode="decimal" min="0" step="any"><span class="unit">% BW/day</span></div>
+          <div class="field-hint">Rule of thumb: grow-out fish eat about 1–2% of body weight a day; small fish eat more.</div>
+        </div>
+
+        <hr class="divider">
+
+        <div class="notice" id="notice" hidden></div>
+
+        <div class="two-col">
+          <div class="field">
+            <label for="outa">Show areas in</label>
+            <select id="outa" class="unit-select" data-unit-group="area" data-unit-default="m2"></select>
+          </div>
+          <div class="field">
+            <label for="outf">Show feed in (per day)</label>
+            <select id="outf" class="unit-select" data-unit-group="mass" data-unit-default="g"></select>
+          </div>
+        </div>
+
+        <div class="result-main" aria-live="polite">
+          <div class="label" id="r-main-label">Grow area needed</div>
+          <div class="value" id="r-main">–</div>
+          <div class="sub" id="r-main-sub"></div>
+          <div class="status" id="r-status" hidden></div>
+        </div>
+
+        <ul class="result-list">
+          <li><span>Grow area range</span><span class="v" id="r-arange">–</span></li>
+          <li><span id="r-amid-label">Design point (mid ratio)</span><span class="v" id="r-amid">–</span></li>
+          <li><span>Daily feed supported</span><span class="v" id="r-frange">–</span></li>
+          <li><span>Fish biomass supported</span><span class="v" id="r-bio">–</span></li>
+          <li><span>Feed rate ratio used</span><span class="v" id="r-ratio">–</span></li>
+          <li><span>Your actual ratio</span><span class="v" id="r-actual">–</span></li>
+        </ul>
+        <div class="field" style="margin-top:10px;">
+          <label for="outb">Show fish biomass in</label>
+          <select id="outb" class="unit-select" data-unit-group="mass" data-unit-default="kg"></select>
+        </div>
+
+        <div class="share-bar">
+          <button class="btn btn-primary" type="button" id="btn-share">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="m8.6 13.5 6.8 4M15.4 6.5l-6.8 4"/></svg>
+            Share
+          </button>
+          <button class="btn" type="button" id="btn-link">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.5.5l3-3a5 5 0 0 0-7-7l-1.7 1.7"/><path d="M14 11a5 5 0 0 0-7.5-.5l-3 3a5 5 0 0 0 7 7l1.7-1.7"/></svg>
+            Copy link
+          </button>
+          <button class="btn" type="button" id="btn-copy">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h10a1 1 0 0 1 1 1v1"/></svg>
+            Copy results
+          </button>
+          <button class="btn" type="button" id="btn-reset">Reset</button>
+        </div>
+      </section>
+
+      <!-- Visualization -->
+      <section class="card viz-card" aria-labelledby="viz-heading">
+        <h2 id="viz-heading">Visualization</h2>
+        <svg class="viz" id="viz" viewBox="0 0 480 330" role="img" aria-label="Fish tank feeding a grow bed drawn to scale, and a bar showing the recommended range with your value"></svg>
+        <p class="viz-caption" id="viz-caption"></p>
+      </section>
+    </div>
+
+    <article class="article">
+      <h2>How the feed rate ratio calculator works</h2>
+      <p>In aquaponics the fish feed is the fertilizer. Fish eat the feed, excrete ammonia and solids, bacteria turn the ammonia into nitrate, and the plants take up the nitrate and other nutrients. Because almost every nutrient enters the system through the feed, the simplest way to balance fish and plants is to match the <strong>amount of feed added per day</strong> to the <strong>area of plants</strong> that will use it. That number, grams of feed per square metre of growing area per day, is called the <strong>feed rate ratio</strong> (Rakocy et al. call it the <em>feeding rate ratio</em>) [1, 2].</p>
+      <p>The calculator works in two directions:</p>
+      <ul>
+        <li><strong>Daily feed → area.</strong> Divide the daily feed by the ratio. The high end of the ratio gives the smallest area, and the low end gives the largest area. If you also enter your actual grow area, the page tells you whether it is inside, under or over that range.</li>
+        <li><strong>Grow area → feed.</strong> Multiply the area by the ratio to get the range of daily feed the plants can use. If you also enter the feed you give now, the page checks it against that range.</li>
+      </ul>
+      <p>In both modes the daily feed is turned into an approximate <strong>fish biomass</strong> by dividing by the feeding rate as a percentage of body weight.</p>
+
+      <h3>Why it matters</h3>
+      <p>Too little growing area for the feed means nutrients (and nitrate) build up faster than the plants remove them, and water quality for the fish gets worse. Too much growing area for the feed means the plants run short of nutrients and grow slowly or show deficiencies. Using the ratio at the design stage lets you size the fish tank, the stocking and the beds together instead of guessing. The FAO manual uses this ratio as its main method to size a small-scale unit [1], and the University of the Virgin Islands (UVI) raft system was designed with it [2].</p>
+
+      <h3>Guideline ratios</h3>
+      <table>
+        <thead><tr><th>Crop or system</th><th>Feed rate ratio</th><th>Source</th></tr></thead>
+        <tbody>
+          <tr><td>Leafy greens (lettuce, herbs, chard…)</td><td>40–50 g/m²/day</td><td>Somerville et al. 2014 [1]</td></tr>
+          <tr><td>Fruiting vegetables (tomato, pepper, cucumber…)</td><td>50–80 g/m²/day</td><td>Somerville et al. 2014 [1]</td></tr>
+          <tr><td>Raft (deep water culture) hydroponics, UVI system</td><td>60–100 g/m²/day</td><td>Rakocy, Masser &amp; Losordo 2006 [2]</td></tr>
+        </tbody>
+      </table>
+      <p>These ranges are <strong>rules of thumb</strong> from practical experience. The FAO figures assume a standard fish feed with 32% protein [1], and the UVI ratio was developed with tilapia fed a similar diet [2]. Fruiting crops need more nutrients than leafy greens to support flowers and fruit, so they get a higher ratio. Rakocy et al. suggest the low end of the raft range for small plants such as Bibb lettuce and the high end for larger plants [2]. A feed with much more or less protein supplies a different amount of nitrogen per gram, so the ratio should be adjusted.</p>
+
+      <h3>Formulas</h3>
+      <p>With F = daily feed (g/day), A = grow area (m²), R<sub>low</sub> and R<sub>high</sub> = the ends of the ratio range (g/m²/day):</p>
+      <div class="formula">Area needed:   A<sub>min</sub> = F ÷ R<sub>high</sub>     A<sub>max</sub> = F ÷ R<sub>low</sub>
+Design point:  A<sub>design</sub> = F ÷ ((R<sub>low</sub> + R<sub>high</sub>) ÷ 2)
+Feed supported: F<sub>min</sub> = A × R<sub>low</sub>     F<sub>max</sub> = A × R<sub>high</sub>
+Actual ratio:  R = F ÷ A</div>
+      <p>Fish biomass from a feeding rate p (% of body weight per day):</p>
+      <div class="formula">Biomass (kg) = F (kg/day) ÷ (p ÷ 100)</div>
+      <p>The design point uses the middle of the ratio range, the same approach as the SRAC worked example, which picks 80 g/m²/day from the 60–100 range [2]. The status line compares your actual ratio R with the range: above R<sub>high</sub> means too little grow area (or too much feed), below R<sub>low</sub> means too much grow area (or too little feed).</p>
+
+      <h3>Unit conversions</h3>
+      <table>
+        <thead><tr><th>Unit</th><th>Equal to</th></tr></thead>
+        <tbody>
+          <tr><td>1 ft²</td><td>0.09290304 m² (exact)</td></tr>
+          <tr><td>1 oz</td><td>28.349523125 g (exact)</td></tr>
+          <tr><td>1 lb</td><td>453.59237 g (exact)</td></tr>
+          <tr><td>1 oz/yd²/day</td><td>≈ 33.91 g/m²/day</td></tr>
+          <tr><td>1 oz/ft²/day</td><td>≈ 305.15 g/m²/day</td></tr>
+        </tbody>
+      </table>
+
+      <h3>Example</h3>
+      <p>You feed <strong>500 g</strong> of fish feed per day and want to grow leafy greens at 40–50 g/m²/day. The smallest area is 500 ÷ 50 = <strong>10.0 m²</strong> and the largest is 500 ÷ 40 = <strong>12.5 m²</strong> (about 108–135 ft²). At the middle ratio of 45 g/m²/day the design area is 500 ÷ 45 = 11.1 m². Your beds have 12 m² of growing area, so the actual ratio is 500 ÷ 12 = 41.7 g/m²/day, inside the range. Those 12 m² can use 12 × 40 = 480 to 12 × 50 = 600 g of feed per day. If the fish eat 1.5% of their body weight per day, 500 g of feed corresponds to about 0.5 ÷ 0.015 = <strong>33.3 kg of fish</strong>.</p>
+
+      <h3>Limitations and assumptions</h3>
+      <ul>
+        <li><strong>Area, not volume.</strong> The ratio uses the planted surface area. For media beds and rafts this is the bed surface. NFT channels hold little water and are often planted more sparsely, so check their sizing against the system guide you follow.</li>
+        <li><strong>Feed quality and fish species.</strong> The ranges were set for a 32% protein feed and warm-water fish such as tilapia. Higher-protein feeds release more nitrogen per gram.</li>
+        <li><strong>Solids handling.</strong> Systems that remove solids early (clarifiers, swirl filters) lose some nutrients from the feed; systems with mineralization keep more. The ratio does not model this.</li>
+        <li><strong>Feeding rate is a rule of thumb.</strong> The percentage of body weight eaten per day changes with fish size, species and water temperature. Use your feed supplier's chart for real feeding; the biomass result here is only an estimate.</li>
+        <li><strong>Micronutrients.</strong> Even with a balanced ratio, aquaponic systems often need iron, potassium or calcium supplements [1, 2].</li>
+        <li><strong>Start-up.</strong> A new system needs time for the biofilter to establish before the full feed rate is used [1].</li>
+      </ul>
+
+      <h2>Sources</h2>
+      <ol class="sources">
+        <li>Somerville, C., Cohen, M., Pantanella, E., Stankus, A. &amp; Lovatelli, A. (2014). <em>Small-scale aquaponic food production: Integrated fish and plant farming</em>. FAO Fisheries and Aquaculture Technical Paper No. 589. Rome: FAO. Feed rate ratio guidance in Chapter 2 (design ratios) and Chapter 8 (component calculations and ratios). <a href="https://www.fao.org/3/i4021e/i4021e.pdf" rel="noopener" target="_blank">fao.org</a></li>
+        <li>Rakocy, J. E., Masser, M. P. &amp; Losordo, T. M. (2006). <em>Recirculating Aquaculture Tank Production Systems: Aquaponics—Integrating Fish and Plant Culture</em>. Southern Regional Aquaculture Center (SRAC) Publication No. 454 (revised). Stoneville, MS: SRAC.</li>
+        <li>National Institute of Standards and Technology. <em>NIST Handbook 44</em>, Appendix C: General Tables of Units of Measurement. <a href="https://www.nist.gov/pml/owm/publications/nist-handbooks/handbook-44" rel="noopener" target="_blank">nist.gov</a></li>
+      </ol>
+    </article>
+  </main>
+
+  <footer class="site-footer">
+    <div class="wrap">Calculations are estimates. Check the sources above before relying on a result.</div>
+  </footer>
+
+  <script src="../assets/share.js"></script>
+  <script src="../assets/units.js"></script>
+  <script src="../assets/feed-rate-to-grow-space.js"></script>
+</body>
+</html>
