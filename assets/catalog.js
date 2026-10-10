@@ -38,7 +38,7 @@ window.CALCULATORS = [
     icon: '<path d="M4 6v12a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V6"/><path d="M8 13c1.5-2 4-2.5 6-1l2-1v4l-2-1c-2 1.5-4.5 1-6-1z"/>' },
   { slug: 'grow-bed-volume', name: 'Grow Bed Volume', blurb: 'Bed water, area, plant sites', cat: 'aquaponics', tags: ['aquaponics', 'hydroponics'], status: 'live',
     icon: '<path d="M3 10h18v8H3z"/><path d="M8 10V6M12 10V5M16 10V6"/>' },
-  { slug: 'salt-addition', name: 'Salt Addition', cat: 'aquaculture', tags: ['aquaculture', 'aquaponics'], status: 'soon',
+  { slug: 'salt-addition', name: 'Salt Addition', blurb: 'Salt dose for fish health', cat: 'aquaculture', tags: ['aquaculture', 'aquaponics'], status: 'live',
     icon: '<path d="M8 3h8v4H8z"/><path d="M7 7h10v13a1 1 0 0 1-1 1H8a1 1 0 0 1-1-1z"/><path d="M10 12h4"/>' },
   { slug: 'feed-rate-to-grow-space', name: 'Feed Rate to Grow Space', blurb: 'Balance fish feed and plants', cat: 'aquaponics', tags: ['aquaponics'], status: 'live',
     icon: '<path d="M3 20h18"/><path d="M7 20v-6M12 20v-9M17 20v-4"/><circle cx="12" cy="5" r="2"/>' },

@@ -157,9 +157,9 @@
     if (mode === 'nitrite') {
       if (!(r.no2n > 0)) return { ok: true, text: 'No nitrite measured' };
       const after = r.clAfter / r.no2n;
-      if (after >= SRAC_RATIO - 1e-9) return { ok: true, text: 'Meets SRAC 462 (≥ 10 : 1)' };
-      if (after >= MIN_RATIO - 1e-9) return { ok: false, text: 'Above 6 : 1, below SRAC 10 : 1' };
-      return { ok: false, text: 'Below the 6 : 1 minimum' };
+      if (after >= SRAC_RATIO - 1e-9) return { ok: true, text: 'Meets SRAC 462 (≥\u00a010\u00a0:\u00a01)' };
+      if (after >= MIN_RATIO - 1e-9) return { ok: false, text: 'Above 6\u00a0:\u00a01, below SRAC 10\u00a0:\u00a01' };
+      return { ok: false, text: 'Below the 6\u00a0:\u00a01 minimum' };
     }
     const c = VENICE.filter(function (b) { return r.saltAfter >= b.lo && r.saltAfter < b.hi; })[0];
     return { ok: true, text: 'Venice class: ' + c.name };
@@ -224,7 +224,7 @@
     $('r-cl').textContent = ok ? pair(r.clNow, r.clAfter) : '–';
     {
       $('r-ratio').textContent = mode === 'nitrite' && ok && r.no2n > 0
-        ? fmt(r.clNow / r.no2n, 1) + ' → ' + fmt(r.clAfter / r.no2n, 1) + ' : 1'
+        ? fmt(r.clNow / r.no2n, 1) + ' → ' + fmt(r.clAfter / r.no2n, 1) + '\u00a0:\u00a01'
         : '–';
     }
     const zone = ok ? zoneInfo(r) : null;
