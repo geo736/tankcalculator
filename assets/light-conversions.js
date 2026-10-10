@@ -235,13 +235,7 @@
   function drawViz(r) {
     while (svg.firstChild) svg.removeChild(svg.firstChild);
 
-    // Spectrum strip as a header (400–700 nm, the PAR band)
-    const defs = el('defs', {});
-    const grad = el('linearGradient', { id: 'par-grad', x1: '0', x2: '1', y1: '0', y2: '0' }, undefined, defs);
-    [['0', '#7b3fd0'], ['.17', '#2f5bea'], ['.33', '#1fa3d6'], ['.5', '#3cbf4a'], ['.62', '#e6d82a'], ['.75', '#f39a1e'], ['.88', '#e5361f'], ['1', '#9c1414']]
-      .forEach(function (s) { el('stop', { offset: s[0], 'stop-color': s[1] }, undefined, grad); });
-    el('rect', { class: 'spectrum', x: AX0, y: 6, width: AX1 - AX0, height: 6, rx: 3, fill: 'url(#par-grad)' });
-    el('text', { x: 8, y: 13, class: 'head-text' }, 'Same light, 4 units');
+    el('text', { x: 8, y: 13, class: 'head-text' }, 'Same light on four scales (' + SOURCES[srcSel.value].name.replace(/ \(.*\)/, '') + ')');
 
     // Parallel scales: x position = physical PPFD, ticks in each unit.
     const pmax = r.valid ? niceMax(r.ppfd * 1.35) : 500;
@@ -250,22 +244,24 @@
       { name: 'PPFD', unit: 'µmol/m²/s', k: 1, val: r.ppfd, entered: r.unit === 'umol' },
       { name: 'Illuminance', unit: 'lx', k: r.f.flux, val: r.lux, entered: r.unit === 'lx' || r.unit === 'klx' },
       { name: 'Illuminance', unit: 'fc', k: r.f.flux * LUX_PER_FC, val: r.fc, entered: r.unit === 'fc' },
-      { name: 'PAR energy', unit: 'W/m²', k: r.f.fw, val: r.w, entered: r.unit === 'wpar' }
+      { name: 'PAR', unit: 'W/m²', k: r.f.fw, val: r.w, entered: r.unit === 'wpar' }
     ];
-    const y0 = 44, dy = 44;
+    const y0 = 46, dy = 44;
     rows.forEach(function (row, i) {
       const y = y0 + i * dy;
-      el('text', { x: 8, y: y - 4, class: 'row-name' }, row.name + (row.unit === 'fc' || row.unit === 'lx' ? ' (' + row.unit + ')' : ''));
+      el('text', { x: 8, y: y - 4, class: 'row-name' }, row.name + ' ' + row.unit);
       const ok = row.k > 0;
       el('text', { x: 8, y: y + 12, class: 'row-val' + (row.entered ? ' entered' : '') },
-        ok && r.valid ? compact(row.val) + (row.unit === 'lx' || row.unit === 'fc' ? '' : ' ' + row.unit) : (ok ? '–' : 'no factor'));
+        ok && r.valid ? (row.val >= 1e6 ? compact(row.val) : fmt(row.val)) : (ok ? '–' : 'no factor'));
       el('line', { x1: AX0, y1: y, x2: AX1, y2: y, class: 'axis' });
       if (!ok) return;
       const umax = pmax / row.k; // axis end in this unit
       const step = niceStep(umax, 4);
+      const xm = r.valid ? xOf(r.ppfd) : -999;
       for (let t = 0; t <= umax + 1e-9; t += step) {
         const x = AX0 + (AX1 - AX0) * (t / umax);
         el('line', { x1: x, y1: y - 4, x2: x, y2: y + 4, class: 'tick' });
+        if (Math.abs(x - xm) < 16 && t > 0) continue; // keep labels clear of the marker
         el('text', { x: x, y: y + 17, 'text-anchor': t === 0 ? 'start' : 'middle', class: 'tick-text' }, compact(+t.toPrecision(6)));
       }
     });

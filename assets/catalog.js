@@ -46,7 +46,7 @@ window.CALCULATORS = [
     icon: '<path d="M4 8h12l-3-3M20 16H8l3 3"/>' },
   { slug: 'mineralization-tank', name: 'Mineralization Tank', blurb: 'Size a solids digester tank', cat: 'aquaponics', tags: ['aquaponics'], status: 'live',
     icon: '<path d="M6 4h12v16H6z"/><circle cx="10" cy="14" r="1"/><circle cx="14" cy="11" r="1"/><circle cx="12" cy="17" r="1"/>' },
-  { slug: 'light-conversions', name: 'Light Conversions', cat: 'hydroponics', tags: ['hydroponics', 'aquaponics'], status: 'soon',
+  { slug: 'light-conversions', name: 'Light Conversions', blurb: 'Lux, PPFD, W/m² converter', cat: 'hydroponics', tags: ['hydroponics', 'aquaponics'], status: 'live',
     icon: '<path d="M9 18h6M10 21h4"/><path d="M12 3a6 6 0 0 0-3.5 10.9V16h7v-2.1A6 6 0 0 0 12 3z"/>' },
   { slug: 'head-loss', name: 'Head Loss', cat: 'aquaculture', tags: ['aquaculture', 'aquaponics', 'hydroponics'], status: 'soon',
     icon: '<path d="M3 6h7v12h11"/><path d="M17 15l4 3-4 3"/>' },

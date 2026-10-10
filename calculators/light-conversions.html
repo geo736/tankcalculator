@@ -9,11 +9,11 @@
   <style>
     .viz .axis { stroke: var(--tank-stroke); stroke-width: 1.5; fill: none; }
     .viz .tick { stroke: var(--text-muted); stroke-width: 1; }
-    .viz .tick-text { fill: var(--text-muted); font-size: 11px; font-family: var(--font); }
-    .viz .row-name { fill: var(--text); font-size: 12px; font-weight: 600; font-family: var(--font); }
-    .viz .row-val { fill: var(--accent); font-size: 12px; font-weight: 700; font-family: var(--font); font-variant-numeric: tabular-nums; }
+    .viz .tick-text { fill: var(--text-muted); font-size: 12px; font-family: var(--font); }
+    .viz .row-name { fill: var(--text); font-size: 13px; font-weight: 600; font-family: var(--font); }
+    .viz .row-val { fill: var(--accent); font-size: 13px; font-weight: 700; font-family: var(--font); font-variant-numeric: tabular-nums; }
     .viz .row-val.entered { fill: var(--warn-text); }
-    .viz .head-text { fill: var(--text-muted); font-size: 12px; font-weight: 600; font-family: var(--font); }
+    .viz .head-text { fill: var(--text-muted); font-size: 13px; font-weight: 600; font-family: var(--font); }
     .viz .marker { stroke: var(--warn-text); stroke-width: 2; }
     .viz .marker-dot { fill: var(--warn-text); stroke: var(--surface); stroke-width: 1.5; }
     .viz .track { fill: var(--surface-2); stroke: var(--border); stroke-width: 1; }
@@ -21,7 +21,6 @@
     .viz .band.hit { fill: var(--accent); fill-opacity: .35; }
     .viz .sun-line { stroke: var(--warn-text); stroke-width: 1.5; stroke-dasharray: 5 4; }
     .viz .sun-text { fill: var(--warn-text); font-size: 11px; font-weight: 600; font-family: var(--font); }
-    .viz .spectrum { opacity: .9; }
     .table-scroll { overflow-x: auto; }
     .table-scroll table { min-width: 0; }
     @media (max-width: 480px) { .article th, .article td { font-size: .85rem; padding: 6px 4px; } }
@@ -65,10 +64,10 @@
           <div class="field-hint" id="src-hint"></div>
         </div>
 
-        <div class="two-col" id="custom-fields" hidden>
+        <div id="custom-fields" hidden>
           <div class="field">
             <label for="flux">PPFD per lux</label>
-            <div class="input-row"><input id="flux" type="number" inputmode="decimal" min="0" step="any"><span class="unit">µmol/m²/s per lx</span></div>
+            <div class="input-row"><input id="flux" type="number" inputmode="decimal" min="0" step="any"><span class="unit">µmol/m²/s per lux</span></div>
             <div class="field-hint" id="flux-hint"></div>
           </div>
           <div class="field">
@@ -127,7 +126,7 @@
       <!-- Visualization -->
       <section class="card viz-card" aria-labelledby="viz-heading">
         <h2 id="viz-heading">Visualization</h2>
-        <svg class="viz" id="viz" viewBox="0 0 480 360" role="img" aria-label="Parallel scales showing the same light level in PPFD, lux, foot-candles and W/m², and a bar comparing the PPFD with typical crop ranges and full sun"></svg>
+        <svg class="viz" id="viz" viewBox="0 0 480 334" role="img" aria-label="Parallel scales showing the same light level in PPFD, lux, foot-candles and W/m², and a bar comparing the PPFD with typical crop ranges and full sun"></svg>
         <p class="viz-caption" id="viz-caption"></p>
       </section>
     </div>
