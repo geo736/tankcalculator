@@ -8,7 +8,10 @@
   // White LED: lux factor from Sharakshane (2018) "1000 lx = 15 µmol/s/m²";
   // W/m² factor estimated from E = hc/λ at ~560 nm mean PAR wavelength.
   const SOURCES = {
-    led: { name: 'White LED', lux: 0.015, w: 4.7 },
+    led: { name: 'White LED (typical)', lux: 0.015, w: 4.7 },
+    // Same factors as the Light Conversions page (Sharakshane 2018 regression; W/m² estimated)
+    warmled: { name: 'Warm white LED (3000 K)', lux: 0.0145, w: 4.9 },
+    coolled: { name: 'Cool white LED (5000 K)', lux: 0.0139, w: 4.6 },
     sun: { name: 'Sunlight', lux: 0.0185, w: 4.57 },
     hps: { name: 'High-pressure sodium', lux: 0.0122, w: 4.98 },
     mh: { name: 'Metal halide', lux: 0.0141, w: 4.59 },

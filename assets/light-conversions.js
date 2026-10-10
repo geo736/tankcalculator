@@ -12,6 +12,7 @@
     hps: { name: 'High-pressure sodium', flux: 0.0122, fw: 4.98, hint: 'Standard (mogul-base) HPS: 82 lux per µmol/m²/s, 4.98 µmol/J.' },
     mh: { name: 'Metal halide', flux: 0.0141, fw: 4.59, hint: '71 lux per µmol/m²/s, 4.59 µmol/J.' },
     cwf: { name: 'Cool-white fluorescent', flux: 0.0135, fw: 4.59, hint: '74 lux per µmol/m²/s, 4.59 µmol/J.' },
+    led: { name: 'White LED (typical)', flux: 0.015, fw: 4.7, hint: 'Sharakshane (2018) headline estimate: 1000 lx ≈ 15 µmol/m²/s (same as the DLI page). W/m² factor is an estimate.' },
     warmled: { name: 'Warm white LED (3000 K, CRI 80)', flux: 0.0145, fw: 4.9, hint: 'Sharakshane (2018) regression: 14.5 µmol/m²/s per 1000 lx. W/m² factor is an estimate.' },
     coolled: { name: 'Cool white LED (5000 K, CRI 80)', flux: 0.0139, fw: 4.6, hint: 'Sharakshane (2018) regression: 13.9 µmol/m²/s per 1000 lx. W/m² factor is an estimate.' },
     custom: { name: 'Custom factors', flux: 0, fw: 0, hint: 'Enter factors from your fixture datasheet or a side-by-side lux and PAR meter reading.' }

@@ -40,12 +40,34 @@ Every input that has a unit gets its **own** unit dropdown – never one shared 
 
 ## Calculators
 
-- [x] Tank Volume – rectangular, round, cone-bottom and horizontal tanks
-- [ ] Fish Stocking Density
-- [ ] Feeding Rate
-- [ ] Grow Bed Ratio
-- [ ] Pump & Turnover
-- [ ] Nutrient EC
-- [ ] pH Adjustment
-- [ ] Daily Light Integral
-- [ ] Dissolved Oxygen
+
+- [x] Tank Volume – `calculators/tank-volume.html`
+- [x] Fish Stocking Density – `calculators/fish-stocking-density.html`
+- [x] Feeding Rate – `calculators/feeding-rate.html`
+- [x] Grow Bed Ratio – `calculators/grow-bed-ratio.html`
+- [x] Pump & Turnover – `calculators/pump-turnover.html`
+- [x] Nutrient EC – `calculators/nutrient-ec.html`
+- [x] pH Adjustment – `calculators/ph-adjustment.html`
+- [x] Daily Light Integral – `calculators/daily-light-integral.html`
+- [x] Dissolved Oxygen – `calculators/dissolved-oxygen.html`
+- [x] Hydrostatic Pressure – `calculators/hydrostatic-pressure.html`
+- [x] Growing Media Fill – `calculators/growing-media-fill.html`
+- [x] Iron Addition – `calculators/iron-addition.html`
+- [x] Biofilter Surface Area – `calculators/biological-surface-area.html`
+- [ ] Fish Hauling
+- [x] Pipe Water Velocity – `calculators/water-velocity.html`
+- [ ] Fish Tank Volume
+- [x] Grow Bed Volume – `calculators/grow-bed-volume.html`
+- [x] Salt Addition – `calculators/salt-addition.html`
+- [x] Feed Rate to Grow Space – `calculators/feed-rate-to-grow-space.html`
+- [x] TAN Conversion – `calculators/tan-conversion.html`
+- [x] Mineralization Tank – `calculators/mineralization-tank.html`
+- [x] Light Conversions – `calculators/light-conversions.html`
+- [x] Head Loss – `calculators/head-loss.html`
+- [ ] Greenhouse HVAC
+- [x] Internal Tank Velocity – `calculators/internal-tank-velocity.html`
+- [ ] Discharge
+- [x] Battery Life Estimator – `calculators/battery-life.html`
+- [x] UV Filtration Sizing – `calculators/uv-sterilizer-sizing.html`
+- [x] Drum Filter Sizing – `calculators/drum-filter-sizing.html`
+- [ ] Cost Benefit Analysis
