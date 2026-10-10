@@ -43,6 +43,8 @@
     :root[data-theme="dark"] .viz .flow-dash { stroke: var(--water-top); }
     :root[data-theme="dark"] .viz .arrow { fill: var(--water-top); }
     .article .table-wrap { overflow-x: auto; }
+    @media (max-width: 480px) { .card .two-col { grid-template-columns: minmax(0, 1fr); gap: 0; } }
+    .viz .halo { paint-order: stroke; stroke: var(--surface); stroke-width: 4px; stroke-linejoin: round; }
   </style>
 </head>
 <body>
@@ -193,7 +195,7 @@
       <!-- Visualization -->
       <section class="card viz-card" aria-labelledby="viz-heading">
         <h2 id="viz-heading">Visualization</h2>
-        <svg class="viz" id="viz" viewBox="0 0 480 380" role="img" aria-label="Water flowing past a UV lamp, and a bar chart comparing the delivered dose with the dose each organism needs"></svg>
+        <svg class="viz" id="viz" viewBox="0 0 480 396" role="img" aria-label="Water flowing past a UV lamp, and a bar chart comparing the delivered dose with the dose each organism needs"></svg>
         <p class="viz-caption" id="viz-caption"></p>
       </section>
     </div>

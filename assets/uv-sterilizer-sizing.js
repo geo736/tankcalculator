@@ -270,8 +270,8 @@
     el('rect', { class: 'sleeve', x: x0 + 24, y: cy - sleeveH / 2, width: x1 - x0 - 48, height: sleeveH, rx: sleeveH / 2 });
     el('rect', { class: 'lamp', x: x0 + 32, y: cy - lampH / 2, width: x1 - x0 - 64, height: lampH, rx: lampH / 2 });
     // arrows
-    el('path', { class: 'arrow', d: 'M14,' + (yB - 25) + ' l12,-6 v12 z' });
-    el('path', { class: 'arrow', d: 'M462,' + (yT + 11) + ' l12,-6 v12 z', transform: 'translate(0,0)' });
+    el('path', { class: 'arrow', d: 'M28,' + (yB - 11) + ' l-12,-6 v12 z' });
+    el('path', { class: 'arrow', d: 'M474,' + (yT + 11) + ' l-12,-6 v12 z' });
 
     if (r) {
       el('text', { x: x0, y: 30, class: 'head-text' }, 'Flow ' + flowOut(r.Q));
@@ -282,7 +282,7 @@
   }
 
   function drawBars(r) {
-    const top = 160, rowH = 24, lx = 140, px0 = 148, px1 = 462;
+    const top = 176, rowH = 24, lx = 140, px0 = 148, px1 = 462;
     const sel = orgSel.value;
     const rows = ORGS.filter(function (o) { return o.dose; }).map(function (o) { return { id: o.id, short: o.short, dose: o.dose }; });
     const target = CalcUnits.base('target');
@@ -304,6 +304,7 @@
       el('text', { x: X(t), y: bottom + 14, 'text-anchor': 'middle', class: 'dim-text' }, fmt(t));
     });
 
+    const valueLabels = [];
     rows.forEach(function (row, i) {
       const y = top + i * rowH;
       const isSel = row.id === sel || (sel === 'custom' && row.id === 'custom');
@@ -314,16 +315,21 @@
         x: px0, y: y + 4, width: Math.max(1, X(row.dose) - px0), height: rowH - 8, rx: 3
       });
       const vx = X(row.dose) + 4;
-      el('text', { x: vx, y: y + rowH / 2 + 4, class: 'dim-text' }, fmt(row.dose) + (r ? (met ? ' ✓' : '') : ''));
+      valueLabels.push([vx, y + rowH / 2 + 4, , fmt(row.dose) + (r ? (met ? ' ✓' : '') : '')]);
     });
 
     if (r) {
       const xn = X(r.dose), xe = X(r.doseEol);
       el('line', { class: 'dose-eol', x1: xe, y1: top - 6, x2: xe, y2: bottom + 2 });
       el('line', { class: 'dose-line', x1: xn, y1: top - 6, x2: xn, y2: bottom + 2 });
-      el('text', { x: 8, y: bottom + 34, class: 'dose-text' }, '━ new lamp ' + fmt(r.dose) + '   ┅ end of life ' + fmt(r.doseEol));
-      el('text', { x: 472, y: bottom + 34, 'text-anchor': 'end', class: 'dim-text' }, '✓ met at end of life');
+      const ly = bottom + 34;
+      el('line', { class: 'dose-line', x1: 8, y1: ly - 4, x2: 26, y2: ly - 4 });
+      el('text', { x: 30, y: ly, class: 'dose-text' }, 'new lamp ' + fmt(r.dose));
+      el('line', { class: 'dose-eol', x1: 140, y1: ly - 4, x2: 158, y2: ly - 4 });
+      el('text', { x: 162, y: ly, class: 'dose-text' }, 'end of life ' + fmt(r.doseEol));
+      el('text', { x: 472, y: ly, 'text-anchor': 'end', class: 'dim-text' }, '✓ = met at end of life');
     }
+    valueLabels.forEach(function (v) { el('text', { x: v[0], y: v[1], class: 'dim-text halo' }, v[2]); });
   }
 
   function drawViz(r) {
