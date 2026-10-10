@@ -22,6 +22,9 @@
     .viz .sun-line { stroke: var(--warn-text); stroke-width: 1.5; stroke-dasharray: 5 4; }
     .viz .sun-text { fill: var(--warn-text); font-size: 11px; font-weight: 600; font-family: var(--font); }
     .viz .spectrum { opacity: .9; }
+    .table-scroll { overflow-x: auto; }
+    .table-scroll table { min-width: 0; }
+    @media (max-width: 480px) { .article th, .article td { font-size: .85rem; padding: 6px 4px; } }
     .status { font-size: .95rem; font-weight: 600; margin-top: 2px; }
   </style>
 </head>
@@ -156,7 +159,7 @@ W/m² (PAR)       = PPFD ÷ f<sub>W</sub></div>
                  = PPFD × h × 0.0036</div>
 
       <h3>Conversion factors</h3>
-      <table>
+      <div class="table-scroll"><table>
         <thead><tr><th>Light source</th><th>f<sub>lux</sub> (µmol/m²/s per lx)</th><th>lux per µmol/m²/s</th><th>f<sub>W</sub> (µmol/J)</th></tr></thead>
         <tbody>
           <tr><td>Sunlight</td><td>0.0185</td><td>54</td><td>4.57</td></tr>
@@ -166,7 +169,7 @@ W/m² (PAR)       = PPFD ÷ f<sub>W</sub></div>
           <tr><td>Warm white LED (3000 K, CRI 80)</td><td>0.0145*</td><td>69</td><td>≈4.9†</td></tr>
           <tr><td>Cool white LED (5000 K, CRI 80)</td><td>0.0139*</td><td>72</td><td>≈4.6†</td></tr>
         </tbody>
-      </table>
+      </table></div>
       <p>Sunlight, HPS, metal halide and fluorescent factors come from Thimijan &amp; Heins (1983), and the lux factors match the table published by Apogee Instruments. The HPS figure is for standard (mogul-base) lamps. Apogee lists 77 lux per µmol/m²/s for one double-ended HPS lamp, so use the custom option for those.</p>
       <p>*Thimijan &amp; Heins and Apogee do not give factors for white LEDs, because LED spectra vary so much. The LED lux factors here come from Sharakshane's (2018) regression for phosphor-white LEDs, which predicts the photon flux per 1000 lumens from colour temperature (CCT) and colour rendering index (Ra):</p>
       <div class="formula">PPFD per klx ≈ −48 + 0.0005·CCT + 12000/CCT + 0.4·Ra + 2000/Ra
@@ -177,7 +180,7 @@ W/m² (PAR)       = PPFD ÷ f<sub>W</sub></div>
 
       <h3>Typical light levels (rules of thumb)</h3>
       <p>The range bar in the visualization converts DLI targets into the PPFD needed at your photoperiod (PPFD = DLI ÷ (h × 0.0036)). These are <strong>rules of thumb</strong>. Runkle (MSU) points out that there is no strict “DLI requirement”: the best level also depends on cultivar, temperature, CO₂ and how fast you want the crop to grow.</p>
-      <table>
+      <div class="table-scroll"><table>
         <thead><tr><th>Group</th><th>DLI (mol/m²/day)</th><th>PPFD at 16 h</th><th>Basis</th></tr></thead>
         <tbody>
           <tr><td>Seedlings / plugs</td><td>6–15</td><td>104–260</td><td>Runkle: early plugs 6–10, late plugs 10–15</td></tr>
@@ -185,7 +188,7 @@ W/m² (PAR)       = PPFD ÷ f<sub>W</sub></div>
           <tr><td>Fruiting crops (tomato, cucumber, pepper)</td><td>15–30</td><td>260–521</td><td>Runkle: 15 or more; 25–30 for high-wire tomato and cucumber</td></tr>
           <tr><td>Full sun, clear summer noon</td><td>–</td><td>≈2000 (instantaneous)</td><td>MSU Floriculture; a peak, not a daily average</td></tr>
         </tbody>
-      </table>
+      </table></div>
 
       <h3>Example</h3>
       <p>A lux meter reads <strong>20,000 lx</strong> at canopy height under warm white LED fixtures, and the lights run <strong>16 hours</strong> a day:</p>

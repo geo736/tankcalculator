@@ -183,7 +183,7 @@
     $('r-tan').textContent = show ? out(r.tan) + ' N' : '–';
     $('r-totnh3').textContent = show ? out(r.tan * NH3_PER_N) : '–';
     $('r-totnh4').textContent = show ? out(r.tan * NH4_PER_N) : '–';
-    $('r-nh4').textContent = show ? out(r.nh4) + ' (' + out(r.nh4n) + ' N)' : '–';
+    $('r-nh4').textContent = show ? out(r.nh4) + ' · ' + out(r.nh4n) + ' N' : '–';
     $('r-pka').textContent = r.ok ? r.pKa.toFixed(3) : '–';
 
     const n2 = nitro('no2', 'no2basis', NO2_PER_N);

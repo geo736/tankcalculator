@@ -19,7 +19,7 @@
     { key: 'edta', label: 'Fe-EDTA' },
     { key: 'dtpa', label: 'Fe-DTPA' },
     { key: 'eddha', label: 'Fe-EDDHA' },
-    { key: 'fes', label: 'FeSO₄ (no chelate)' }
+    { key: 'fes', label: 'FeSO₄' }
   ];
   const NEAR = 0.3; // pH units below a limit that count as "near limit"
   // Guidance bands in mg/L (rules of thumb): aquaponics ~1–2 (FAO TP 589; UVI 2 mg/L),
@@ -336,7 +336,7 @@
       txt(X(lim) + 4, y + 14, (row.key === 'fes' ? '~' : '≤') + fmt(lim, 1), 'start', 'dim-text');
     });
 
-    txt(24, yEnd + 42, 'Shaded column: usual aquaponic pH 6–7', 'start');
+    txt(24, yEnd + 42, 'Shaded: usual aquaponic pH 6–7 · FeSO₄ is not chelated', 'start');
 
     if (isFinite(r.ph) && r.ph >= 0 && r.ph <= 14) {
       const xp = X(r.ph);

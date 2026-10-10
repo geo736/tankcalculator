@@ -374,7 +374,7 @@
       ? typed('nbeds') + ' × ' + typed('blen') + ' × ' + typed('bwid') + ' = ' + showA(c.A)
       : typed('area')));
     lines.push('Feeding rate: ' + typed('pct') + '% body weight/day');
-    if (c.ok && c.F > 0) lines.push('Grow area needed: ' + rangeA(c.Amin, c.Amax) + ' (design ' + showA(c.Amid) + ')');
+    if (c.ok && c.F > 0) lines.push((mode === 'feed' ? 'Grow area needed: ' : 'Grow area for this feed: ') + rangeA(c.Amin, c.Amax) + ' (design ' + showA(c.Amid) + ')');
     if (c.ok && c.A > 0) lines.push('Daily feed supported: ' + rangeF(c.Fmin, c.Fmax) + ' (design ' + showF(c.Fmid) + ')');
     if (c.ok && c.pct > 0) {
       if (c.bio) lines.push('Fish biomass for this feed: ' + showB(c.bio));

@@ -28,6 +28,9 @@
     .viz .jar-lid { fill: var(--tank-back); stroke: var(--tank-stroke); stroke-width: 1.5; }
     .viz .powder { fill: #b5532a; fill-opacity: .9; }
     .viz .liquid { fill: #8a2f1c; fill-opacity: .85; }
+    .viz .dim-text { font-size: 13px; }
+    .viz .strong-text, .viz .accent-text, .viz .warn-text { font-size: 13.5px; }
+    @media (max-width: 480px) { .two-col.stack { grid-template-columns: minmax(0, 1fr); gap: 0; } }
     .status-ok { color: var(--accent); }
     .status-warn { color: var(--warn-text); }
   </style>
@@ -58,8 +61,8 @@
         <div class="field">
           <label for="sys">System type</label>
           <select id="sys">
-            <option value="aqp">Aquaponics (guidance band 1–2 mg/L)</option>
-            <option value="hyd">Hydroponics (typical band 1–3 mg/L)</option>
+            <option value="aqp">Aquaponics (band 1–2 mg/L)</option>
+            <option value="hyd">Hydroponics (band 1–3 mg/L)</option>
           </select>
         </div>
 
@@ -69,7 +72,7 @@
           <div class="field-hint">All the water the iron will mix into: tanks, sump, beds and pipes.</div>
         </div>
 
-        <div class="two-col">
+        <div class="two-col stack">
           <div class="field">
             <label for="cur">Current iron (Fe)</label>
             <div class="input-row"><input id="cur" type="number" inputmode="decimal" min="0" step="any"><select class="unit-select" data-unit-group="concentration" data-unit-for="cur" data-unit-default="mgL" aria-label="Current iron unit"></select></div>
@@ -91,7 +94,7 @@
           </select>
         </div>
 
-        <div class="two-col">
+        <div class="two-col stack">
           <div class="field">
             <label for="form">Product form</label>
             <select id="form">

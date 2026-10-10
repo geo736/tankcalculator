@@ -119,29 +119,21 @@
         </ul>
 
         <h3 class="sub-heading">Nitrite and nitrate converter</h3>
-        <div class="two-col">
-          <div class="field">
-            <label for="no2">Nitrite result</label>
-            <div class="input-row"><input id="no2" type="number" inputmode="decimal" min="0" step="any"><select class="unit-select" data-unit-group="concentration" data-unit-for="no2" data-unit-default="mgL" aria-label="Nitrite unit"></select></div>
-          </div>
-          <div class="field">
-            <label for="no2basis">Reported as</label>
-            <select id="no2basis">
-              <option value="ion">Nitrite ion, NO₂⁻</option>
-              <option value="n">Nitrite-N, NO₂-N</option>
-            </select>
-          </div>
-          <div class="field">
-            <label for="no3">Nitrate result</label>
-            <div class="input-row"><input id="no3" type="number" inputmode="decimal" min="0" step="any"><select class="unit-select" data-unit-group="concentration" data-unit-for="no3" data-unit-default="mgL" aria-label="Nitrate unit"></select></div>
-          </div>
-          <div class="field">
-            <label for="no3basis">Reported as</label>
-            <select id="no3basis">
-              <option value="ion">Nitrate ion, NO₃⁻</option>
-              <option value="n">Nitrate-N, NO₃-N</option>
-            </select>
-          </div>
+        <div class="field">
+          <label for="no2">Nitrite result</label>
+          <div class="input-row"><input id="no2" type="number" inputmode="decimal" min="0" step="any"><select class="unit-select" data-unit-group="concentration" data-unit-for="no2" data-unit-default="mgL" aria-label="Nitrite unit"></select></div>
+          <select id="no2basis" aria-label="Nitrite reported as" style="margin-top:6px">
+            <option value="ion">reported as nitrite ion, NO₂⁻</option>
+            <option value="n">reported as nitrite-N, NO₂-N</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="no3">Nitrate result</label>
+          <div class="input-row"><input id="no3" type="number" inputmode="decimal" min="0" step="any"><select class="unit-select" data-unit-group="concentration" data-unit-for="no3" data-unit-default="mgL" aria-label="Nitrate unit"></select></div>
+          <select id="no3basis" aria-label="Nitrate reported as" style="margin-top:6px">
+            <option value="ion">reported as nitrate ion, NO₃⁻</option>
+            <option value="n">reported as nitrate-N, NO₃-N</option>
+          </select>
         </div>
         <ul class="result-list">
           <li><span>Nitrite as NO₂⁻</span><span class="v" id="r-no2">–</span></li>

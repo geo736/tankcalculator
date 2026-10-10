@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>UV Filtration Sizing Calculator</title>
+  <meta name="description" content="Size a UV-C sterilizer for a recirculating aquaculture, aquaponics or hydroponic system: delivered UV dose, maximum flow for a target pathogen dose, and the unit or lamp size you need.">
+  <link rel="stylesheet" href="../assets/style.css">
+  <style>
+    #flowmode-group, #spec-group { grid-template-columns: repeat(2, 1fr); }
+    #flowmode-group button, #spec-group button { padding: 10px 6px; }
+    .result-main .sub { font-size: .9rem; color: var(--text-muted); margin-top: 2px; }
+    .out-row { display: flex; align-items: center; gap: 8px; margin: 0 0 10px; font-size: .9rem; color: var(--text-muted); }
+    .out-row select { width: auto; padding: 6px 8px; }
+    .verdict-ok { color: var(--accent-strong); }
+    .verdict-bad { color: var(--warn-text); }
+    .viz .housing { fill: var(--surface-2); stroke: var(--tank-stroke); stroke-width: 2; }
+    .viz .sleeve { fill: var(--surface); fill-opacity: .7; stroke: var(--tank-back); stroke-width: 1.5; }
+    .viz .lamp { fill: #a98cf0; stroke: #6f4fd0; stroke-width: 1; }
+    .viz .glow { fill: #a98cf0; }
+    .viz .flow-dash { fill: none; stroke: var(--water-deep); stroke-width: 2.5; stroke-linecap: round; }
+    .viz .arrow { fill: var(--water-deep); }
+    .viz .bar-ok { fill: var(--accent); fill-opacity: .85; }
+    .viz .bar-bad { fill: var(--tank-back); fill-opacity: .8; }
+    .viz .bar-sel { stroke: var(--text); stroke-width: 1.5; }
+    .viz .grid { stroke: var(--border); stroke-width: 1; }
+    .viz .dose-line { stroke: #6f4fd0; stroke-width: 2.5; }
+    .viz .dose-eol { stroke: #6f4fd0; stroke-width: 2; stroke-dasharray: 5 4; }
+    .viz .dose-text { fill: #6f4fd0; font-size: 12px; font-weight: 700; font-family: var(--font); }
+    .viz .bar-text { fill: var(--text); font-size: 12px; font-family: var(--font); }
+    .viz .bar-text-sel { fill: var(--text); font-size: 12px; font-weight: 700; font-family: var(--font); }
+    .viz .head-text { fill: var(--text); font-size: 13px; font-weight: 700; font-family: var(--font); }
+    @media (prefers-color-scheme: dark) {
+      :root:not([data-theme="light"]) .viz .dose-text { fill: #c3adff; }
+      :root:not([data-theme="light"]) .viz .dose-line,
+      :root:not([data-theme="light"]) .viz .dose-eol { stroke: #c3adff; }
+      :root:not([data-theme="light"]) .viz .flow-dash { stroke: var(--water-top); }
+      :root:not([data-theme="light"]) .viz .arrow { fill: var(--water-top); }
+    }
+    :root[data-theme="dark"] .viz .dose-text { fill: #c3adff; }
+    :root[data-theme="dark"] .viz .dose-line,
+    :root[data-theme="dark"] .viz .dose-eol { stroke: #c3adff; }
+    :root[data-theme="dark"] .viz .flow-dash { stroke: var(--water-top); }
+    :root[data-theme="dark"] .viz .arrow { fill: var(--water-top); }
+    .article .table-wrap { overflow-x: auto; }
+  </style>
+</head>
+<body>
+  <header class="site-header">
+    <div class="wrap">
+      <a class="brand" href="../">
+        <span class="brand-mark" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3c3 4 6 7 6 11a6 6 0 0 1-12 0c0-4 3-7 6-11z"/></svg>
+        </span>
+        Tank Calculator
+      </a>
+      <nav><a href="../">All calculators</a></nav>
+    </div>
+  </header>
+
+  <main class="wrap">
+    <div class="crumbs"><a href="../">Home</a> / UV Filtration Sizing</div>
+    <h1 class="page-title">UV Filtration Sizing Calculator</h1>
+    <p class="page-lede">Check whether a UV-C sterilizer delivers enough dose to kill a target pathogen at your flow rate, find the highest flow it can handle, and see what size of unit or lamp you need. Accounts for water clarity (UV transmittance) and lamp aging.</p>
+
+    <div class="calc-layout">
+      <!-- Calculator -->
+      <section class="card" aria-labelledby="calc-heading">
+        <h2 id="calc-heading">Calculator</h2>
+
+        <div class="field">
+          <span class="label" id="flowmode-label">Flow through the UV unit</span>
+          <div class="segmented" role="group" aria-labelledby="flowmode-label" id="flowmode-group">
+            <button type="button" data-flowmode="vol" aria-pressed="true">From volume &amp; passes/h</button>
+            <button type="button" data-flowmode="flow" aria-pressed="false">I know the flow</button>
+          </div>
+        </div>
+
+        <div class="two-col">
+          <div class="field" data-flowmode-for="vol">
+            <label for="volume">System water volume</label>
+            <div class="input-row"><input id="volume" type="number" inputmode="decimal" min="0" step="any"><select class="unit-select" data-unit-group="volume" data-unit-for="volume" data-unit-default="L" aria-label="Volume unit"></select></div>
+          </div>
+          <div class="field" data-flowmode-for="vol">
+            <label for="passes">Passes through UV</label>
+            <div class="input-row"><input id="passes" type="number" inputmode="decimal" min="0" step="any"><span class="unit">per hour</span></div>
+          </div>
+        </div>
+        <div class="field" data-flowmode-for="flow">
+          <label for="flow">Flow through the UV unit</label>
+          <div class="input-row"><input id="flow" type="number" inputmode="decimal" min="0" step="any"><select class="unit-select" data-unit-group="flow" data-unit-for="flow" data-unit-default="Lph" aria-label="Flow unit"></select></div>
+          <div class="field-hint">Measure it, or read it from the pump curve at your head. Only water that passes the lamp is treated.</div>
+        </div>
+
+        <div class="field">
+          <label for="org">Target organism</label>
+          <select id="org"></select>
+        </div>
+        <div class="two-col">
+          <div class="field">
+            <label for="target">Required UV dose</label>
+            <div class="input-row"><input id="target" type="number" inputmode="decimal" min="0" step="any"><span class="unit">mJ/cm²</span></div>
+            <div class="field-hint" id="target-hint"></div>
+          </div>
+          <div class="field">
+            <label for="uvt">Water UV transmittance</label>
+            <div class="input-row"><input id="uvt" type="number" inputmode="decimal" min="0" max="100" step="any"><span class="unit">% UVT</span></div>
+            <div class="field-hint">At 254 nm over 1 cm. Clear water 90–98%; RAS water is often lower. Measure it if you can.</div>
+          </div>
+        </div>
+
+        <div class="field">
+          <span class="label" id="spec-label">How do you know the UV unit's output?</span>
+          <div class="segmented" role="group" aria-labelledby="spec-label" id="spec-group">
+            <button type="button" data-spec="rated" aria-pressed="true">Rated dose at a flow</button>
+            <button type="button" data-spec="lamp" aria-pressed="false">Lamp UV-C watts</button>
+          </div>
+        </div>
+
+        <div class="two-col">
+          <div class="field" data-spec-for="rated">
+            <label for="rdose">Rated dose</label>
+            <div class="input-row"><input id="rdose" type="number" inputmode="decimal" min="0" step="any"><span class="unit">mJ/cm²</span></div>
+          </div>
+          <div class="field" data-spec-for="rated">
+            <label for="rflow">at rated flow</label>
+            <div class="input-row"><input id="rflow" type="number" inputmode="decimal" min="0" step="any"><select class="unit-select" data-unit-group="flow" data-unit-for="rflow" data-unit-default="Lph" aria-label="Rated flow unit"></select></div>
+          </div>
+          <div class="field" data-spec-for="rated">
+            <label for="ruvt">Rating's UVT</label>
+            <div class="input-row"><input id="ruvt" type="number" inputmode="decimal" min="0" max="100" step="any"><span class="unit">% UVT</span></div>
+            <div class="field-hint">From the spec sheet. If none is given, 95% is a cautious guess.</div>
+          </div>
+          <div class="field" data-spec-for="lamp">
+            <label for="lampw">Lamp UV-C output (254 nm)</label>
+            <div class="input-row"><input id="lampw" type="number" inputmode="decimal" min="0" step="any"><select class="unit-select" data-unit-group="power" data-unit-for="lampw" data-unit-default="W" aria-label="UV-C output unit"></select></div>
+            <div class="field-hint">UV-C watts from the lamp datasheet, not the electrical watts.</div>
+          </div>
+          <div class="field">
+            <label for="gap">Water gap, sleeve to wall</label>
+            <div class="input-row"><input id="gap" type="number" inputmode="decimal" min="0" step="any"><select class="unit-select" data-unit-group="length" data-unit-for="gap" data-unit-default="cm" aria-label="Water gap unit"></select></div>
+            <div class="field-hint">(Housing inside diameter − sleeve diameter) ÷ 2.</div>
+          </div>
+          <div class="field">
+            <label for="eol">Lamp output at end of life</label>
+            <div class="input-row"><input id="eol" type="number" inputmode="decimal" min="0" max="100" step="any"><span class="unit">% of new</span></div>
+            <div class="field-hint">Low-pressure lamps typically keep 75–80% (manufacturer figure).</div>
+          </div>
+        </div>
+
+        <hr class="divider">
+
+        <div class="notice" id="notice" hidden></div>
+
+        <div class="out-row">
+          <label for="outflow">Show flow in</label>
+          <select class="unit-select" id="outflow" data-unit-group="flow" data-unit-default="Lph" aria-label="Output flow unit"></select>
+        </div>
+
+        <div class="result-main" aria-live="polite">
+          <div class="label">Delivered UV dose (new lamp)</div>
+          <div class="value" id="r-dose">–</div>
+          <div class="sub" id="r-dose-sub"></div>
+        </div>
+
+        <ul class="result-list">
+          <li><span>Meets target?</span><span class="v" id="r-meets">–</span></li>
+          <li><span>Flow through UV</span><span class="v" id="r-flow">–</span></li>
+          <li><span>Dose at end of lamp life</span><span class="v" id="r-eol">–</span></li>
+          <li><span>Max flow for target (end of life)</span><span class="v" id="r-qmax">–</span></li>
+          <li><span>UVT effect on dose</span><span class="v" id="r-uvtf">–</span></li>
+          <li><span id="r-size-label">Recommended unit size</span><span class="v" id="r-size">–</span></li>
+          <li><span id="r-size2-label">Units of this size needed</span><span class="v" id="r-size2">–</span></li>
+        </ul>
+
+        <div class="share-bar">
+          <button class="btn btn-primary" type="button" id="btn-share">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="m8.6 13.5 6.8 4M15.4 6.5l-6.8 4"/></svg>
+            Share
+          </button>
+          <button class="btn" type="button" id="btn-link">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.5.5l3-3a5 5 0 0 0-7-7l-1.7 1.7"/><path d="M14 11a5 5 0 0 0-7.5-.5l-3 3a5 5 0 0 0 7 7l1.7-1.7"/></svg>
+            Copy link
+          </button>
+          <button class="btn" type="button" id="btn-copy">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h10a1 1 0 0 1 1 1v1"/></svg>
+            Copy results
+          </button>
+          <button class="btn" type="button" id="btn-reset">Reset</button>
+        </div>
+      </section>
+
+      <!-- Visualization -->
+      <section class="card viz-card" aria-labelledby="viz-heading">
+        <h2 id="viz-heading">Visualization</h2>
+        <svg class="viz" id="viz" viewBox="0 0 480 380" role="img" aria-label="Water flowing past a UV lamp, and a bar chart comparing the delivered dose with the dose each organism needs"></svg>
+        <p class="viz-caption" id="viz-caption"></p>
+      </section>
+    </div>
+
+    <article class="article">
+      <h2>How the UV sizing calculator works</h2>
+      <p>A UV sterilizer is a tube with a germicidal lamp inside a quartz sleeve. Water flows through the gap between the sleeve and the outer wall. UV-C light at 254 nm damages the DNA or RNA of bacteria, viruses and parasites in that water so they can no longer multiply. What matters is the <strong>dose</strong> (also called fluence): how much UV energy reaches each square centimeter, in millijoules per cm² (mJ/cm²). The dose depends on three things:</p>
+      <ul>
+        <li><strong>How bright the light is</strong> (fluence rate, mW/cm²), which falls as the lamp ages and as the water absorbs UV.</li>
+        <li><strong>How long the water stays in the light</strong> (contact time). Doubling the flow halves the time, so it halves the dose.</li>
+        <li><strong>How clear the water is to UV</strong> (UV transmittance, UVT). Dissolved organic matter, tannins and fine particles absorb UV before it reaches the far side of the gap.</li>
+      </ul>
+      <p>The calculator finds the flow through the unit, scales the dose to your flow and your water's UVT, reduces it for an aged lamp, and compares the result with the dose your target organism needs.</p>
+
+      <h3>Why it matters for aquaponics, aquaculture and hydroponics</h3>
+      <p>In recirculating systems the same water passes every tank again and again, so a pathogen released by one fish can reach all of them. UV on the return line reduces the number of free-floating bacteria, viruses and parasite stages, which limits spread between tanks (Summerfelt, 2003). Hydroponic growers use UV on recirculated nutrient solution for the same reason. UV adds no chemicals to the water and leaves no residual, so it does not harm fish, plants or the nitrifying bacteria living on biofilter surfaces. It only treats water that passes the lamp, though. It does not cure fish that are already sick, and it does not reach organisms on surfaces or in biofilm.</p>
+
+      <h3>Formulas</h3>
+      <p><strong>Flow through the unit.</strong> If you enter the system volume V and the number of passes per hour N:</p>
+      <div class="formula">Q = V × N</div>
+
+      <p><strong>Dose.</strong> Dose is fluence rate times exposure time. In a reactor of water volume V<sub>r</sub>, the exposure time is V<sub>r</sub> ÷ Q, so at a fixed lamp output the dose is inversely proportional to flow:</p>
+      <div class="formula">Dose = E<sub>avg</sub> × t = E<sub>avg</sub> × V<sub>r</sub> / Q   ⇒   Dose ∝ 1 / Q</div>
+
+      <p><strong>UV transmittance.</strong> UVT is the percentage of 254 nm light that passes through 1 cm of water. Its absorbance per cm is a = −log<sub>10</sub>(UVT/100). Across a water layer of thickness g (the gap from sleeve to wall), the average intensity relative to the intensity at the sleeve is the <em>water factor</em> used in standard UV dose methods (Bolton &amp; Linden, 2003):</p>
+      <div class="formula">a  = −log<sub>10</sub>(UVT / 100)          [per cm]
+WF = (1 − 10<sup>−a·g</sup>) / (a · g · ln 10)    [g in cm]</div>
+
+      <p><strong>Method A: manufacturer rating.</strong> Spec sheets give a dose D<sub>r</sub> at a rated flow Q<sub>r</sub>, measured at a stated UVT<sub>r</sub>. Scale it to your flow and your water:</p>
+      <div class="formula">Dose = D<sub>r</sub> × (Q<sub>r</sub> / Q) × WF(UVT) / WF(UVT<sub>r</sub>)</div>
+
+      <p><strong>Method B: lamp UV-C watts (approximate).</strong> If all the lamp's UV-C power P enters the water and travels straight out across the gap, energy balance gives the volume-average fluence rate times the reactor volume as P × g × WF. Dividing by the flow gives the average dose. The reactor volume cancels, so you only need the gap:</p>
+      <div class="formula">E<sub>avg</sub> × V<sub>r</sub> = P × g × WF
+Dose = P × g × WF / Q        (W·cm ÷ cm³/s = J/cm²; ×1000 for mJ/cm²)</div>
+      <p>This is a rough, average-dose estimate. It ignores reflection from the housing wall (which adds dose), light lost in the quartz sleeve and parts of the flow that rush past the lamp (which remove dose). Real reactors are validated by testing with organisms. Use Method A when a rating exists.</p>
+
+      <p><strong>Lamp aging, maximum flow and sizing.</strong> With f<sub>EOL</sub> the lamp output at end of life:</p>
+      <div class="formula">Dose<sub>EOL</sub> = Dose × f<sub>EOL</sub>
+Q<sub>max</sub>    = Q × Dose<sub>EOL</sub> / Dose<sub>target</sub>
+Units needed = ⌈ Q / Q<sub>max</sub> ⌉
+Method B: UV-C watts needed = Dose<sub>target</sub> × Q / (g × WF × f<sub>EOL</sub>)</div>
+      <p>The calculator judges "meets target" at end of lamp life. That way the system still works just before the lamp is changed.</p>
+
+      <h3>Doses needed by common targets</h3>
+      <p>"3-log" means 99.9% of the organisms are inactivated, and "4-log" means 99.99%. Results vary between studies, strains and water types. Treat these figures as guide values, not guarantees.</p>
+      <div class="table-wrap">
+      <table>
+        <thead><tr><th>Target</th><th>Dose (mJ/cm²)</th><th>Basis</th></tr></thead>
+        <tbody>
+          <tr><td>Infectious salmon anaemia virus (ISAV)</td><td>7.7</td><td>3-log in seawater [4]</td></tr>
+          <tr><td>Cryptosporidium / Giardia (drinking-water reference)</td><td>12 / 11</td><td>3-log, US EPA regulatory table [3]</td></tr>
+          <tr><td>Bacterial fish pathogens (general design)</td><td>30</td><td>Widely recommended design dose [5, 6]; a rule of thumb</td></tr>
+          <tr><td>Ich (<em>Ichthyophthirius multifiliis</em>) free-swimming stages</td><td>≈ 92 (100 used)</td><td>Dose that stopped Ich spreading between tanks [7]; rounded up as a rule of thumb</td></tr>
+          <tr><td>Atlantic halibut nodavirus (AHNV)</td><td>105</td><td>3-log [4]</td></tr>
+          <tr><td>Viruses, 4-log (adenovirus basis)</td><td>186</td><td>US EPA regulatory table [3]</td></tr>
+          <tr><td>Infectious pancreatic necrosis virus (IPNV)</td><td>246</td><td>3-log in seawater [4]</td></tr>
+        </tbody>
+      </table>
+      </div>
+      <p>Bacteria and protozoan cysts are generally sensitive to UV, and viruses such as adenovirus are the most resistant (Hijnen et al., 2006). Fish pathogens follow the same pattern. Common bacterial pathogens such as <em>Aeromonas</em>, <em>Vibrio</em> and <em>Yersinia</em> need only a few mJ/cm² in lab tests. However, some <em>Flavobacterium</em> isolates needed much more (up to about 126 mJ/cm² for one <em>F. psychrophilum</em> isolate; Knupp et al., 2023). That is why 30 mJ/cm² is a design minimum for bacteria, not a ceiling.</p>
+
+      <h3>Example</h3>
+      <p>A 5,000 L system with water passed through the UV once per hour gives Q = 5,000 L/h. The unit is rated 30 mJ/cm² at 8,000 L/h at 95% UVT, the water gap is 2 cm and the system water has 80% UVT.</p>
+      <ul>
+        <li>Rating water: a = −log<sub>10</sub>(0.95) = 0.0223 /cm, WF = 0.950. Your water: a = −log<sub>10</sub>(0.80) = 0.0969 /cm, WF = 0.807. The UVT ratio is 0.807 ÷ 0.950 = <strong>0.849</strong>.</li>
+        <li>Dose (new lamp) = 30 × (8,000 ÷ 5,000) × 0.849 = <strong>40.7 mJ/cm²</strong>.</li>
+        <li>At end of life (80%): 40.7 × 0.80 = <strong>32.6 mJ/cm²</strong>. That is above the 30 mJ/cm² bacterial design dose, so it <strong>meets the target</strong>.</li>
+        <li>Max flow for 30 mJ/cm² at end of life = 5,000 × 32.6 ÷ 30 ≈ <strong>5,430 L/h</strong>.</li>
+      </ul>
+      <p>The same unit would deliver only about a third of the 100 mJ/cm² rule-of-thumb dose for Ich. Controlling Ich would need about four of these units in parallel, or a much bigger one.</p>
+
+      <h3>Things that reduce real-world dose</h3>
+      <ul>
+        <li><strong>Particles and color.</strong> Suspended solids shade organisms and absorb UV. Put the UV after mechanical filtration (drum, bead or sand filter, foam fractionator). Ozone upstream often improves UVT. Clean water also keeps the sleeve clean.</li>
+        <li><strong>Lamp aging.</strong> Low-pressure lamp output falls with use. One lamp maker quotes about 20–25% loss by end of life, which leaves 75–80% (Ushio). Lamps are usually replaced on a schedule (often about once a year) even though they still glow. Visible light says nothing about UV-C output.</li>
+        <li><strong>Sleeve fouling.</strong> Scale and biofilm on the quartz sleeve cut UV output. Clean it regularly. Regulatory designs apply separate fouling and aging factors (US EPA, 2006).</li>
+        <li><strong>Temperature.</strong> Low-pressure lamps put out less UV-C in cold air or water. Rate the lamp near your operating temperature.</li>
+        <li><strong>Rating conventions differ.</strong> Some makers rate at end of lamp life, some with a new lamp, and some at very clear water (UVT 95–98%). Check the spec sheet and adjust the inputs to match.</li>
+        <li><strong>Hydroponics: iron chelates.</strong> UV breaks down some iron chelates in nutrient solution, so check iron levels after adding UV. Fe-EDTA and Fe-DTPA are less stable than Fe-EDDHA (Albano &amp; Miller, 2001).</li>
+      </ul>
+
+      <h2>Sources</h2>
+      <ol class="sources">
+        <li>Summerfelt, S. T. (2003). Ozonation and UV irradiation—an introduction and examples of current applications. <em>Aquacultural Engineering</em>, 28(1–2), 21–36. doi:10.1016/S0144-8609(02)00069-9</li>
+        <li>Hijnen, W. A. M., Beerendonk, E. F. &amp; Medema, G. J. (2006). Inactivation credit of UV radiation for viruses, bacteria and protozoan (oo)cysts in water: A review. <em>Water Research</em>, 40(1), 3–22.</li>
+        <li>U.S. Code of Federal Regulations, 40 CFR 141.720(d), Table: UV dose table for Cryptosporidium, Giardia lamblia, and virus inactivation credit. <a href="https://www.law.cornell.edu/cfr/text/40/141.720" rel="noopener" target="_blank">law.cornell.edu</a></li>
+        <li>Liltved, H., Vogelsang, C., Modahl, I. &amp; Dannevig, B. H. (2006). High resistance of fish pathogenic viruses to UV irradiation and ozonated seawater. <em>Aquacultural Engineering</em>, 34(2), 72–82.</li>
+        <li>Knupp, C. K., et al. (2023). Ultraviolet light differentially reduces viability of fish- and fish farm-associated flavobacteria (families Flavobacteriaceae and Weeksellaceae). <em>North American Journal of Aquaculture</em>, 85(4), 311–. doi:10.1002/naaq.10300</li>
+        <li>Sharrer, M. J., Summerfelt, S. T., Bullock, G. L., Gleason, L. E. &amp; Taeuber, J. (2005). Inactivation of bacteria using ultraviolet irradiation in a recirculating salmonid culture system. <em>Aquacultural Engineering</em>, 33(2), 135–149. doi:10.1016/j.aquaeng.2004.12.001</li>
+        <li>Gratzek, J. B., et al. (1983). Ultraviolet light control of <em>Ichthyophthirius multifiliis</em> Fouquet in a closed fish culture recirculation system. <em>Journal of Fish Diseases</em>, 6(2), 145–153. doi:10.1111/j.1365-2761.1983.tb00062.x</li>
+        <li>Bolton, J. R. &amp; Linden, K. G. (2003). Standardization of methods for fluence (UV dose) determination in bench-scale UV experiments. <em>Journal of Environmental Engineering</em>, 129(3), 209–215.</li>
+        <li>U.S. Environmental Protection Agency (2006). <em>Ultraviolet Disinfection Guidance Manual for the Final Long Term 2 Enhanced Surface Water Treatment Rule</em>. EPA 815-R-06-007. <a href="https://www.epa.gov/system/files/documents/2022-10/ultraviolet-disinfection-guidance-manual-2006.pdf" rel="noopener" target="_blank">epa.gov</a></li>
+        <li>Ushio. Aquaculture ultraviolet low-pressure mercury arc lamps, product information (end-of-life output depreciation). <a href="https://www.ushio.com/product/aquaculture-ultraviolet-low-pressure-mercury-arc/" rel="noopener" target="_blank">ushio.com</a></li>
+        <li>Albano, J. P. &amp; Miller, W. B. (2001). Photodegradation of FeDTPA in nutrient solutions. I. Effects of irradiance, wavelength, and temperature. <em>HortScience</em>, 36(2), 313–316.</li>
+      </ol>
+    </article>
+  </main>
+
+  <footer class="site-footer">
+    <div class="wrap">Calculations are estimates. Check the sources above before relying on a result.</div>
+  </footer>
+
+  <script src="../assets/share.js"></script>
+  <script src="../assets/units.js"></script>
+  <script src="../assets/uv-sterilizer-sizing.js"></script>
+</body>
+</html>

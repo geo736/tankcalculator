@@ -149,7 +149,7 @@
     if (vout.value === 'mps') $('r-vin').textContent = r.okJet ? fmtV(r.vin) : '–';
 
     const bs = r.okJet ? blStatus(r) : null;
-    $('r-bl').innerHTML = bs ? fmt(r.blLow, 2) + '–' + fmt(r.blHigh, 2) + ' BL/s ' + pill(bs) : (r.okJet ? 'enter fish length' : '–');
+    $('r-bl').innerHTML = bs ? r.blLow.toFixed(2) + '–' + r.blHigh.toFixed(2) + ' BL/s ' + pill(bs) : (r.okJet ? 'enter fish length' : '–');
 
     const cs = r.okJet ? cleanStatus(r) : null;
     $('r-clean').innerHTML = cs ? pill(cs) : '–';
@@ -173,7 +173,7 @@
     }
 
     $('viz-caption').textContent = r.okJet
-      ? 'Jets ' + fmtV(r.vin) + ' → tank ≈ ' + fmtVRange(r.vLow, r.vHigh) + (isFinite(r.blLow) ? ' · ' + fmt(r.blLow, 2) + '–' + fmt(r.blHigh, 2) + ' BL/s' : '')
+      ? 'Jets ' + fmtV(r.vin) + ' → tank ≈ ' + fmtVRange(r.vLow, r.vHigh) + (isFinite(r.blLow) ? ' · ' + r.blLow.toFixed(2) + '–' + r.blHigh.toFixed(2) + ' BL/s' : '')
       : 'Enter flow and port size to draw the jets';
 
     drawViz(r);
@@ -202,13 +202,15 @@
   }
 
   // Fish outline, nose at (x, y) pointing right, total length len px.
-  function fish(x, y, len, cls) {
+  function fish(x, y, len) { fishIn(svg, x, y, len); }
+
+  function fishIn(parent, x, y, len) {
     const b = len * 0.78, h = len * 0.17, t = len * 0.22;
     const bx = x - b;
-    el('path', { class: cls || 'fish', d:
+    el('path', { class: 'fish', d:
       'M' + p(x, y) + ' Q' + p(x - b * 0.45, y - h * 2) + ' ' + p(bx, y) +
       ' L' + p(bx - t, y - h * 1.1) + ' L' + p(bx - t, y + h * 1.1) + ' L' + p(bx, y) +
-      ' Q' + p(x - b * 0.45, y + h * 2) + ' ' + p(x, y) + 'Z' });
+      ' Q' + p(x - b * 0.45, y + h * 2) + ' ' + p(x, y) + 'Z' }, undefined, parent);
   }
 
   function drawViz(r) {
@@ -216,7 +218,7 @@
     const cx = 128, cy = 166, R = 108;
 
     // ----- Tank (top view) -----
-    el('circle', { cx: cx, cy: cy, r: R, class: 'water', 'fill-opacity': 0.2 });
+    el('circle', { cx: cx, cy: cy, r: R, class: 'tank-water' });
     el('circle', { cx: cx, cy: cy, r: R, class: 'tank-line' });
     el('path', { class: 'dim', d: 'M' + p(cx - R, cy - R - 12) + ' L' + p(cx + R, cy - R - 12) +
       ' M' + p(cx - R, cy - R - 17) + ' L' + p(cx - R, cy - R - 7) + ' M' + p(cx + R, cy - R - 17) + ' L' + p(cx + R, cy - R - 7) });
@@ -281,36 +283,44 @@
     } else label(X0, 60, '–', 'start');
 
     // tank velocity gauge with self-cleaning band
-    label(X0, 102, 'Tank velocity (estimate)', 'start', 'title-text');
+    label(X0, 100, 'Tank velocity (estimate)', 'start', 'title-text');
     const vMax = Math.max(0.6, r.okJet ? r.vHigh * 1.15 : 0);
     const gx = function (v) { return X0 + Math.min(1, v / vMax) * W; };
-    el('rect', { class: 'track', x: X0, y: 112, width: W, height: 16, rx: 4 });
-    el('rect', { class: 'band', x: gx(CLEAN_LOW), y: 112, width: gx(CLEAN_HIGH) - gx(CLEAN_LOW), height: 16 });
+    el('rect', { class: 'track', x: X0, y: 110, width: W, height: 16, rx: 4 });
+    el('rect', { class: 'band', x: gx(CLEAN_LOW), y: 110, width: gx(CLEAN_HIGH) - gx(CLEAN_LOW), height: 16 });
     if (r.okJet) {
-      el('rect', { class: 'range', x: gx(r.vLow), y: 115, width: Math.max(2, gx(r.vHigh) - gx(r.vLow)), height: 10, rx: 3 });
+      el('rect', { class: 'range', x: gx(r.vLow), y: 113, width: Math.max(2, gx(r.vHigh) - gx(r.vLow)), height: 10, rx: 3 });
     }
-    label(X0, 142, '0', 'start');
-    label(X0 + W, 142, fmt(vNum(vMax), vNum(vMax) >= 10 ? 0 : 2), 'end');
-    label((gx(CLEAN_LOW) + gx(CLEAN_HIGH)) / 2, 142, 'self-clean 15–30 cm/s', 'middle', 'band-text');
-    label(X0, 160, r.okJet ? fmtVRange(r.vLow, r.vHigh) : '–', 'start');
+    label(X0, 140, '0', 'start');
+    label(X0 + W, 140, fmt(vNum(vMax), vNum(vMax) >= 10 ? 0 : 2) + ' ' + vUnit(), 'end');
+    el('rect', { class: 'band', x: X0, y: 149, width: 12, height: 10 });
+    label(X0 + 17, 158, 'self-cleaning > 15–30 cm/s', 'start');
+    el('rect', { class: 'range', x: X0, y: 167, width: 12, height: 10, rx: 2 });
+    label(X0 + 17, 176, r.okJet ? 'estimate ' + fmtVRange(r.vLow, r.vHigh) : 'estimate –', 'start');
 
     // fish-length scale: distance water moves in 1 s vs fish lengths
-    label(X0, 196, 'Water travel in 1 s vs fish', 'start', 'title-text');
+    label(X0, 206, 'Water travel in 1 s vs fish', 'start', 'title-text');
     if (r.okJet && r.L > 0) {
-      const scale = (W - 4) / Math.max(r.vHigh, r.L * 2.2);   // px per m
-      const travel = r.vMid * scale;
-      el('rect', { class: 'track', x: X0, y: 206, width: W, height: 12, rx: 3 });
-      el('rect', { class: 'range', x: X0, y: 208, width: Math.max(2, travel), height: 8, rx: 2 });
+      const scale = (W - 4) / Math.max(r.vHigh, r.L * 1.2);   // px per m
+      const travel = Math.max(2, r.vMid * scale);
+      el('rect', { class: 'track', x: X0, y: 216, width: W, height: 12, rx: 3 });
+      el('rect', { class: 'range', x: X0, y: 218, width: travel, height: 8, rx: 2 });
       const fl = r.L * scale;
       if (fl >= 6) {
-        const nFish = Math.min(Math.ceil(r.blMid), Math.floor(W / fl));
-        for (let i = 0; i < nFish; i++) fish(X0 + fl * (i + 1), 236, fl * 0.96);
+        // fish laid nose to tail, clipped at the 1-second travel distance
+        const defs = el('defs', {});
+        const clip = el('clipPath', { id: 'travel-clip' }, undefined, defs);
+        el('rect', { x: X0 - 1, y: 228, width: travel + 1, height: 40 }, undefined, clip);
+        const g = el('g', { 'clip-path': 'url(#travel-clip)' });
+        const nFish = Math.min(Math.ceil(r.blMid), 60);
+        for (let i = 0; i < nFish; i++) fishIn(g, X0 + fl * (i + 1), 246, fl * 0.96);
+        el('path', { class: 'dim', d: 'M' + p(X0 + travel, 214) + ' L' + p(X0 + travel, 264) });
       }
-      label(X0, 268, fmt(vNum(r.vMid)) + ' ' + vUnit() + ' ≈ ' + fmt(r.blMid, 2) + ' fish lengths', 'start');
+      label(X0, 282, fmtV(r.vMid) + ' ≈ ' + r.blMid.toFixed(2) + ' fish lengths/s', 'start');
       const bs = blStatus(r);
-      label(X0, 286, 'guide 0.5–2 BL/s: ' + (bs ? bs.text.replace(/^in /, 'within ') : ''), 'start');
+      label(X0, 300, (bs.ok ? 'within' : r.blHigh < BL_LOW ? 'slower than' : r.blLow > BL_HIGH ? 'faster than' : 'partly outside') + ' the 0.5–2 BL/s guide', 'start');
     } else {
-      label(X0, 222, r.okJet ? 'Enter fish length' : '–', 'start');
+      label(X0, 232, r.okJet ? 'Enter fish length' : '–', 'start');
     }
   }
 
@@ -325,7 +335,7 @@
     if (r.okJet) {
       lines.push('Inlet jet velocity: ' + fmtV(r.vin));
       lines.push('Estimated mean tank velocity (15–20% of jet, rule of thumb): ' + fmtVRange(r.vLow, r.vHigh));
-      if (isFinite(r.blLow)) lines.push('Fish swimming speed: ' + fmt(r.blLow, 2) + '–' + fmt(r.blHigh, 2) + ' BL/s (guide 0.5–2)');
+      if (isFinite(r.blLow)) lines.push('Fish swimming speed: ' + r.blLow.toFixed(2) + '–' + r.blHigh.toFixed(2) + ' BL/s (guide 0.5–2)');
       lines.push('Self-cleaning (> 15–30 cm/s): ' + cleanStatus(r).text);
       lines.push('Jet velocity head (minimum): ' + inUnitOf('depth', r.head));
     }

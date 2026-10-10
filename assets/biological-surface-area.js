@@ -293,7 +293,7 @@
     let fill, mediaTopY;
     if (r.vesselL > 0) {
       fill = Math.min(r.fill, 1);
-      label(vx + vw / 2, 39, typed('vessel'), 'middle');
+      label(vx + vw / 2, 39, typed('vessel') + ' · ' + fmt(r.fill * 100, 0) + '% media', 'middle');
     } else {
       fill = 0;
       label(vx + vw / 2, 39, 'enter vessel volume', 'middle');
@@ -332,14 +332,14 @@
       }
       // fill marker
       el('line', { x1: vx + vw + 4, y1: mediaTopY, x2: vx + vw + 4, y2: vBot, class: 'depth-line' });
-      label(vx + vw / 2, Math.max(mediaTopY - 6, waterY + 22), fmt(r.fill * 100, 0) + '% media', 'middle', 'depth-text');
+      if (fill <= 0.85) label(vx + vw / 2, mediaTopY - 6, fmt(r.fill * 100, 0) + '% media', 'middle', 'depth-text');
     }
 
     // max fill line for moving bed
     if (r.moving && r.vesselL > 0) {
       const my = vBot - (vBot - waterY) * MOVING_MAX;
       el('line', { x1: vx - 4, y1: my, x2: vx + vw + 4, y2: my, class: 'max-line' });
-      label(vx + vw + 8, my + 4, 'max 70%', 'start', 'max-text');
+      label(vx + vw - 4, my - 5, 'max 70%', 'end', 'max-text');
     }
 
     el('path', { class: 'tank-line', d: 'M' + vx + ',' + vTop + ' L' + vx + ',' + vBot + ' L' + (vx + vw) + ',' + vBot + ' L' + (vx + vw) + ',' + vTop });

@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Head Loss &amp; Total Dynamic Head Calculator</title>
+  <meta name="description" content="Calculate pipe friction loss, fitting losses and total dynamic head (TDH) for pump sizing in aquaponics, aquaculture and hydroponics, using Darcy-Weisbach or Hazen-Williams.">
+  <link rel="stylesheet" href="../assets/style.css">
+  <style>
+    #method-group { grid-template-columns: repeat(2, 1fr); }
+    #method-group button { padding: 10px 6px; font-size: .85rem; }
+    .fit-grid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 8px 12px; }
+    .fit-grid .field { margin-bottom: 0; }
+    .fit-grid label { font-weight: 500 !important; font-size: .85rem !important; }
+    .out-units { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 12px; }
+    .notice div + div { margin-top: 6px; }
+    .result-main .sub { font-size: 1rem; color: var(--text-muted); font-weight: 600; font-variant-numeric: tabular-nums; }
+    .viz .hl-pipe { fill: none; stroke: var(--tank-stroke); stroke-width: 8; stroke-linejoin: round; }
+    .viz .hl-pipe-water { fill: none; stroke: var(--water); stroke-width: 4; stroke-linejoin: round; }
+    .viz .hl-arrow { fill: none; stroke: var(--surface); stroke-width: 1.6; }
+    .viz .hl-pump { fill: var(--surface); stroke: var(--tank-stroke); stroke-width: 2; }
+    .viz .hl-pump-mark { fill: var(--accent); }
+    .viz .hl-valve { fill: var(--surface); stroke: var(--tank-stroke); stroke-width: 1.5; stroke-linejoin: round; }
+    .viz .hl-valve-dot { fill: var(--tank-stroke); }
+    .viz .hl-seg-static { fill: var(--c-aquaculture); }
+    .viz .hl-seg-fric { fill: var(--accent); }
+    .viz .hl-seg-fit { fill: var(--c-hydroponics); }
+    .viz .hl-bar-outline { fill: none; stroke: var(--tank-stroke); stroke-width: 1.5; }
+    .viz .hl-total { fill: var(--text); font-size: 13px; font-weight: 700; font-family: var(--font); }
+  </style>
+</head>
+<body>
+  <header class="site-header">
+    <div class="wrap">
+      <a class="brand" href="../">
+        <span class="brand-mark" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3c3 4 6 7 6 11a6 6 0 0 1-12 0c0-4 3-7 6-11z"/></svg>
+        </span>
+        Tank Calculator
+      </a>
+      <nav><a href="../">All calculators</a></nav>
+    </div>
+  </header>
+
+  <main class="wrap">
+    <div class="crumbs"><a href="../">Home</a> / Head Loss &amp; TDH</div>
+    <h1 class="page-title">Head Loss &amp; Total Dynamic Head Calculator</h1>
+    <p class="page-lede">Work out how much head a pump has to supply to push water through your pipes, elbows and valves and lift it to a grow bed, filter or tank. Use the total dynamic head (TDH) to read a pump curve.</p>
+
+    <div class="calc-layout">
+      <!-- Calculator -->
+      <section class="card" aria-labelledby="calc-heading">
+        <h2 id="calc-heading">Calculator</h2>
+
+        <div class="field">
+          <span class="label" id="method-label">Friction method</span>
+          <div class="segmented" role="group" aria-labelledby="method-label" id="method-group">
+            <button type="button" data-method="dw" aria-pressed="true">Darcy-Weisbach</button>
+            <button type="button" data-method="hw" aria-pressed="false">Hazen-Williams</button>
+          </div>
+        </div>
+
+        <div class="field">
+          <label for="flow">Flow rate</label>
+          <div class="input-row"><input id="flow" type="number" inputmode="decimal" min="0" step="any"><select class="unit-select" data-unit-group="flow" data-unit-for="flow" data-unit-default="gpm" aria-label="Flow rate unit"></select></div>
+        </div>
+
+        <div class="field">
+          <label for="pipe">Pipe size</label>
+          <select id="pipe"></select>
+          <div class="field-hint">Schedule 40 PVC inside diameters from ASTM D1785 (outside diameter − 2 × minimum wall). Pick “Custom” or type an inside diameter for other pipe.</div>
+        </div>
+
+        <div class="two-col">
+          <div class="field">
+            <label for="diam">Inside diameter</label>
+            <div class="input-row"><input id="diam" type="number" inputmode="decimal" min="0" step="any"><select class="unit-select" data-unit-group="length" data-unit-for="diam" data-unit-default="in" aria-label="Inside diameter unit"></select></div>
+          </div>
+          <div class="field">
+            <label for="len">Pipe length</label>
+            <div class="input-row"><input id="len" type="number" inputmode="decimal" min="0" step="any"><select class="unit-select" data-unit-group="length" data-unit-for="len" data-unit-default="ft" aria-label="Pipe length unit"></select></div>
+          </div>
+          <div class="field">
+            <label for="lift">Static lift</label>
+            <div class="input-row"><input id="lift" type="number" inputmode="decimal" min="0" step="any"><select class="unit-select" data-unit-group="length" data-unit-for="lift" data-unit-default="ft" aria-label="Static lift unit"></select></div>
+            <div class="field-hint">Height from the sump water surface to the discharge point.</div>
+          </div>
+          <div class="field">
+            <label for="temp">Water temperature</label>
+            <div class="input-row"><input id="temp" type="number" inputmode="decimal" step="any"><select class="unit-select" data-unit-group="temperature" data-unit-for="temp" data-unit-default="F" aria-label="Water temperature unit"></select></div>
+            <div class="field-hint">Sets water viscosity and density.</div>
+          </div>
+        </div>
+
+        <div class="field">
+          <label for="mat">Pipe material</label>
+          <select id="mat"></select>
+        </div>
+
+        <div class="field" id="field-eps">
+          <label for="eps">Absolute roughness ε</label>
+          <div class="input-row"><input id="eps" type="number" inputmode="decimal" min="0" step="any"><select class="unit-select" data-unit-group="length" data-unit-for="eps" data-unit-default="mm" aria-label="Roughness unit"></select></div>
+          <div class="field-hint">Used by Darcy-Weisbach. Clean new pipe; old or scaled pipe is rougher.</div>
+        </div>
+        <div class="field" id="field-c" hidden>
+          <label for="C">Hazen-Williams C</label>
+          <div class="input-row"><input id="C" type="number" inputmode="decimal" min="0" step="any"><span class="unit">C</span></div>
+          <div class="field-hint">Higher C = smoother pipe. Typical design values; see the table below.</div>
+        </div>
+
+        <span class="label" style="display:block;font-size:.9rem;font-weight:600;margin:4px 0 8px">Fittings (number of each)</span>
+        <div class="fit-grid">
+          <div class="field"><label for="n90">90° elbows</label><div class="input-row"><input id="n90" type="number" inputmode="numeric" min="0" step="1"></div></div>
+          <div class="field"><label for="n45">45° elbows</label><div class="input-row"><input id="n45" type="number" inputmode="numeric" min="0" step="1"></div></div>
+          <div class="field"><label for="nteer">Tee, through run</label><div class="input-row"><input id="nteer" type="number" inputmode="numeric" min="0" step="1"></div></div>
+          <div class="field"><label for="nteeb">Tee, through branch</label><div class="input-row"><input id="nteeb" type="number" inputmode="numeric" min="0" step="1"></div></div>
+          <div class="field"><label for="nball">Ball valves (open)</label><div class="input-row"><input id="nball" type="number" inputmode="numeric" min="0" step="1"></div></div>
+          <div class="field"><label for="ncheck">Swing check valves</label><div class="input-row"><input id="ncheck" type="number" inputmode="numeric" min="0" step="1"></div></div>
+          <div class="field"><label for="nent">Pipe entrances</label><div class="input-row"><input id="nent" type="number" inputmode="numeric" min="0" step="1"></div></div>
+          <div class="field"><label for="nexit">Pipe exits</label><div class="input-row"><input id="nexit" type="number" inputmode="numeric" min="0" step="1"></div></div>
+        </div>
+
+        <hr class="divider">
+
+        <div class="notice" id="notice" hidden></div>
+
+        <div class="out-units">
+          <div class="field">
+            <label for="out-len">Show head in</label>
+            <select id="out-len" data-unit-group="length" data-unit-default="ft"></select>
+          </div>
+          <div class="field">
+            <label for="out-p">Show pressure in</label>
+            <select id="out-p" data-unit-group="pressure" data-unit-default="psi"></select>
+          </div>
+        </div>
+
+        <div class="result-main" aria-live="polite">
+          <div class="label">Total dynamic head (TDH)</div>
+          <div class="value" id="r-tdh">–</div>
+          <div class="sub" id="r-press">–</div>
+        </div>
+
+        <ul class="result-list">
+          <li><span>Static lift</span><span class="v" id="r-static">–</span></li>
+          <li><span>Pipe friction loss</span><span class="v" id="r-fric">–</span></li>
+          <li><span>Fittings (minor) loss</span><span class="v" id="r-minor">–</span></li>
+          <li><span>Friction loss rate</span><span class="v" id="r-grad">–</span></li>
+          <li><span>Velocity</span><span class="v" id="r-vel">–</span></li>
+          <li><span>Velocity guide</span><span class="v" id="r-velband">–</span></li>
+          <li><span>Reynolds number</span><span class="v" id="r-re">–</span></li>
+          <li><span>Darcy friction factor f</span><span class="v" id="r-f">–</span></li>
+          <li><span>Hydraulic power (water)</span><span class="v" id="r-power">–</span></li>
+          <li><span>Water density · viscosity</span><span class="v" id="r-water">–</span></li>
+        </ul>
+
+        <div class="share-bar">
+          <button class="btn btn-primary" type="button" id="btn-share">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="m8.6 13.5 6.8 4M15.4 6.5l-6.8 4"/></svg>
+            Share
+          </button>
+          <button class="btn" type="button" id="btn-link">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.5.5l3-3a5 5 0 0 0-7-7l-1.7 1.7"/><path d="M14 11a5 5 0 0 0-7.5-.5l-3 3a5 5 0 0 0 7 7l1.7-1.7"/></svg>
+            Copy link
+          </button>
+          <button class="btn" type="button" id="btn-copy">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h10a1 1 0 0 1 1 1v1"/></svg>
+            Copy results
+          </button>
+          <button class="btn" type="button" id="btn-reset">Reset</button>
+        </div>
+      </section>
+
+      <!-- Visualization -->
+      <section class="card viz-card" aria-labelledby="viz-heading">
+        <h2 id="viz-heading">Visualization</h2>
+        <svg class="viz" id="viz" viewBox="0 0 480 320" role="img" aria-label="Pipe run from sump to upper tank, with a stacked bar of static lift, pipe friction and fitting losses"></svg>
+        <p class="viz-caption" id="viz-caption"></p>
+      </section>
+    </div>
+
+    <article class="article">
+      <h2>How the head loss calculator works</h2>
+      <p>A pump has to do two jobs. It lifts water from the sump up to where it is discharged (the <strong>static lift</strong>), and it overcomes the friction of the water rubbing along the pipe wall and swirling through elbows, tees and valves (the <strong>friction</strong> and <strong>minor losses</strong>). Engineers express all three as a height of water column called <em>head</em>. Added together they give the <strong>total dynamic head (TDH)</strong>, the number you look up on a pump curve together with your flow rate.</p>
+      <p>The calculator finds the water velocity from the flow and the pipe’s inside diameter, works out the pipe friction with either the Darcy-Weisbach or the Hazen-Williams equation, adds a loss coefficient K for every fitting, and adds the static lift. The visualization draws the pipe run and stacks the three parts of the TDH on the same vertical scale, so the static part of the bar lines up with the real lift.</p>
+
+      <h3>Why it matters in aquaponics, aquaculture and hydroponics</h3>
+      <p>Most recirculating systems run a pump 24 hours a day, so a pump that is too small fails to deliver the turnover the fish or plants need, and one that is too big wastes electricity for years. Pump manufacturers rate pumps by flow at a given head. A pump sold as “2,000 gph” may deliver less than half that against 10 ft of head. Knowing your TDH lets you pick the pump on its curve, and the breakdown shows where head is going: if fittings or pipe friction are a large share, a bigger pipe or fewer elbows is often cheaper than a bigger pump. Timmons &amp; Ebeling (2010) treat pump and pipe sizing this way for recirculating aquaculture systems.</p>
+
+      <h3>Velocity and Reynolds number</h3>
+      <div class="formula">A  = π D² / 4
+V  = Q / A
+Re = V D / ν          (ν = μ / ρ, kinematic viscosity)</div>
+      <p>Flow is laminar below Re ≈ 2,000, turbulent above about 4,000, and unpredictable in between. Almost all pumped water lines in fish and plant systems are turbulent. Water viscosity changes a lot with temperature (it is about twice as viscous at 0 °C as at 30 °C), so the calculator uses density and viscosity at your water temperature, interpolated from IAPWS reference values between 0 and 80 °C.</p>
+
+      <h3>Pipe friction: Darcy-Weisbach</h3>
+      <div class="formula">h<sub>f</sub> = f × (L / D) × V² / (2g)</div>
+      <p>The Darcy friction factor f depends on Re and the relative roughness ε/D. In turbulent flow it is found from the Colebrook equation, which has f on both sides and is solved by iteration:</p>
+      <div class="formula">1/√f = −2 log₁₀( (ε/D)/3.7 + 2.51 / (Re √f) )</div>
+      <p>The calculator starts the iteration from the explicit Swamee-Jain (1976) approximation and also shows that value for comparison. Swamee-Jain is stated to be within about 1% of Colebrook for 10⁻⁶ ≤ ε/D ≤ 10⁻² and 5,000 ≤ Re ≤ 10⁸:</p>
+      <div class="formula">f = 0.25 / [ log₁₀( (ε/D)/3.7 + 5.74 / Re<sup>0.9</sup> ) ]²</div>
+      <p>For laminar flow (Re &lt; 2,000) f = 64 / Re. Darcy-Weisbach works for any temperature and pipe size, so it is the default.</p>
+
+      <h3>Pipe friction: Hazen-Williams</h3>
+      <div class="formula">V = 0.849 × C × R<sub>h</sub><sup>0.63</sup> × S<sup>0.54</sup>     (SI units, R<sub>h</sub> = D/4, S = h<sub>f</sub>/L)
+h<sub>f</sub> ≈ 10.67 × L × Q<sup>1.852</sup> / (C<sup>1.852</sup> × D<sup>4.87</sup>)   (Q in m³/s, D and L in m)</div>
+      <p>Hazen-Williams is an empirical formula for water at ordinary temperatures. It is popular in irrigation and plumbing, but it ignores temperature and is usually quoted for pipes of about 2 in (50 mm) and larger and velocities below about 3 m/s (10 ft/s). The calculator uses the velocity form above; the second line is the common rearranged form and agrees within about 1%.</p>
+
+      <h3>Fittings (minor losses)</h3>
+      <div class="formula">h<sub>m</sub> = ΣK × V² / (2g)
+K  = n × f<sub>T</sub>   (Crane TP-410 method)</div>
+      <p>Crane Technical Paper 410 gives most fitting resistances as a multiple n of f<sub>T</sub>, the friction factor of clean commercial steel pipe of that size in fully turbulent flow. f<sub>T</sub> is about 0.026 for ½ in pipe, 0.020 for 1½ in and 0.016 for 4 in; the calculator interpolates Crane’s table using your inside diameter. Entrance and exit losses are fixed values found in every fluid mechanics text. The K values for the default 1½ in pipe are:</p>
+      <table>
+        <thead><tr><th>Fitting</th><th>Crane</th><th>K (1½ in)</th></tr></thead>
+        <tbody id="k-table-body"></tbody>
+      </table>
+      <p>Crane’s values are for threaded or welded steel fittings. Solvent-weld PVC fittings have similar shapes, so these are a reasonable estimate, but different manufacturers’ fittings can differ by a factor of two or more. A partly closed valve, a strainer, a UV unit or a filter adds much more loss: use the manufacturer’s pressure-drop figure and add it to the static lift.</p>
+
+      <h3>Total dynamic head, pressure and power</h3>
+      <div class="formula">TDH = static lift + h<sub>f</sub> + h<sub>m</sub>
+p   = ρ g × TDH
+P<sub>hydraulic</sub> = ρ g Q × TDH</div>
+      <p>The hydraulic power is the power delivered to the water. The pump draws more electricity than this: divide by the pump-and-motor efficiency from the manufacturer (small submersible pumps are often well below 50% efficient).</p>
+
+      <h3>Pipe materials</h3>
+      <table>
+        <thead><tr><th>Material</th><th>ε (mm)</th><th>Hazen-Williams C</th></tr></thead>
+        <tbody>
+          <tr><td>PVC / CPVC</td><td>0.0015</td><td>150</td></tr>
+          <tr><td>Polyethylene</td><td>0.0015</td><td>150</td></tr>
+          <tr><td>Copper tubing</td><td>0.0015</td><td>150</td></tr>
+          <tr><td>Commercial steel, new</td><td>0.045</td><td>120</td></tr>
+          <tr><td>Galvanized iron</td><td>0.15</td><td>120</td></tr>
+          <tr><td>Cast iron, unlined</td><td>0.26</td><td>100</td></tr>
+        </tbody>
+      </table>
+      <p>Roughness values are from Munson et al. (drawn tubing 0.0015 mm, commercial steel 0.045 mm, galvanized iron 0.15 mm, cast iron 0.26 mm); plastic pipe is hydraulically smooth and the drawn-tubing value is used for it. C values are typical design values (rule of thumb) that match the NFPA 13 sprinkler table and the PPI handbook for polyethylene. Pipe that has aged, scaled or grown biofilm, which is common in fish systems, has a lower C and a higher ε.</p>
+
+      <h3>Example</h3>
+      <p>Default inputs: 20 US gpm through 50 ft of 1½ in Schedule 40 PVC (ID 1.610 in), 5 ft static lift, water at 77 °F (25 °C), with four 90° elbows, one tee (run), one ball valve, one swing check valve, one entrance and one exit.</p>
+      <ul>
+        <li>Q = 20 gpm = 0.001262 m³/s; D = 0.04089 m; A = 0.001313 m²; V = 0.961 m/s (3.15 ft/s).</li>
+        <li>At 25 °C, ν = 0.890 × 10⁻³ / 997.05 = 0.893 mm²/s, so Re = 0.961 × 0.04089 / 0.893 × 10⁻⁶ ≈ 44,000 (turbulent).</li>
+        <li>ε/D = 0.0015 / 40.89 = 3.7 × 10⁻⁵; Colebrook gives f = 0.0216 (Swamee-Jain 0.0215).</li>
+        <li>Velocity head V²/2g = 0.0471 m. Pipe friction h<sub>f</sub> = 0.0216 × (15.24 / 0.04089) × 0.0471 = 0.379 m = <strong>1.24 ft</strong>.</li>
+        <li>f<sub>T</sub> = 0.020, so ΣK = 4 × 0.60 + 0.40 + 0.06 + 2.00 + 0.5 + 1.0 = 6.36 and h<sub>m</sub> = 6.36 × 0.0471 = 0.299 m = <strong>0.98 ft</strong>.</li>
+        <li>TDH = 5 + 1.24 + 0.98 = <strong>7.23 ft</strong> (2.20 m, 3.12 psi). Hydraulic power = 997 × 9.807 × 0.001262 × 2.20 ≈ <strong>27 W</strong> (0.036 hp).</li>
+      </ul>
+      <p>The swing check valve alone (K = 2.0) costs as much head as about 12 ft of this pipe. With Hazen-Williams (C = 150) the pipe friction comes out at 1.23 ft instead.</p>
+
+      <h3>Limitations and assumptions</h3>
+      <ul>
+        <li><strong>One pipe size.</strong> The whole run is treated as a single diameter. For a suction line and a discharge line of different sizes, or for branches, calculate each section and add the losses.</li>
+        <li><strong>Clean water.</strong> Viscosity is for fresh water. Seawater is about 8% more viscous; water with heavy solids or sludge behaves differently.</li>
+        <li><strong>Fitting values are estimates.</strong> K values vary with manufacturer, size and how the fitting is made. Short-radius and sanitary fittings, reducers and partly open valves are not included.</li>
+        <li><strong>Velocity guide is a rule of thumb.</strong> Keeping water near 0.3–1.5 m/s (1–5 ft/s) is common practice to limit friction, noise and water hammer while keeping solids moving. It is not a standard.</li>
+        <li><strong>Static lift</strong> is measured from the sump water surface to the point of discharge (or to the water surface if the pipe discharges below it). A pressurized outlet, such as a spray bar or a pressurized filter, needs its pressure added as extra head.</li>
+        <li>Add a safety margin before choosing a pump, and check the pump’s net positive suction head (NPSH) if it sits above the water.</li>
+      </ul>
+
+      <h2>Sources</h2>
+      <ol class="sources">
+        <li>Crane Co. (2009). <em>Flow of Fluids Through Valves, Fittings, and Pipe</em>. Technical Paper No. 410. Stamford, CT: Crane Co. (Fitting resistance K = n f<sub>T</sub>, f<sub>T</sub> table, entrance and exit coefficients.)</li>
+        <li>Munson, B. R., Young, D. F., Okiishi, T. H. &amp; Huebsch, W. W. (2009). <em>Fundamentals of Fluid Mechanics</em> (6th ed.). Hoboken, NJ: Wiley. Chapter 8, Viscous Flow in Pipes (Darcy-Weisbach, Colebrook, Moody chart, equivalent roughness, minor losses).</li>
+        <li>White, F. M. (2011). <em>Fluid Mechanics</em> (7th ed.). New York: McGraw-Hill. Chapter 6, Viscous Flow in Ducts.</li>
+        <li>Colebrook, C. F. (1939). Turbulent flow in pipes, with particular reference to the transition region between the smooth and rough pipe laws. <em>Journal of the Institution of Civil Engineers</em>, 11(4), 133–156.</li>
+        <li>Swamee, P. K. &amp; Jain, A. K. (1976). Explicit equations for pipe-flow problems. <em>Journal of the Hydraulics Division, ASCE</em>, 102(HY5), 657–664.</li>
+        <li>Williams, G. S. &amp; Hazen, A. (1920). <em>Hydraulic Tables</em> (3rd ed.). New York: John Wiley &amp; Sons.</li>
+        <li>ASTM International. ASTM D1785, <em>Standard Specification for Poly(Vinyl Chloride) (PVC) Plastic Pipe, Schedules 40, 80, and 120</em>. West Conshohocken, PA: ASTM.</li>
+        <li>Huber, M. L., Perkins, R. A., Laesecke, A., Friend, D. G., Sengers, J. V., Assael, M. J., Metaxa, I. N., Vogel, E., Mareš, R. &amp; Miyagawa, K. (2009). New international formulation for the viscosity of H₂O. <em>Journal of Physical and Chemical Reference Data</em>, 38(2), 101–125. (Water density from IAPWS-95: Wagner, W. &amp; Pruß, A. (2002), <em>J. Phys. Chem. Ref. Data</em>, 31(2), 387–535.)</li>
+        <li>National Fire Protection Association. NFPA 13, <em>Standard for the Installation of Sprinkler Systems</em>. Quincy, MA: NFPA. (Hazen-Williams C values for design.)</li>
+        <li>Plastics Pipe Institute. <em>Handbook of Polyethylene Pipe</em> (2nd ed.), Chapter 6: Design of PE Piping Systems. Irving, TX: PPI.</li>
+        <li>Timmons, M. B. &amp; Ebeling, J. M. (2010). <em>Recirculating Aquaculture</em> (2nd ed.). Ithaca, NY: Cayuga Aqua Ventures.</li>
+      </ol>
+    </article>
+  </main>
+
+  <footer class="site-footer">
+    <div class="wrap">Calculations are estimates. Check the sources above before relying on a result.</div>
+  </footer>
+
+  <script src="../assets/share.js"></script>
+  <script src="../assets/units.js"></script>
+  <script src="../assets/head-loss.js"></script>
+</body>
+</html>

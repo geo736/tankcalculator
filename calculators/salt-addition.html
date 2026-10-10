@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Salt Addition Calculator</title>
+  <meta name="description" content="How much salt (sodium chloride) to add to a fish tank, pond or aquaponic system for a stress or treatment level, nitrite protection by chloride, or a target salinity.">
+  <link rel="stylesheet" href="../assets/style.css">
+  <style>
+    .viz .salt-pile { fill: var(--surface-2); stroke: var(--tank-stroke); stroke-width: 1.5; stroke-linejoin: round; }
+    .viz .salt-grain { fill: var(--text-muted); }
+    .viz .salt-dot { fill: var(--surface); fill-opacity: .9; }
+    .viz .gauge-tube { fill: var(--surface-2); stroke: var(--tank-stroke); stroke-width: 1.5; }
+    .viz .zone-ok { fill: var(--accent); fill-opacity: .45; }
+    .viz .zone-warn { fill: var(--warn-text); fill-opacity: .35; }
+    .viz .zone-band { fill: var(--water); }
+    .viz .gauge-fill { fill: var(--water-deep); fill-opacity: .9; }
+    .viz .marker-now { fill: var(--text-muted); }
+    .viz .marker-target { fill: var(--accent); }
+    .viz .arrow { stroke: var(--accent); stroke-width: 2; fill: none; }
+    .viz .arrow-head { fill: var(--accent); }
+    .viz .tick { stroke: var(--text-muted); stroke-width: 1; }
+    .viz .small-text { fill: var(--text-muted); font-size: 11px; font-family: var(--font); }
+    .viz .strong-text { fill: var(--text); font-size: 12px; font-weight: 600; font-family: var(--font); }
+    .viz .accent-text { fill: var(--accent); font-size: 12px; font-weight: 700; font-family: var(--font); }
+    .viz .add-path { stroke: var(--text-muted); stroke-width: 1.5; stroke-dasharray: 4 3; fill: none; }
+    .plant-note { font-size: .85rem; color: var(--text-muted); margin-top: 10px; }
+    .zone-status { font-weight: 600; }
+    .zone-status.ok { color: var(--accent-strong); }
+    .zone-status.warn { color: var(--warn-text); }
+  </style>
+</head>
+<body>
+  <header class="site-header">
+    <div class="wrap">
+      <a class="brand" href="../">
+        <span class="brand-mark" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3c3 4 6 7 6 11a6 6 0 0 1-12 0c0-4 3-7 6-11z"/></svg>
+        </span>
+        Tank Calculator
+      </a>
+      <nav><a href="../">All calculators</a></nav>
+    </div>
+  </header>
+
+  <main class="wrap">
+    <div class="crumbs"><a href="../">Home</a> / Salt Addition</div>
+    <h1 class="page-title">Salt Addition Calculator</h1>
+    <p class="page-lede">Work out how much salt (sodium chloride) to add to a tank, pond or system: for a stress-relief or treatment level, to protect fish from nitrite with chloride, or to reach a target salinity for a brackish system.</p>
+
+    <div class="calc-layout">
+      <!-- Calculator -->
+      <section class="card" aria-labelledby="calc-heading">
+        <h2 id="calc-heading">Calculator</h2>
+
+        <div class="field">
+          <span class="label" id="mode-label">Purpose</span>
+          <div class="segmented" role="group" aria-labelledby="mode-label" id="mode-group" style="grid-template-columns: repeat(3, 1fr);">
+            <button type="button" data-mode="therapy" aria-pressed="true">
+              <svg viewBox="0 0 34 26" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 13c4-5 11-5 15 0-4 5-11 5-15 0zM19 13l5-4v8z"/><path d="M27 5v6M24 8h6"/></svg>
+              Fish health
+            </button>
+            <button type="button" data-mode="nitrite" aria-pressed="false">
+              <svg viewBox="0 0 34 26" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3l11 4v6c0 6-5 9-11 11C11 22 6 19 6 13V7z"/><path d="M13 13h8"/></svg>
+              Nitrite (chloride)
+            </button>
+            <button type="button" data-mode="salinity" aria-pressed="false">
+              <svg viewBox="0 0 34 26" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10c3-3 6-3 9 0s6 3 9 0 6-3 9 0M3 17c3-3 6-3 9 0s6 3 9 0 6-3 9 0"/></svg>
+              Target salinity
+            </button>
+          </div>
+        </div>
+
+        <div class="field">
+          <label for="volume">Water volume to treat</label>
+          <div class="input-row"><input id="volume" type="number" inputmode="decimal" min="0" step="any"><select class="unit-select" data-unit-group="volume" data-unit-for="volume" data-unit-default="gal" aria-label="Volume unit"></select></div>
+          <div class="field-hint" id="volume-hint">The water that receives the salt: the whole system, or just the treatment tank.</div>
+        </div>
+
+        <!-- Therapy mode -->
+        <div class="field" data-for="therapy">
+          <label for="preset">Treatment</label>
+          <select id="preset">
+            <option value="prolonged">Prolonged / indefinite (1–3 g/L)</option>
+            <option value="transport">Handling and transport (5–8 g/L)</option>
+            <option value="bath">Short bath, 1% (10 g/L, 30 min to a few hours)</option>
+            <option value="dip">Dip, 3% (30 g/L, 30 s to 10 min)</option>
+          </select>
+          <div class="field-hint" id="preset-hint"></div>
+        </div>
+
+        <!-- Therapy + salinity -->
+        <div class="two-col" data-for="therapy salinity">
+          <div class="field">
+            <label for="cur">Current level</label>
+            <div class="input-row"><input id="cur" type="number" inputmode="decimal" min="0" step="any"><select class="unit-select" data-unit-group="concentration" data-unit-for="cur" data-unit-default="gL" aria-label="Current level unit"></select></div>
+          </div>
+          <div class="field">
+            <label for="basis">Measured as</label>
+            <select id="basis">
+              <option value="salt">Salt / salinity</option>
+              <option value="cl">Chloride (Cl⁻)</option>
+            </select>
+          </div>
+        </div>
+        <div class="field" data-for="therapy salinity">
+          <label for="target">Target salt level</label>
+          <div class="input-row"><input id="target" type="number" inputmode="decimal" min="0" step="any"><select class="unit-select" data-unit-group="concentration" data-unit-for="target" data-unit-default="gL" aria-label="Target unit"></select></div>
+          <div class="field-hint">As sodium chloride. 1 g/L ≈ 1 ppt (‰) at these low salinities.</div>
+        </div>
+
+        <!-- Nitrite mode -->
+        <div class="two-col" data-for="nitrite">
+          <div class="field">
+            <label for="nitrite">Measured nitrite</label>
+            <div class="input-row"><input id="nitrite" type="number" inputmode="decimal" min="0" step="any"><select class="unit-select" data-unit-group="concentration" data-unit-for="nitrite" data-unit-default="mgL" aria-label="Nitrite unit"></select></div>
+          </div>
+          <div class="field">
+            <label for="nform">Test reports nitrite as</label>
+            <select id="nform">
+              <option value="n">Nitrite-N (NO₂-N)</option>
+              <option value="no2">Nitrite (NO₂⁻)</option>
+            </select>
+          </div>
+        </div>
+        <div class="two-col" data-for="nitrite">
+          <div class="field">
+            <label for="cl">Current chloride</label>
+            <div class="input-row"><input id="cl" type="number" inputmode="decimal" min="0" step="any"><select class="unit-select" data-unit-group="concentration" data-unit-for="cl" data-unit-default="mgL" aria-label="Chloride unit"></select></div>
+          </div>
+          <div class="field">
+            <label for="ratio">Target Cl⁻ : NO₂-N ratio</label>
+            <div class="input-row"><input id="ratio" type="number" inputmode="decimal" min="0" step="any"><span class="unit">: 1</span></div>
+          </div>
+        </div>
+        <div class="field-hint" data-for="nitrite" style="margin:-8px 0 14px">SRAC 462 recommends at least 10 : 1 for catfish ponds; some sources use 6 : 1 as a minimum, and sick fish may need more.</div>
+
+        <div class="field">
+          <label for="purity">Salt purity (NaCl content)</label>
+          <div class="input-row"><input id="purity" type="number" inputmode="decimal" min="0" max="100" step="any"><span class="unit">%</span></div>
+          <div class="field-hint">Use plain, non-iodized salt with no anti-caking agents (e.g. pure food-grade, pickling or solar salt, usually ≥ 99% NaCl).</div>
+        </div>
+
+        <hr class="divider">
+
+        <div class="notice" id="notice" hidden></div>
+
+        <div class="field">
+          <label for="out">Show salt in</label>
+          <select class="unit-select" id="out" data-unit-group="mass" data-unit-default="lb"></select>
+        </div>
+
+        <div class="result-main" aria-live="polite">
+          <div class="label">Salt to add</div>
+          <div class="value" id="r-salt">–</div>
+        </div>
+
+        <ul class="result-list">
+          <li><span>Approximate volume of salt</span><span class="v" id="r-cups">–</span></li>
+          <li><span>Salt dose added (as NaCl)</span><span class="v" id="r-dose">–</span></li>
+          <li><span>Resulting salt level</span><span class="v" id="r-level">–</span></li>
+          <li><span>Resulting chloride</span><span class="v" id="r-cl">–</span></li>
+          <li id="li-ratio"><span>Cl⁻ : NO₂-N ratio, before → after</span><span class="v" id="r-ratio">–</span></li>
+          <li><span>Guidance range</span><span class="v" id="r-zone">–</span></li>
+          <li><span>EC added (rough)</span><span class="v" id="r-ec">–</span></li>
+          <li><span>Salt, other units</span><span class="v" id="r-alt">–</span></li>
+        </ul>
+
+        <p class="plant-note" id="plant-note"></p>
+
+        <div class="share-bar">
+          <button class="btn btn-primary" type="button" id="btn-share">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="m8.6 13.5 6.8 4M15.4 6.5l-6.8 4"/></svg>
+            Share
+          </button>
+          <button class="btn" type="button" id="btn-link">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.5.5l3-3a5 5 0 0 0-7-7l-1.7 1.7"/><path d="M14 11a5 5 0 0 0-7.5-.5l-3 3a5 5 0 0 0 7 7l1.7-1.7"/></svg>
+            Copy link
+          </button>
+          <button class="btn" type="button" id="btn-copy">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h10a1 1 0 0 1 1 1v1"/></svg>
+            Copy results
+          </button>
+          <button class="btn" type="button" id="btn-reset">Reset</button>
+        </div>
+      </section>
+
+      <!-- Visualization -->
+      <section class="card viz-card" aria-labelledby="viz-heading">
+        <h2 id="viz-heading">Visualization</h2>
+        <svg class="viz" id="viz" viewBox="0 0 480 320" role="img" aria-label="Salt pile, tank and a gauge showing the salt level moving from the current value to the target"></svg>
+        <p class="viz-caption" id="viz-caption"></p>
+      </section>
+    </div>
+
+    <article class="article">
+      <h2>How the salt addition calculator works</h2>
+      <p>Salt dissolves completely, so the amount to add is simply the <strong>rise in concentration you want × the volume of water</strong>. Because commercial salt is not 100% sodium chloride, the result is divided by the purity. The calculator works in three ways:</p>
+      <ul>
+        <li><strong>Fish health</strong>: raise a freshwater system or treatment tank to a salt level used to reduce handling stress or to treat external parasites.</li>
+        <li><strong>Nitrite (chloride)</strong>: add enough chloride to reach a chosen chloride-to-nitrite ratio, which protects fish from nitrite poisoning (“brown blood disease”).</li>
+        <li><strong>Target salinity</strong>: bring water to any salt level, for example for a low-salinity brackish system.</li>
+      </ul>
+      <p>Every input has its own unit. Volume is converted to liters and concentrations to mg/L before the calculation.</p>
+
+      <h3>Why salt is used in aquaculture and aquaponics</h3>
+      <p>Freshwater fish keep their blood saltier than the water around them and constantly lose salts through the gills. Handling, crowding and transport make this worse. A little salt in the water reduces the gradient the fish has to work against, and higher concentrations for short times kill or dislodge many external parasites (Francis-Floyd; Swann &amp; Fitzgerald, 1992). Many freshwater aquaculturists keep NaCl at 1–3 g/L in recirculating systems (Yanong, 2003).</p>
+      <p>Chloride also protects against nitrite. Nitrite enters fish through the same gill uptake route as chloride, so raising chloride blocks much of the nitrite uptake. Tomasso, Simco &amp; Davis (1979) found that sodium chloride prevented nitrite-induced methemoglobin formation in channel catfish, and suggested that chloride competes with nitrite at the gills. SRAC Publication 462 (Durborow et al., 1997) recommends keeping at least a <strong>10 : 1 ratio of chloride to nitrite</strong> in catfish ponds, and notes that diseased fish may need a higher ratio. Other guidance uses <strong>6 : 1</strong> as a minimum (Kubitza). Treat both as rules of thumb rather than exact thresholds.</p>
+
+      <h3>Treatment levels (guidance ranges)</h3>
+      <table>
+        <thead><tr><th>Use</th><th>Salt level</th><th>Time</th><th>Source</th></tr></thead>
+        <tbody>
+          <tr><td>Prolonged / indefinite, freshwater RAS</td><td>1–3 g/L (0.1–0.3%)</td><td>Ongoing</td><td>Yanong 2003</td></tr>
+          <tr><td>Handling and transport</td><td>5–8 g/L</td><td>During transport</td><td>Kubitza</td></tr>
+          <tr><td>Bath</td><td>10 g/L (1%)</td><td>30 min to several hours</td><td>Francis-Floyd</td></tr>
+          <tr><td>Dip (parasites)</td><td>30 g/L (3%, about seawater)</td><td>30 s to 10 min, by species</td><td>Francis-Floyd</td></tr>
+        </tbody>
+      </table>
+      <p>Tolerance differs between species and sizes. Some fish (for example many scaleless catfish and some tetras) are more sensitive than others. Do baths and dips in a separate container with aeration, watch the fish, and take them out at the first sign of distress. Do not raise a whole system to bath or dip strength.</p>
+
+      <h3>Formulas</h3>
+      <p><strong>Salt to add</strong> for a target salt level (C in g/L, V in liters, purity P in %):</p>
+      <div class="formula">NaCl needed (g) = (C<sub>target</sub> − C<sub>current</sub>) × V
+Salt to weigh (g) = NaCl needed ÷ (P ÷ 100)</div>
+
+      <p><strong>Chloride and sodium chloride.</strong> Using atomic masses Na = 22.990 and Cl = 35.453 g/mol, NaCl = 58.443 g/mol, so chloride is 60.66% of the mass of sodium chloride:</p>
+      <div class="formula">Cl⁻ = NaCl × 35.453 ÷ 58.443 = NaCl × 0.6066
+NaCl = Cl⁻ × 1.6485</div>
+      <p>If you measured the current level as chloride, the calculator converts it to a NaCl-equivalent with the factor above. That assumes the existing chloride came from sodium chloride.</p>
+
+      <p><strong>Nitrite mode.</strong> The ratio is applied to nitrite-nitrogen. If your test reports nitrite as NO₂⁻, it is converted first (N = 14.007, O = 15.999 g/mol):</p>
+      <div class="formula">NO₂-N = NO₂⁻ × 14.007 ÷ 46.005 = NO₂⁻ × 0.3045
+Cl⁻ target   = ratio × NO₂-N
+Cl⁻ to add   = Cl⁻ target − Cl⁻ current   (none if ≤ 0)
+Salt (g)     = Cl⁻ to add (mg/L) × 1.6485 × V (L) ÷ 1000 ÷ (P ÷ 100)</div>
+      <p>Not every source says whether its ratio uses nitrite or nitrite-N. Most pond test kits report nitrite-N, and that is what this calculator uses. If you apply the ratio to NO₂⁻ instead, you need about 3.3 times more chloride, which is the more cautious choice.</p>
+      <p><strong>Check against SRAC 462.</strong> SRAC 462 says 4.5 lb of salt raises chloride by 1 mg/L in one acre-foot (1,233.5 m³) of water. Using the formula: 1,233.5 m³ × 1 g/m³ × 1.6485 = 2,033 g = 4.48 lb, which matches. In SRAC's example, a 20-acre pond 4 ft deep with 4 mg/L nitrite and 15 mg/L chloride needs (10 × 4 − 15) = 25 mg/L more chloride, or about 9,000 lb of salt. This calculator gives 8,966 lb at 100% purity.</p>
+
+      <p><strong>Approximate kitchen volume.</strong> USDA lists 1 US cup of table salt as 292 g, a bulk density of about 1.23 g/mL. Coarse, solar or flaked salts weigh much less per cup, so weigh the salt when you can.</p>
+      <div class="formula">Cups ≈ grams ÷ 292      Tablespoons ≈ grams ÷ 18.3</div>
+
+      <p><strong>Lowering salt.</strong> Salt does not break down or get removed by filters. The only practical way to lower it is to replace water with salt-free water. For a target below the current level:</p>
+      <div class="formula">Fraction of water to replace = 1 − C<sub>target</sub> ÷ C<sub>current</sub></div>
+
+      <h3>Example (default inputs)</h3>
+      <p>A 100 US gallon system (100 × 3.785411784 = 378.54 L) with no salt is raised to a prolonged level of 2 g/L. NaCl needed = 2 g/L × 378.54 L = 757.1 g. With 99% pure salt: 757.1 ÷ 0.99 = <strong>764.7 g (1.69 lb)</strong>, about 2.6 cups of fine table salt. The resulting chloride is 2,000 mg/L × 0.6066 ≈ 1,213 mg/L.</p>
+      <p>Nitrite example: the same 100 gallons with 2 mg/L nitrite-N and 10 mg/L chloride. At 10 : 1 the chloride target is 20 mg/L, so 10 mg/L chloride is added. That is 16.5 mg/L NaCl × 378.54 L = 6.24 g of pure NaCl, or 6.3 g of 99% salt. Nitrite protection needs only a very small amount of salt.</p>
+
+      <h3>Aquaponics: watch your plants</h3>
+      <p>Plants take up very little sodium or chloride, so salt added to an aquaponic system stays in the water until you replace it, and it builds up with every dose. Each 1 g/L of NaCl adds roughly 2 mS/cm (2 dS/m) of electrical conductivity at low concentrations, from the conductivity of sodium chloride solutions (CRC Handbook). Many crops are sensitive. In Maas &amp; Hoffman's (1977) crop tolerance data, yield of lettuce starts to fall at a soil salinity (saturated-extract EC) of about 1.3 dS/m and strawberry at about 1.0 dS/m. Those soil figures do not transfer exactly to hydroponics, but they show that a 1–3 g/L treatment can harm many crops. Treat fish in a separate tank, or bypass the grow beds, when you need more than a small chloride dose for nitrite protection.</p>
+
+      <h3>Which salt to use</h3>
+      <ul>
+        <li>Use plain sodium chloride with no additives: pure food-grade, pickling/canning, solar or “aquarium” salt. Check the purity and ingredient list on the bag.</li>
+        <li>Avoid salt with anti-caking agents. Extension advice is to use salt that does not contain toxic anti-caking additives (Wynne). One such agent, sodium ferrocyanide (“yellow prussiate of soda”), is a cyanide complex. Iodized table salt adds iodide that the fish do not need. These additives are present in small amounts, but plain salt costs little and avoids the question.</li>
+        <li>For marine or brackish species kept above a few g/L, a marine salt mix is often a better choice than pure NaCl, because it also supplies magnesium, calcium and potassium. This calculator only works out sodium chloride.</li>
+      </ul>
+
+      <h3>Salinity classes</h3>
+      <p>In Target salinity mode the gauge shows the Venice System classes (1958): fresh &lt; 0.5‰, oligohaline 0.5–5‰, mesohaline 5–18‰, polyhaline 18–30‰, euhaline 30–40‰ and hyperhaline &gt; 40‰.</p>
+
+      <h3>Assumptions and limitations</h3>
+      <ul>
+        <li><strong>g/L vs ppt.</strong> Concentrations are handled as mass per liter of water. Salinity in ppt (‰) is strictly grams per kilogram. The difference is under 1% below about 10 ppt and about 2.5% at seawater strength. Dissolving salt also increases the volume very slightly. Both effects are ignored.</li>
+        <li><strong>Even mixing.</strong> Dissolve salt in tank water first and add it gradually. Do not let undissolved salt sit on fish, plants or biofilter media.</li>
+        <li><strong>Measure, then dose.</strong> Check the level with a calibrated meter or refractometer after adding salt, especially in ponds where the real volume is hard to know.</li>
+        <li><strong>Existing chloride source.</strong> If current salinity is entered, all of it is treated as sodium chloride when the resulting chloride is shown.</li>
+        <li><strong>Guidance, not a prescription.</strong> Ranges come from extension publications and are rules of thumb. Check species tolerance and local rules, and ask a fish health professional before treating valuable stock.</li>
+      </ul>
+
+      <h2>Sources</h2>
+      <ol class="sources">
+        <li>Durborow, R. M., Crosby, D. M. &amp; Brunson, M. W. (1997). <em>Nitrite in Fish Ponds</em>. SRAC Publication No. 462. Southern Regional Aquaculture Center.</li>
+        <li>Tomasso, J. R., Simco, B. A. &amp; Davis, K. B. (1979). Chloride inhibition of nitrite-induced methemoglobinemia in channel catfish (<em>Ictalurus punctatus</em>). <em>Journal of the Fisheries Research Board of Canada</em>, 36(9), 1141–1144. doi:10.1139/f79-160</li>
+        <li>Francis-Floyd, R. <em>The Use of Salt in Aquaculture</em>. Fact Sheet VM-86 (EDIS VM007). University of Florida, IFAS Extension. <a href="https://edis.ifas.ufl.edu/publication/VM007" rel="noopener" target="_blank">edis.ifas.ufl.edu</a></li>
+        <li>Yanong, R. P. E. (2003, reviewed 2012). <em>Fish Health Management Considerations in Recirculating Aquaculture Systems – Part 3: General Recommendations and Problem-Solving Approaches</em>. Circular 122 / FA101. University of Florida, IFAS Extension. <a href="https://edis.ifas.ufl.edu/publication/FA101" rel="noopener" target="_blank">edis.ifas.ufl.edu</a></li>
+        <li>Swann, L. &amp; Fitzgerald, S. (1992). <em>Use and Application of Salt in Aquaculture</em>. NCRAC Fact Sheet Series No. 105. North Central Regional Aquaculture Center.</li>
+        <li>Kubitza, F. “Common salt a useful tool in aquaculture, part 2.” <em>Responsible Seafood Advocate</em>, Global Seafood Alliance. <a href="https://www.globalseafood.org/advocate/common-salt-a-useful-tool-in-aquaculture-part-2/" rel="noopener" target="_blank">globalseafood.org</a></li>
+        <li>Wynne, F. <em>Nitrite Season</em>. Kentucky State University Aquaculture Extension.</li>
+        <li>Maas, E. V. &amp; Hoffman, G. J. (1977). Crop salt tolerance – current assessment. <em>Journal of the Irrigation and Drainage Division, ASCE</em>, 103(IR2), 115–134.</li>
+        <li>Venice System (1959). Symposium on the Classification of Brackish Waters, Venice, 8–14 April 1958. <em>Archivio di Oceanografia e Limnologia</em>, 11 (suppl.), 243–248.</li>
+        <li>Prohaska, T. et al. (2022). Standard atomic weights of the elements 2021 (IUPAC Technical Report). <em>Pure and Applied Chemistry</em>, 94(5), 573–600.</li>
+        <li>Haynes, W. M. (ed.). <em>CRC Handbook of Chemistry and Physics</em>. “Electrical Conductivity of Aqueous Solutions.” Boca Raton: CRC Press.</li>
+        <li>U.S. Department of Agriculture, Agricultural Research Service. FoodData Central: “Salt, table” (SR Legacy). <a href="https://fdc.nal.usda.gov/" rel="noopener" target="_blank">fdc.nal.usda.gov</a></li>
+      </ol>
+    </article>
+  </main>
+
+  <footer class="site-footer">
+    <div class="wrap">Calculations are estimates. Check the sources above before relying on a result.</div>
+  </footer>
+
+  <script src="../assets/share.js"></script>
+  <script src="../assets/units.js"></script>
+  <script src="../assets/salt-addition.js"></script>
+</body>
+</html>
