@@ -58,7 +58,7 @@ window.CALCULATORS = [
     icon: '<path d="M4 4h10v10H4z"/><path d="M14 11h3c2 0 3 2 3 4v5"/>' },
   { slug: 'battery-life', name: 'Battery Life Estimator', blurb: 'Backup runtime for pumps', cat: 'aquaculture', tags: ['aquaculture', 'aquaponics', 'hydroponics'], status: 'live',
     icon: '<rect x="3" y="7" width="16" height="10" rx="2"/><path d="M21 11v2"/><path d="M7 10v4M10 10v4"/>' },
-  { slug: 'uv-sterilizer-sizing', name: 'UV Filtration Sizing', cat: 'aquaculture', tags: ['aquaculture', 'aquaponics', 'hydroponics'], status: 'soon',
+  { slug: 'uv-sterilizer-sizing', name: 'UV Filtration Sizing', blurb: 'UV-C dose for target pathogens', cat: 'aquaculture', tags: ['aquaculture', 'aquaponics', 'hydroponics'], status: 'live',
     icon: '<rect x="3" y="9" width="18" height="6" rx="3"/><path d="M8 5v2M12 4v3M16 5v2M8 17v2M12 17v3M16 17v2"/>' },
   { slug: 'drum-filter-sizing', name: 'Drum Filter Sizing', blurb: 'Size a drum microscreen', cat: 'aquaculture', tags: ['aquaculture', 'aquaponics'], status: 'live',
     icon: '<ellipse cx="7" cy="12" rx="3" ry="7"/><path d="M7 5h10M7 19h10"/><ellipse cx="17" cy="12" rx="3" ry="7"/>' },

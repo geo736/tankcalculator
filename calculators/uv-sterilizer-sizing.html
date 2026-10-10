@@ -230,7 +230,7 @@ WF = (1 − 10<sup>−a·g</sup>) / (a · g · ln 10)    [g in cm]</div>
       <p><strong>Method B: lamp UV-C watts (approximate).</strong> If all the lamp's UV-C power P enters the water and travels straight out across the gap, energy balance gives the volume-average fluence rate times the reactor volume as P × g × WF. Dividing by the flow gives the average dose. The reactor volume cancels, so you only need the gap:</p>
       <div class="formula">E<sub>avg</sub> × V<sub>r</sub> = P × g × WF
 Dose = P × g × WF / Q        (W·cm ÷ cm³/s = J/cm²; ×1000 for mJ/cm²)</div>
-      <p>This is a rough, average-dose estimate. It ignores reflection from the housing wall (which adds dose), light lost in the quartz sleeve and parts of the flow that rush past the lamp (which remove dose). Real reactors are validated by testing with organisms. Use Method A when a rating exists.</p>
+      <p>This is a rough, average-dose estimate. It ignores reflection from the housing wall (which adds dose), light lost in the quartz sleeve and parts of the flow that rush past the lamp (which remove dose). Real reactors are validated by testing with organisms. Use Method A when a rating exists. Look up the lamp's UV-C output (254 nm) on its datasheet. Low-pressure mercury lamps turn roughly 30–40% of their electrical power into UV-C (US EPA, 2006), so the calculator shows the electrical watts on that basis. That conversion is a rule of thumb.</p>
 
       <p><strong>Lamp aging, maximum flow and sizing.</strong> With f<sub>EOL</sub> the lamp output at end of life:</p>
       <div class="formula">Dose<sub>EOL</sub> = Dose × f<sub>EOL</sub>

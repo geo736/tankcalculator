@@ -315,7 +315,7 @@
         x: px0, y: y + 4, width: Math.max(1, X(row.dose) - px0), height: rowH - 8, rx: 3
       });
       const vx = X(row.dose) + 4;
-      valueLabels.push([vx, y + rowH / 2 + 4, , fmt(row.dose) + (r ? (met ? ' ✓' : '') : '')]);
+      valueLabels.push([vx, y + rowH / 2 + 4, fmt(row.dose) + (r ? (met ? ' ✓' : '') : '')]);
     });
 
     if (r) {
