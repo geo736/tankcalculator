@@ -14,7 +14,7 @@ window.CALCULATORS = [
     icon: '<path d="M3 5h7v14H3z"/><path d="M14 13h7v6h-7z"/><path d="M17.5 13V9m0 1.5-2-1.5m2 0 2-1.5"/>' },
   { slug: 'pump-turnover', name: 'Pump & Turnover', blurb: 'Size pumps by turnover', cat: 'aquaponics', tags: ['aquaponics', 'aquaculture', 'hydroponics'], status: 'live',
     icon: '<path d="M21 12a9 9 0 1 1-3-6.7"/><path d="M21 4v5h-5"/>' },
-  { slug: 'nutrient-ec', name: 'Nutrient EC', cat: 'hydroponics', tags: ['hydroponics', 'aquaponics'], status: 'soon',
+  { slug: 'nutrient-ec', name: 'Nutrient EC', blurb: 'Predict EC from nutrient ions', cat: 'hydroponics', tags: ['hydroponics', 'aquaponics'], status: 'live',
     icon: '<path d="M13 3 6 13h5l-1 8 7-10h-5z"/>' },
   { slug: 'ph-adjustment', name: 'pH Adjustment', blurb: 'Acid dose from alkalinity', cat: 'hydroponics', tags: ['hydroponics', 'aquaponics'], status: 'live',
     icon: '<path d="M9 3h6"/><path d="M10 3v6L5 19a1.5 1.5 0 0 0 1.3 2h11.4a1.5 1.5 0 0 0 1.3-2L14 9V3"/><path d="M7.5 15h9"/>' },
