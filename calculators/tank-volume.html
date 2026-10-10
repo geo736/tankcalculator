@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Tank Volume Calculator</title>
+  <meta name="description" content="Find the water volume and weight of rectangular, round, cone-bottom and horizontal tanks for aquaponics, aquaculture and hydroponics.">
+  <link rel="stylesheet" href="../assets/style.css">
+</head>
+<body>
+  <header class="site-header">
+    <div class="wrap">
+      <a class="brand" href="../">
+        <span class="brand-mark" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3c3 4 6 7 6 11a6 6 0 0 1-12 0c0-4 3-7 6-11z"/></svg>
+        </span>
+        Tank Calculator
+      </a>
+      <nav><a href="../">All calculators</a></nav>
+    </div>
+  </header>
+
+  <main class="wrap">
+    <div class="crumbs"><a href="../">Home</a> / Tank Volume</div>
+    <h1 class="page-title">Tank Volume Calculator</h1>
+    <p class="page-lede">Find how much water a fish tank, sump or nutrient reservoir holds and how much that water weighs. Works for rectangular, round, cone-bottom and horizontal tanks.</p>
+
+    <div class="calc-layout">
+      <!-- Calculator -->
+      <section class="card" aria-labelledby="calc-heading">
+        <h2 id="calc-heading">Calculator</h2>
+
+        <div class="field">
+          <span class="label" id="shape-label">Tank shape</span>
+          <div class="segmented" role="group" aria-labelledby="shape-label" id="shape-group">
+            <button type="button" data-shape="rect" aria-pressed="true">
+              <svg viewBox="0 0 34 26" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M4 8h20v15H4zM4 8l6-5h20l-6 5M24 23l6-5V3"/></svg>
+              Rectangular
+            </button>
+            <button type="button" data-shape="cyl" aria-pressed="false">
+              <svg viewBox="0 0 34 26" fill="none" stroke="currentColor" stroke-width="1.6"><ellipse cx="17" cy="5" rx="10" ry="3"/><path d="M7 5v16a10 3 0 0 0 20 0V5"/></svg>
+              Round
+            </button>
+            <button type="button" data-shape="cone" aria-pressed="false">
+              <svg viewBox="0 0 34 26" fill="none" stroke="currentColor" stroke-width="1.6"><ellipse cx="17" cy="4" rx="10" ry="2.6"/><path d="M7 4v10l10 10 10-10V4"/></svg>
+              Cone bottom
+            </button>
+            <button type="button" data-shape="hcyl" aria-pressed="false">
+              <svg viewBox="0 0 34 26" fill="none" stroke="currentColor" stroke-width="1.6"><ellipse cx="27" cy="13" rx="3.5" ry="9"/><path d="M27 4H7a3.5 9 0 0 0 0 18h20"/></svg>
+              Horizontal
+            </button>
+          </div>
+        </div>
+
+        <div class="two-col">
+          <div class="field">
+            <label for="unit">Dimensions in</label>
+            <select id="unit">
+              <option value="in">inches (in)</option>
+              <option value="ft">feet (ft)</option>
+              <option value="cm">centimeters (cm)</option>
+              <option value="m">meters (m)</option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="water">Water type</label>
+            <select id="water">
+              <option value="fresh">Freshwater</option>
+              <option value="salt">Saltwater</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="two-col">
+          <div class="field" data-for="rect">
+            <label for="length">Length</label>
+            <div class="input-row"><input id="length" type="number" inputmode="decimal" min="0" step="any"><span class="unit" data-unit></span></div>
+          </div>
+          <div class="field" data-for="rect">
+            <label for="width">Width</label>
+            <div class="input-row"><input id="width" type="number" inputmode="decimal" min="0" step="any"><span class="unit" data-unit></span></div>
+          </div>
+          <div class="field" data-for="cyl cone hcyl">
+            <label for="diameter">Diameter</label>
+            <div class="input-row"><input id="diameter" type="number" inputmode="decimal" min="0" step="any"><span class="unit" data-unit></span></div>
+          </div>
+          <div class="field" data-for="hcyl">
+            <label for="hlength">Length</label>
+            <div class="input-row"><input id="hlength" type="number" inputmode="decimal" min="0" step="any"><span class="unit" data-unit></span></div>
+          </div>
+          <div class="field" data-for="rect cyl">
+            <label for="height">Height</label>
+            <div class="input-row"><input id="height" type="number" inputmode="decimal" min="0" step="any"><span class="unit" data-unit></span></div>
+          </div>
+          <div class="field" data-for="cone">
+            <label for="wall">Straight wall height</label>
+            <div class="input-row"><input id="wall" type="number" inputmode="decimal" min="0" step="any"><span class="unit" data-unit></span></div>
+          </div>
+          <div class="field" data-for="cone">
+            <label for="coneh">Cone height</label>
+            <div class="input-row"><input id="coneh" type="number" inputmode="decimal" min="0" step="any"><span class="unit" data-unit></span></div>
+          </div>
+          <div class="field">
+            <label for="depth">Water depth</label>
+            <div class="input-row"><input id="depth" type="number" inputmode="decimal" min="0" step="any"><span class="unit" data-unit></span></div>
+            <div class="field-hint" id="depth-hint">Measured from the bottom of the tank.</div>
+          </div>
+        </div>
+
+        <hr class="divider">
+
+        <div class="notice" id="notice" hidden></div>
+
+        <div class="field">
+          <label for="out">Show volume in</label>
+          <select id="out">
+            <option value="gal">US gallons</option>
+            <option value="L">liters</option>
+            <option value="m3">cubic meters</option>
+            <option value="ft3">cubic feet</option>
+            <option value="impgal">imperial gallons</option>
+          </select>
+        </div>
+
+        <div class="result-main" aria-live="polite">
+          <div class="label">Water volume</div>
+          <div class="value" id="r-water">–</div>
+        </div>
+
+        <div class="fill-bar" aria-hidden="true"><span id="r-fillbar" style="width:0%"></span></div>
+
+        <ul class="result-list">
+          <li><span>Total tank capacity</span><span class="v" id="r-cap">–</span></li>
+          <li><span>Fill level</span><span class="v" id="r-fill">–</span></li>
+          <li><span>Water weight</span><span class="v" id="r-weight">–</span></li>
+          <li><span>Water volume, other units</span><span class="v" id="r-alt">–</span></li>
+        </ul>
+
+        <div class="share-bar">
+          <button class="btn btn-primary" type="button" id="btn-share">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="m8.6 13.5 6.8 4M15.4 6.5l-6.8 4"/></svg>
+            Share
+          </button>
+          <button class="btn" type="button" id="btn-link">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.5.5l3-3a5 5 0 0 0-7-7l-1.7 1.7"/><path d="M14 11a5 5 0 0 0-7.5-.5l-3 3a5 5 0 0 0 7 7l1.7-1.7"/></svg>
+            Copy link
+          </button>
+          <button class="btn" type="button" id="btn-copy">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h10a1 1 0 0 1 1 1v1"/></svg>
+            Copy results
+          </button>
+          <button class="btn" type="button" id="btn-reset">Reset</button>
+        </div>
+      </section>
+
+      <!-- Visualization -->
+      <section class="card viz-card" aria-labelledby="viz-heading">
+        <h2 id="viz-heading">Visualization</h2>
+        <svg class="viz" id="viz" viewBox="0 0 480 320" role="img" aria-label="Diagram of the tank and its water level"></svg>
+        <p class="viz-caption" id="viz-caption"></p>
+      </section>
+    </div>
+
+    <article class="article">
+      <h2>How the tank volume calculator works</h2>
+      <p>The calculator finds two volumes: the <strong>total capacity</strong> of the tank when it is full to the top, and the <strong>water volume</strong> at the depth you enter. Both come from standard geometry. The result is converted to your chosen unit, and the water weight is found by multiplying the volume by the density of the water.</p>
+
+      <h3>Why tank volume matters</h3>
+      <p>Almost every other calculation in a fish or plant system starts from the water volume. In aquaponics and recirculating aquaculture (RAS) you need it to:</p>
+      <ul>
+        <li>set fish stocking density (kg of fish per m³ or per 1,000 L);</li>
+        <li>dose salt, buffers, medications or nutrients at the correct concentration;</li>
+        <li>size pumps and filters by how many times per hour the water is turned over;</li>
+        <li>check that a floor, stand or deck can carry the weight of a full tank.</li>
+      </ul>
+      <p>The FAO aquaponics manual (Somerville et al., 2014) and <em>Recirculating Aquaculture</em> (Timmons &amp; Ebeling, 2010) both base stocking, feeding and flow guidance on the volume of the culture tanks.</p>
+
+      <h3>Formulas</h3>
+      <p><strong>Rectangular tank</strong> (aquariums, IBC totes, raceways):</p>
+      <div class="formula">Capacity = L × W × H
+Water    = L × W × d</div>
+
+      <p><strong>Round tank</strong> (vertical cylinder) with radius r = D ÷ 2:</p>
+      <div class="formula">Capacity = π × r² × H
+Water    = π × r² × d</div>
+
+      <p><strong>Cone-bottom tank</strong>: a cylinder on top of a cone of height h<sub>c</sub>. Depth d is measured from the tip of the cone.</p>
+      <div class="formula">Capacity = π r² H<sub>wall</sub> + ⅓ π r² h<sub>c</sub>
+If d ≤ h<sub>c</sub>:  Water = ⅓ π (r·d/h<sub>c</sub>)² d
+If d > h<sub>c</sub>:  Water = ⅓ π r² h<sub>c</sub> + π r² (d − h<sub>c</sub>)</div>
+
+      <p><strong>Horizontal cylinder</strong>: the water fills a circular segment of the end face, multiplied by the length L.</p>
+      <div class="formula">Segment area A = r² · arccos((r − d) / r) − (r − d) · √(2rd − d²)
+Water         = A × L
+Capacity      = π r² L</div>
+
+      <h3>Water weight</h3>
+      <div class="formula">Weight = Volume (L) × density (kg/L)</div>
+      <p>Freshwater at 20 °C has a density of about 0.998 kg/L (USGS). Seawater at 35 practical salinity units and 20 °C is about 1.025 kg/L (Millero &amp; Poisson, 1981). The calculator uses these two values. Warmer water is slightly lighter and colder water slightly heavier, but the difference is less than 0.5% across normal culture temperatures.</p>
+
+      <h3>Unit conversions</h3>
+      <table>
+        <thead><tr><th>Unit</th><th>Equal to</th></tr></thead>
+        <tbody>
+          <tr><td>1 inch</td><td>2.54 cm (exact)</td></tr>
+          <tr><td>1 foot</td><td>0.3048 m (exact)</td></tr>
+          <tr><td>1 US gallon</td><td>231 in³ = 3.785411784 L (exact)</td></tr>
+          <tr><td>1 imperial gallon</td><td>4.54609 L (exact)</td></tr>
+          <tr><td>1 cubic foot</td><td>28.316846592 L (exact)</td></tr>
+          <tr><td>1 pound</td><td>0.45359237 kg (exact)</td></tr>
+        </tbody>
+      </table>
+
+      <h3>Example</h3>
+      <p>A 48 × 24 × 24 inch glass tank filled to 20 inches holds 48 × 24 × 20 = 23,040 in³ of water. Dividing by 231 in³ per gallon gives <strong>99.7 US gallons</strong> (377.6 L). As freshwater it weighs about 377 kg (831 lb), before counting the glass, gravel and stand.</p>
+
+      <h3>Things the calculator does not include</h3>
+      <ul>
+        <li><strong>Wall thickness.</strong> Measure inside dimensions, or subtract the wall thickness from outside measurements.</li>
+        <li><strong>Displacement.</strong> Gravel, media, rocks and equipment take up space. A grow bed full of expanded clay holds much less water than its volume suggests.</li>
+        <li><strong>Plumbing.</strong> Water in pipes, sumps and filters adds to the system total. Add each tank separately to get the total system volume.</li>
+      </ul>
+
+      <h2>Sources</h2>
+      <ol class="sources">
+        <li>National Institute of Standards and Technology. <em>NIST Handbook 44: Specifications, Tolerances, and Other Technical Requirements for Weighing and Measuring Devices</em>, Appendix C: General Tables of Units of Measurement. <a href="https://www.nist.gov/pml/owm/publications/nist-handbooks/handbook-44" rel="noopener" target="_blank">nist.gov</a></li>
+        <li>U.S. Geological Survey, Water Science School. “Water Density.” <a href="https://www.usgs.gov/special-topics/water-science-school/science/water-density" rel="noopener" target="_blank">usgs.gov</a></li>
+        <li>Millero, F. J. &amp; Poisson, A. (1981). International one-atmosphere equation of state of seawater. <em>Deep-Sea Research Part A</em>, 28(6), 625–629.</li>
+        <li>Somerville, C., Cohen, M., Pantanella, E., Stankus, A. &amp; Lovatelli, A. (2014). <em>Small-scale aquaponic food production: Integrated fish and plant farming</em>. FAO Fisheries and Aquaculture Technical Paper No. 589. Rome: FAO. <a href="https://www.fao.org/3/i4021e/i4021e.pdf" rel="noopener" target="_blank">fao.org</a></li>
+        <li>Timmons, M. B. &amp; Ebeling, J. M. (2010). <em>Recirculating Aquaculture</em> (2nd ed.). Ithaca, NY: Cayuga Aqua Ventures.</li>
+        <li>Weisstein, E. W. “Circular Segment” and “Cone.” <em>MathWorld</em>, Wolfram Research. <a href="https://mathworld.wolfram.com/CircularSegment.html" rel="noopener" target="_blank">mathworld.wolfram.com</a></li>
+      </ol>
+    </article>
+  </main>
+
+  <footer class="site-footer">
+    <div class="wrap">Calculations are estimates. Check the sources above before relying on a result.</div>
+  </footer>
+
+  <script src="../assets/share.js"></script>
+  <script src="../assets/tank-volume.js"></script>
+</body>
+</html>
