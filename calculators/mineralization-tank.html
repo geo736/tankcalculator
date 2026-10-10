@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mineralization Tank Calculator</title>
+  <meta name="description" content="Size an aerobic mineralization tank for aquaponics from daily feed, solids capture, sludge concentration and retention time.">
+  <link rel="stylesheet" href="../assets/style.css">
+  <style>
+    .viz .clar-fill { fill: var(--accent-soft); stroke: none; }
+    .viz .sludge { fill: var(--warn-text); fill-opacity: .28; }
+    .viz .sludge-top { stroke: var(--warn-text); stroke-width: 1.5; fill: none; }
+    .viz .bubble { fill: none; stroke: var(--water-top); stroke-width: 1.2; }
+    .viz .flow { stroke: var(--accent); stroke-width: 2; fill: none; }
+    .viz .flow-head { fill: var(--accent); }
+    .viz .band { fill: var(--accent-soft); }
+    .viz .band-line { stroke: var(--accent); stroke-width: 1; fill: none; }
+    .viz .day { fill: var(--warn-text); fill-opacity: .35; }
+    .viz .day-new { fill: var(--warn-text); fill-opacity: .7; }
+    .viz .marker { stroke: var(--text); stroke-width: 2; }
+    .viz .title-text { fill: var(--text); font-size: 12px; font-weight: 600; font-family: var(--font); }
+    .viz .accent-text { fill: var(--accent); font-size: 11px; font-weight: 600; font-family: var(--font); }
+    .viz .small-text { fill: var(--text-muted); font-size: 11px; font-family: var(--font); }
+  </style>
+</head>
+<body>
+  <header class="site-header">
+    <div class="wrap">
+      <a class="brand" href="../">
+        <span class="brand-mark" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3c3 4 6 7 6 11a6 6 0 0 1-12 0c0-4 3-7 6-11z"/></svg>
+        </span>
+        Tank Calculator
+      </a>
+      <nav><a href="../">All calculators</a></nav>
+    </div>
+  </header>
+
+  <main class="wrap">
+    <div class="crumbs"><a href="../">Home</a> / Mineralization Tank</div>
+    <h1 class="page-title">Mineralization Tank Calculator</h1>
+    <p class="page-lede">Size an aerated mineralization (remineralization) tank that digests the fish solids caught by your clarifier or drum filter, so the nutrients locked in them go back to the plants instead of down the drain.</p>
+
+    <div class="calc-layout">
+      <!-- Calculator -->
+      <section class="card" aria-labelledby="calc-heading">
+        <h2 id="calc-heading">Calculator</h2>
+
+        <div class="two-col">
+          <div class="field">
+            <label for="feed">Feed given per day</label>
+            <div class="input-row"><input id="feed" type="number" inputmode="decimal" min="0" step="any"><select class="unit-select" data-unit-group="mass" data-unit-for="feed" data-unit-default="kg" aria-label="Daily feed unit"></select></div>
+            <div class="field-hint">Mass of feed per day, as fed.</div>
+          </div>
+          <div class="field">
+            <label for="solids">Feed that becomes solid waste</label>
+            <div class="input-row"><input id="solids" type="number" inputmode="decimal" min="0" max="100" step="any"><span class="unit">% of feed</span></div>
+            <div class="field-hint">Dry solids. Rule of thumb: 25% (published range about 20–40%).</div>
+          </div>
+          <div class="field">
+            <label for="capture">Solids capture efficiency</label>
+            <div class="input-row"><input id="capture" type="number" inputmode="decimal" min="0" max="100" step="any"><span class="unit">%</span></div>
+            <div class="field-hint">Share of those solids your clarifier, swirl separator or drum filter removes.</div>
+          </div>
+          <div class="field">
+            <label for="conc">Sludge concentration fed to tank</label>
+            <div class="input-row"><input id="conc" type="number" inputmode="decimal" min="0" step="any"><select class="unit-select" data-unit-group="concentration" data-unit-for="conc" data-unit-default="pct" aria-label="Sludge concentration unit"></select></div>
+            <div class="field-hint">Dry solids in the sludge you drain off. 1% w/v = 10 g/L. Measure yours if you can.</div>
+          </div>
+          <div class="field">
+            <label for="hrt">Retention time</label>
+            <div class="input-row"><input id="hrt" type="number" inputmode="decimal" min="0" step="any"><select class="unit-select" data-unit-group="time" data-unit-for="hrt" data-unit-default="d" aria-label="Retention time unit"></select></div>
+            <div class="field-hint">Reported mineralization cycles: about 5–30 days.</div>
+          </div>
+          <div class="field">
+            <label for="free">Freeboard (optional)</label>
+            <div class="input-row"><input id="free" type="number" inputmode="decimal" min="0" max="90" step="any"><span class="unit">% of depth</span></div>
+            <div class="field-hint">Empty space at the top for foam and splashing.</div>
+          </div>
+        </div>
+
+        <hr class="divider">
+
+        <div class="notice" id="notice" hidden></div>
+
+        <div class="two-col">
+          <div class="field">
+            <label for="out-vol">Show volumes in</label>
+            <select id="out-vol" data-unit-group="volume" data-unit-default="L" aria-label="Volume output unit"></select>
+          </div>
+          <div class="field">
+            <label for="out-mass">Show solids in</label>
+            <select id="out-mass" data-unit-group="mass" data-unit-default="kg" aria-label="Solids output unit"></select>
+          </div>
+        </div>
+
+        <div class="result-main" aria-live="polite">
+          <div class="label">Total tank volume (with freeboard)</div>
+          <div class="value" id="r-total">–</div>
+        </div>
+
+        <ul class="result-list">
+          <li><span>Working (liquid) volume</span><span class="v" id="r-work">–</span></li>
+          <li><span>Dry solids captured per day</span><span class="v" id="r-dry">–</span></li>
+          <li><span>Sludge volume added per day</span><span class="v" id="r-sludge">–</span></li>
+          <li><span>Supernatant returned per day (steady state)</span><span class="v" id="r-return">–</span></li>
+          <li><span>Dry solids loaded per retention period</span><span class="v" id="r-load">–</span></li>
+          <li><span>Retention time vs. 5–30 day range</span><span class="v" id="r-range">–</span></li>
+        </ul>
+
+        <div class="share-bar">
+          <button class="btn btn-primary" type="button" id="btn-share">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="m8.6 13.5 6.8 4M15.4 6.5l-6.8 4"/></svg>
+            Share
+          </button>
+          <button class="btn" type="button" id="btn-link">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.5.5l3-3a5 5 0 0 0-7-7l-1.7 1.7"/><path d="M14 11a5 5 0 0 0-7.5-.5l-3 3a5 5 0 0 0 7 7l1.7-1.7"/></svg>
+            Copy link
+          </button>
+          <button class="btn" type="button" id="btn-copy">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h10a1 1 0 0 1 1 1v1"/></svg>
+            Copy results
+          </button>
+          <button class="btn" type="button" id="btn-reset">Reset</button>
+        </div>
+      </section>
+
+      <!-- Visualization -->
+      <section class="card viz-card" aria-labelledby="viz-heading">
+        <h2 id="viz-heading">Visualization</h2>
+        <svg class="viz" id="viz" viewBox="0 22 480 318" role="img" aria-label="Clarifier feeding sludge to an aerated mineralization tank, with a timeline of retention days"></svg>
+        <p class="viz-caption" id="viz-caption"></p>
+      </section>
+    </div>
+
+    <article class="article">
+      <h2>How the mineralization tank calculator works</h2>
+      <p>Fish turn part of their feed into solid waste (faeces and uneaten feed). A clarifier, swirl separator or drum filter takes much of it out of the water as a wet sludge. In a <strong>mineralization tank</strong> that sludge is mixed with water and aerated, and bacteria break the organic matter down. Nutrients such as phosphorus, potassium, calcium and micronutrients are released into the water in forms plants can take up, and that nutrient-rich water (the supernatant) is returned to the plants.</p>
+      <p>The calculator follows the sludge through four steps: how much dry solids the fish produce, how much of it your filter captures, how much wet sludge that makes at your sludge concentration, and how big a tank holds that sludge for the retention time you choose. Each input with a unit has its own unit picker; everything is converted to kilograms, liters and days before the calculation.</p>
+
+      <h3>Why it matters in aquaponics</h3>
+      <p>Fish feed is the only nutrient input in most aquaponic systems, and a large share of the phosphorus and other minerals in it ends up in the solids rather than dissolved in the water. Throwing the sludge away throws those nutrients away. Studies of aerobic sludge treatment for aquaponics found that aeration released phosphorus and potassium into solution, which makes the supernatant a useful supplement for plants (Monsees et al., 2017; Delaide et al., 2018; Delaide et al., 2019). Decoupled and "multi-loop" aquaponic designs build a mineralization step into the system for this reason (Goddek et al., 2019), and the FAO small-scale aquaponics manual describes letting captured solids mineralize in a separate aerated container before returning the water to the system (Somerville et al., 2014).</p>
+
+      <h3>Formulas</h3>
+      <div class="formula">Dry solids produced  = Feed × solids fraction
+Dry solids captured  = Dry solids produced × capture efficiency
+Sludge volume / day  = Dry solids captured ÷ sludge concentration
+Working volume       = Sludge volume / day × retention time
+Total tank volume    = Working volume ÷ (1 − freeboard)</div>
+      <p>Sludge concentration is dry solids per volume of sludge. For dilute sludge (well under 10% solids) the density is close to that of water, so "% solids" by weight and "% w/v" are practically the same: 1% ≈ 10 g/L = 10 kg/m³. Freeboard is the share of the tank depth left empty above the liquid, so a 15% freeboard means the liquid fills 85% of the tank.</p>
+      <p>The tank is treated as fed with fresh sludge once a day while the same volume of clear supernatant leaves (or is decanted after the aeration is switched off and the solids settle), so the liquid stays in the tank for the retention time on average. The "dry solids loaded per retention period" line is simply the captured solids per day × retention time: the most the tank would ever hold if nothing were digested. In practice part of it is broken down, part is wasted as stable residue, and part leaves with the supernatant.</p>
+
+      <h3>Where the numbers come from</h3>
+      <table>
+        <thead><tr><th>Input</th><th>Default</th><th>Basis</th></tr></thead>
+        <tbody>
+          <tr><td>Solid waste, % of feed</td><td>25%</td><td><strong>Rule of thumb.</strong> Timmons &amp; Ebeling use about 0.25 kg of total suspended solids (dry) per kg of feed for design and note that published values range from roughly 20% to 40% depending on feed, digestibility and feeding practice.</td></tr>
+          <tr><td>Capture efficiency</td><td>80%</td><td><strong>Example only.</strong> Depends strongly on the device, screen size or settler surface loading and how often it is drained. Use your own figure.</td></tr>
+          <tr><td>Sludge concentration</td><td>1% (10 g/L)</td><td><strong>Example only.</strong> It varies widely with the device (drum filter, settling cone, swirl separator) and with how the sludge is drawn off and thickened. Dry a measured sample to find yours: grams of dry residue ÷ liters of sludge = g/L.</td></tr>
+          <tr><td>Retention time</td><td>20 days</td><td>Delaide et al. (2019) report that one mineralization cycle can last up to about 5–30 days depending on the system, organic load and nutrient profile wanted, and must be worked out for each system. Rakocy et al. (2007) aerated aquaponic sludge for 29 days and obtained substantial mineralization.</td></tr>
+          <tr><td>Freeboard</td><td>15%</td><td><strong>Practical choice</strong>, not from a source. Aerated sludge can foam, so leave room at the top.</td></tr>
+        </tbody>
+      </table>
+
+      <h3>Worked example (the default inputs)</h3>
+      <p>A system fed <strong>1 kg of feed per day</strong>. With 25% of the feed turning into dry solids, the fish produce 1 × 0.25 = 0.25 kg of dry solids a day. The clarifier captures 80% of it: 0.25 × 0.80 = <strong>0.2 kg dry solids per day</strong>. At 1% solids (10 kg/m³) that is 0.2 ÷ 10 = 0.02 m³ = <strong>20 L of sludge per day</strong>. Holding it for 20 days needs 20 × 20 = <strong>400 L of working volume</strong>. With 15% freeboard the tank should hold 400 ÷ 0.85 = <strong>470.6 L</strong> in total, so a 500 L tank would fit. Over the 20 days the tank receives 0.2 × 20 = 4 kg of dry solids.</p>
+      <p>Notice how much the sludge concentration matters: the same solids at 0.2% (2 g/L, a much more dilute sludge) would be 100 L a day and need a 2,000 L working volume. Thickening the sludge first (letting it settle and pouring off clear water) shrinks the tank a lot.</p>
+
+      <h3>Operating notes</h3>
+      <ul>
+        <li><strong>Keep it aerobic.</strong> The tank is aerated continuously with an air pump and diffusers so that the bacteria have oxygen and the tank does not turn anaerobic and smelly. Aeration also lowers the pH as the solids are oxidised, which helps dissolve phosphorus and other minerals (Monsees et al., 2017). This page does not size the air pump; no simple, well-sourced rule exists for this use.</li>
+        <li><strong>Batch or continuous.</strong> Delaide et al. (2019) describe batch operation: stop the air, let the solids settle, draw off the supernatant for the plants, and refill with fresh sludge and water. A tank fed little and often behaves like the continuous case used here.</li>
+        <li><strong>Watch the plants' water.</strong> The supernatant can be rich in sodium and chloride from feed and may need dilution (Rakocy et al., 2007).</li>
+      </ul>
+
+      <h3>Limitations</h3>
+      <ul>
+        <li>The solids fraction is a rule of thumb. High-energy, highly digestible feeds produce less solid waste; poor feeding practice (uneaten feed) produces more.</li>
+        <li>The calculator ignores the volume reduction from digestion and the residue that never breaks down; both mean a real tank slowly accumulates inert solids that must be removed from time to time.</li>
+        <li>Mineralization speed depends on temperature, pH, aeration and solids content. The 5–30 day range is what has been reported, not a guarantee; check the supernatant (EC, phosphate) to tune the retention time for your system.</li>
+        <li>Anaerobic digesters work differently (slower, produce biogas) and are not covered here.</li>
+      </ul>
+
+      <h2>Sources</h2>
+      <ol class="sources">
+        <li>Delaide, B., Monsees, H., Gross, A. &amp; Goddek, S. (2019). Aerobic and anaerobic treatments for aquaponic sludge reduction and mineralisation. In S. Goddek, A. Joyce, B. Kotzen &amp; G. M. Burnell (Eds.), <em>Aquaponics Food Production Systems</em> (Chapter 10). Cham: Springer (open access). <a href="https://doi.org/10.1007/978-3-030-15943-6_10" rel="noopener" target="_blank">doi.org/10.1007/978-3-030-15943-6_10</a></li>
+        <li>Goddek, S., Joyce, A., Kotzen, B. &amp; Burnell, G. M. (Eds.) (2019). <em>Aquaponics Food Production Systems: Combined Aquaculture and Hydroponic Production Technologies for the Future</em>. Cham: Springer (open access). <a href="https://doi.org/10.1007/978-3-030-15943-6" rel="noopener" target="_blank">doi.org/10.1007/978-3-030-15943-6</a></li>
+        <li>Monsees, H., Keitel, J., Paul, M., Kloas, W. &amp; Wuertz, S. (2017). Potential of aquacultural sludge treatment for aquaponics: evaluation of nutrient mobilization under aerobic and anaerobic conditions. <em>Aquaculture Environment Interactions</em>, 9, 9–18. <a href="https://doi.org/10.3354/aei00205" rel="noopener" target="_blank">doi.org/10.3354/aei00205</a></li>
+        <li>Delaide, B., Goddek, S., Keesman, K. J. &amp; Jijakli, M. H. (2018). A methodology to quantify the aerobic and anaerobic sludge digestion performance for nutrient recycling in aquaponics. <em>Biotechnologie, Agronomie, Société et Environnement</em>, 22(2), 106–112.</li>
+        <li>Rakocy, J. E. et al. (2007). Preliminary evaluation of organic waste from two aquaculture systems as a source of inorganic nutrients for hydroponics. <em>Acta Horticulturae</em>, 742, 201–207. <a href="https://doi.org/10.17660/ActaHortic.2007.742.27" rel="noopener" target="_blank">doi.org/10.17660/ActaHortic.2007.742.27</a></li>
+        <li>Timmons, M. B. &amp; Ebeling, J. M. (2010). <em>Recirculating Aquaculture</em> (2nd ed.). Ithaca, NY: Cayuga Aqua Ventures. (Solids production per kg of feed, mass-balance design.)</li>
+        <li>Somerville, C., Cohen, M., Pantanella, E., Stankus, A. &amp; Lovatelli, A. (2014). <em>Small-scale aquaponic food production: Integrated fish and plant farming</em>. FAO Fisheries and Aquaculture Technical Paper No. 589. Rome: FAO. <a href="https://www.fao.org/3/i4021e/i4021e.pdf" rel="noopener" target="_blank">fao.org</a></li>
+      </ol>
+    </article>
+  </main>
+
+  <footer class="site-footer">
+    <div class="wrap">Calculations are estimates. Check the sources above before relying on a result.</div>
+  </footer>
+
+  <script src="../assets/share.js"></script>
+  <script src="../assets/units.js"></script>
+  <script src="../assets/mineralization-tank.js"></script>
+</body>
+</html>
