@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Cost Benefit Analysis Calculator</title>
+  <meta name="description" content="Compare farm decisions side by side with net present value, equivalent annual value, benefit–cost ratio, payback, ROI and IRR. For aquaponics, aquaculture and hydroponics.">
+  <link rel="stylesheet" href="../assets/style.css">
+  <style>
+    /* Series colours (validated categorical slots, light and dark steps) */
+    :root { --cb1: #2a78d6; --cb2: #eb6834; --cb3: #1baf7a; --cb4: #eda100; }
+    @media (prefers-color-scheme: dark) {
+      :root:not([data-theme="light"]) { --cb1: #3987e5; --cb2: #d95926; --cb3: #199e70; --cb4: #c98500; }
+    }
+    :root[data-theme="dark"] { --cb1: #3987e5; --cb2: #d95926; --cb3: #199e70; --cb4: #c98500; }
+
+    .opt-list { display: grid; grid-template-columns: minmax(0, 1fr); gap: 10px; margin-bottom: 10px; }
+    .opt-row { border: 1px solid var(--border); border-radius: 12px; background: var(--surface-2); padding: 10px; min-width: 0; }
+    .opt-row .two-col { gap: 8px; }
+    .opt-row .field { margin-bottom: 8px; }
+    .opt-row label { font-size: .8rem; margin-bottom: 4px; }
+    .opt-head { display: flex; gap: 8px; align-items: center; margin-bottom: 8px; }
+    .opt-head .swatch { width: 12px; height: 12px; border-radius: 3px; flex: none; }
+    .opt-head input {
+      flex: 1; min-width: 0; font: inherit; font-weight: 600; color: var(--text);
+      background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 8px 10px;
+    }
+    .opt-head input:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
+    .opt-remove {
+      flex: none; font: inherit; font-size: 1.1rem; line-height: 1; width: 36px; height: 36px;
+      border: 1px solid var(--border); border-radius: 10px; background: var(--surface); color: var(--text-muted); cursor: pointer;
+    }
+    .opt-remove:hover:not(:disabled) { border-color: var(--accent); color: var(--text); }
+    .opt-remove:disabled { opacity: .4; cursor: default; }
+    .input-row .cur-pre { border-left: 0; border-right: 1px solid var(--border); padding: 0 9px; min-width: 30px; justify-content: center; }
+    .opt-more summary { cursor: pointer; font-size: .82rem; font-weight: 600; color: var(--text-muted); }
+    .opt-more[open] summary { margin-bottom: 8px; }
+    .add-opt { display: flex; gap: 8px; }
+    .add-opt select { flex: 1; min-width: 0; }
+    .add-opt .btn { flex: none; }
+    .btn:disabled { opacity: .5; cursor: default; }
+    .result-main .value { font-size: 1.5rem; }
+    .result-main .sub { font-size: .9rem; color: var(--text-muted); margin-top: 4px; }
+    .rank-dot { display: inline-block; width: 10px; height: 10px; border-radius: 3px; margin-right: 6px; vertical-align: baseline; }
+    .cmp-wrap { overflow-x: auto; margin: 12px 0 4px; border: 1px solid var(--border); border-radius: 10px; }
+    .cmp { border-collapse: collapse; width: 100%; font-size: .82rem; font-variant-numeric: tabular-nums; }
+    .cmp th, .cmp td { padding: 6px 8px; border-bottom: 1px solid var(--border); text-align: right; white-space: nowrap; }
+    .cmp thead th { background: var(--surface-2); font-weight: 600; }
+    .cmp th[scope="row"], .cmp thead th:first-child { text-align: left; font-weight: 500; color: var(--text-muted); white-space: normal; min-width: 96px; position: sticky; left: 0; background: var(--surface); }
+    .cmp thead th:first-child { background: var(--surface-2); }
+    .cmp tbody tr:last-child th, .cmp tbody tr:last-child td { border-bottom: 0; }
+    .viz .cb-line { fill: none; stroke-width: 2.5; stroke-linejoin: round; stroke-linecap: round; }
+    .viz .cb-bar { stroke: var(--surface); stroke-width: 1; }
+    .viz .pay-dot { stroke: var(--surface); stroke-width: 2; }
+    .viz .hit { fill: transparent; stroke: none; }
+    .viz .grid-line { stroke: var(--border); stroke-width: 1; }
+    .viz .zero-line { stroke: var(--text-muted); stroke-width: 1.2; }
+    .viz .axis { stroke: var(--text-muted); stroke-width: 1; }
+    .viz .end-text { fill: var(--text); font-size: 12px; font-weight: 600; font-family: var(--font); }
+    .viz .strong-text { fill: var(--text); font-size: 13px; font-weight: 700; font-family: var(--font); }
+  </style>
+</head>
+<body>
+  <header class="site-header">
+    <div class="wrap">
+      <a class="brand" href="../">
+        <span class="brand-mark" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3c3 4 6 7 6 11a6 6 0 0 1-12 0c0-4 3-7 6-11z"/></svg>
+        </span>
+        Tank Calculator
+      </a>
+      <nav><a href="../">All calculators</a></nav>
+    </div>
+  </header>
+
+  <main class="wrap">
+    <div class="crumbs"><a href="../">Home</a> / Cost Benefit Analysis</div>
+    <h1 class="page-title">Cost Benefit Analysis Calculator</h1>
+    <p class="page-lede">Compare two to four farm decisions side by side, such as a backup generator, LED grow lights, an extra grow bed, a drum filter or a part-time worker. See which one pays back, how fast, and which is worth the most once the time value of money is counted.</p>
+
+    <div class="calc-layout">
+      <!-- Calculator -->
+      <section class="card" aria-labelledby="calc-heading">
+        <h2 id="calc-heading">Calculator</h2>
+
+        <div class="two-col">
+          <div class="field">
+            <label for="rate">Discount rate</label>
+            <div class="input-row"><input id="rate" type="number" inputmode="decimal" min="0" max="100" step="any"><span class="unit">%/yr</span></div>
+            <div class="field-hint">What your money could earn elsewhere, or your loan interest rate.</div>
+          </div>
+          <div class="field">
+            <label for="period">Analysis period</label>
+            <div class="input-row"><input id="period" type="number" inputmode="numeric" min="1" max="50" step="1" placeholder="auto"><span class="unit">years</span></div>
+            <div class="field-hint" id="period-hint">Blank = longest life.</div>
+          </div>
+          <div class="field">
+            <label for="cur">Currency symbol</label>
+            <select id="cur"></select>
+            <div class="field-hint">Display only, no exchange rates.</div>
+          </div>
+          <div class="field">
+            <label for="method">Different lives</label>
+            <select id="method">
+              <option value="eav">Replace like-for-like; rank by annual value</option>
+              <option value="npv">No replacement; rank by NPV over period</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="field">
+          <span class="label" id="opts-label">Options to compare</span>
+          <div class="opt-list" id="opt-list" role="group" aria-labelledby="opts-label"></div>
+          <div class="add-opt">
+            <select id="add-preset" aria-label="Option to add"></select>
+            <button class="btn" type="button" id="btn-add">+ Add option</button>
+          </div>
+          <div class="field-hint">Enter benefits as extra revenue plus savings compared with what you do now, so “Do nothing” is all zeros. Preset numbers are made-up examples; replace them with your own quotes and records.</div>
+        </div>
+
+        <hr class="divider">
+
+        <div class="notice" id="notice" hidden></div>
+
+        <div class="result-main" aria-live="polite">
+          <div class="label" id="r-best-label">Best option</div>
+          <div class="value" id="r-best">–</div>
+          <div class="sub" id="r-best-sub"></div>
+        </div>
+
+        <ul class="result-list" id="rank-list"></ul>
+
+        <div class="cmp-wrap">
+          <table class="cmp" id="cmp"></table>
+        </div>
+
+        <div class="share-bar">
+          <button class="btn btn-primary" type="button" id="btn-share">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="m8.6 13.5 6.8 4M15.4 6.5l-6.8 4"/></svg>
+            Share
+          </button>
+          <button class="btn" type="button" id="btn-link">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.5.5l3-3a5 5 0 0 0-7-7l-1.7 1.7"/><path d="M14 11a5 5 0 0 0-7.5-.5l-3 3a5 5 0 0 0 7 7l1.7-1.7"/></svg>
+            Copy link
+          </button>
+          <button class="btn" type="button" id="btn-copy">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h10a1 1 0 0 1 1 1v1"/></svg>
+            Copy results
+          </button>
+          <button class="btn" type="button" id="btn-reset">Reset</button>
+        </div>
+      </section>
+
+      <!-- Visualization -->
+      <section class="card viz-card" aria-labelledby="viz-heading">
+        <h2 id="viz-heading">Visualization</h2>
+        <svg class="viz" id="viz" viewBox="0 0 480 440" role="img" aria-label="Cumulative discounted cash flow of each option by year, and a bar chart of net present value"></svg>
+        <p class="viz-caption" id="viz-caption"></p>
+      </section>
+    </div>
+
+    <article class="article">
+      <h2>How the cost benefit calculator works</h2>
+      <p>For each option you enter what it costs to start (upfront cost), what it costs to keep going each year (power, feed, parts, servicing, labour), what it brings in each year (extra sales plus money saved), how many years it lasts, and what it is worth when you are done with it (salvage or resale value). The calculator lays these out year by year, turns every future amount into today’s money with the <strong>discount rate</strong>, and adds them up. The option with the highest value after discounting is the best one on money alone.</p>
+      <p>Costs and benefits are assumed to arrive at the end of each year; the upfront cost is paid at the start (year 0). The optional growth rates let a benefit or cost rise (or fall) by a fixed percentage each year, for example rising electricity prices making LED savings bigger over time.</p>
+
+      <h3>Why it matters on an aquaponics, aquaculture or hydroponics farm</h3>
+      <p>Small farms make the same kind of decision again and again: spend money now to save money or earn more later. A drum filter costs far more than a swirl separator but saves labour; LEDs cost more than HPS lamps but use less power; a generator earns nothing until the day it saves a tank of fish. Putting each choice through the same calculation makes them comparable. Engle (2015) notes that many published aquaponics budgets have been overly optimistic because they leave out costs other than the obvious fingerlings, feed and utilities, and that labour is one of the largest costs. Enter every cost you can think of.</p>
+
+      <h3>The discount rate</h3>
+      <p>Money now is worth more than the same money later, because you could put it to work in the meantime. The discount rate is the yearly return you give up by tying money up in this option: the interest on the loan you would take out, or what the cash could earn elsewhere (savings, paying off debt, another farm project). Farm management texts base it on the opportunity cost of capital, often the borrowing rate, and some add a premium for risk (Kay, Edwards &amp; Duffy, 2020). A higher rate favours options that pay back quickly. Setting it to 0% shows plain, undiscounted totals.</p>
+
+      <h3>What each result means</h3>
+      <ul>
+        <li><strong>Net present value (NPV).</strong> All benefits minus all costs over the analysis period, in today’s money. Positive means the option earns more than the discount rate; the bigger the better. This is the main measure (Boardman et al., 2018).</li>
+        <li><strong>Equivalent annual value (EAV).</strong> The NPV of one full life of the option spread into an equal yearly amount. It lets you compare a 5-year grow bed with a 10-year LED fit-out fairly, as long as you would replace each one like-for-like when it wears out.</li>
+        <li><strong>Benefit–cost ratio (BCR).</strong> Present value of benefits divided by present value of costs (including the upfront cost). Above 1 means benefits outweigh costs. Useful as a quick check, but it can rank options wrongly when they differ in size, so pick by NPV or EAV. Salvage value is counted as a benefit here.</li>
+        <li><strong>Internal rate of return (IRR).</strong> The discount rate at which NPV would be exactly zero, in other words the yearly return the option earns on the money put in. If IRR is higher than your discount rate, the option pays. It shows “n/a” when there is no investment to earn a return on (cash flow never changes sign), and is marked * when cash flows change sign more than once and more than one IRR exists.</li>
+        <li><strong>Return on investment (ROI).</strong> Total benefits minus total costs, divided by total costs, over the period, <em>without</em> discounting. Easy to explain, but it ignores timing.</li>
+        <li><strong>Simple and discounted payback.</strong> How long until the running total of cash in reaches the money put out. The discounted version uses discounted amounts, so it is always a little longer. Fractions of a year assume the year’s cash comes in evenly. Payback ignores everything after the break-even point, so use it as a risk check, not to choose.</li>
+        <li><strong>Break-even yearly benefit.</strong> The first-year benefit that would make NPV exactly zero, with all other inputs unchanged. If you are unsure of the benefit, ask yourself whether you are confident of at least this much.</li>
+      </ul>
+
+      <h3>Options with different lives</h3>
+      <p>Comparing a 5-year option with a 10-year one over 10 years is unfair to the short one unless you say what happens after year 5. The calculator gives two choices:</p>
+      <ul>
+        <li><strong>Replace like-for-like, rank by annual value</strong> (default). Each option is assumed to be bought again at the same price when it wears out. The ranking uses the equivalent annual value, which does not depend on the period you pick. The year-by-year chart and the period figures use the same assumption: a replacement is paid for at the end of each life, and if the period ends part-way through a life, the unused part is credited back as a residual value (straight-line between upfront cost and salvage).</li>
+        <li><strong>No replacement, rank by NPV over the period.</strong> Each option simply stops when its life ends. Use this for one-off decisions where you would not repeat the purchase.</li>
+      </ul>
+
+      <h3>Formulas</h3>
+      <p>Present value of an amount CF received in year t, at discount rate r:</p>
+      <div class="formula">PV = CF ÷ (1 + r)^t</div>
+      <p>Yearly cash flows with growth g (benefits and costs each have their own g):</p>
+      <div class="formula">B_t = B × (1 + g_B)^(t−1)      C_t = C × (1 + g_C)^(t−1)</div>
+      <p>Net present value over the period of N years (I = upfront and replacement costs, S = salvage or residual value):</p>
+      <div class="formula">PV benefits = Σ (B_t + S_t) ÷ (1 + r)^t
+PV costs    = Σ (C_t + I_t) ÷ (1 + r)^t
+NPV         = PV benefits − PV costs
+BCR         = PV benefits ÷ PV costs</div>
+      <p>Equivalent annual value, using the capital recovery factor (CRF) for one life of n years:</p>
+      <div class="formula">CRF = r (1 + r)^n ÷ ((1 + r)^n − 1)      (= 1/n when r = 0)
+EAV = NPV(one life) × CRF</div>
+      <p>Internal rate of return (solved numerically by searching for where NPV changes sign, then halving the interval):</p>
+      <div class="formula">Σ CF_t ÷ (1 + IRR)^t = 0</div>
+      <p>Payback, where the running total turns from negative in year k−1 to zero or positive in year k:</p>
+      <div class="formula">Payback = (k − 1) + |cumulative CF at k−1| ÷ CF_k
+ROI     = (total benefits − total costs) ÷ total costs</div>
+      <p>Break-even first-year benefit (NPV is a straight line in B):</p>
+      <div class="formula">B* = B − NPV ÷ Σ (1 + g_B)^(t−1) ÷ (1 + r)^t</div>
+
+      <h3>Worked example (the default inputs)</h3>
+      <p>Discount rate 6%, period 10 years (the longest life), three options:</p>
+      <table>
+        <thead><tr><th>Option</th><th>Upfront</th><th>Yearly costs</th><th>Yearly benefits</th><th>Life</th><th>Salvage</th></tr></thead>
+        <tbody>
+          <tr><td>Do nothing</td><td>$0</td><td>$0</td><td>$0</td><td>10 yr</td><td>$0</td></tr>
+          <tr><td>Switch HPS to LED</td><td>$6,000</td><td>$100</td><td>$1,800, +3%/yr</td><td>10 yr</td><td>$0</td></tr>
+          <tr><td>Second grow bed</td><td>$2,500</td><td>$400</td><td>$1,300</td><td>5 yr</td><td>$200</td></tr>
+        </tbody>
+      </table>
+      <p><strong>LED lights.</strong> The yearly costs are worth $100 × 7.3601 = $736 today (7.3601 is the sum of 1/1.06^t for t = 1–10), so PV of costs = $6,000 + $736 = $6,736. The savings start at $1,800 and grow 3% a year; discounting each year and adding gives PV of benefits = $14,974. NPV = $14,974 − $6,736 = <strong>$8,238</strong>. CRF for 10 years at 6% is 0.13587, so EAV = $8,238 × 0.13587 = <strong>$1,119 per year</strong>. BCR = 14,974 ÷ 6,736 = 2.22. Cash flow is $1,700 in year 1, $1,754 in year 2, $1,810 in year 3, so after 3 years $5,264 of the $6,000 has come back; year 4 brings $1,867, giving a simple payback of 3 + 736 ÷ 1,867 = 3.4 years (discounted: 3.9 years). IRR is 28.3%, and ROI is ($20,635 − $7,000) ÷ $7,000 = 195%. NPV would still be zero with first-year savings of only $810.</p>
+      <p><strong>Second grow bed.</strong> One 5-year life: −$2,500 + $900 × 4.2124 + $200 ÷ 1.06^5 = $1,441, and CRF(6%, 5 yr) = 0.23740, so EAV = <strong>$342 per year</strong>. Over the 10-year period the bed is bought twice (year 0 and year 5), so NPV = $1,441 × (1 + 1/1.06^5) = <strong>$2,517</strong>, BCR 1.34, payback 2,500 ÷ 900 = 2.8 years, IRR 24.7%.</p>
+      <p><strong>Do nothing</strong> scores zero on every measure. The calculator ranks LED first ($1,119/yr), the grow bed second ($342/yr) and doing nothing third. The grow bed pays back sooner, but the LED switch earns far more over its life.</p>
+
+      <h3>When to trust which number</h3>
+      <ul>
+        <li>Choose between options by <strong>NPV</strong> (same lives, or no replacement) or <strong>EAV</strong> (different lives, replaced like-for-like).</li>
+        <li>Use <strong>payback</strong> when cash is tight or the future is uncertain: a short payback means less time at risk.</li>
+        <li>Use <strong>IRR</strong> and <strong>BCR</strong> to explain a decision to a lender or partner, but do not rank options of very different sizes by them.</li>
+        <li>Look at the <strong>break-even benefit</strong> when the benefit is a guess. If your realistic estimate is far above it, the decision is robust.</li>
+      </ul>
+
+      <h3>Limitations and assumptions</h3>
+      <ul>
+        <li><strong>Risk.</strong> Every number is a single best guess. Fish deaths, crop failures, price swings and outages are uncertain; try low and high values and see whether the ranking changes. For an option like a generator, enter the <em>expected</em> yearly loss avoided (chance of an outage × cost of the loss).</li>
+        <li><strong>Things money does not measure.</strong> Animal welfare, food safety, your own time and stress, reputation and lifestyle are not in the numbers. Weigh them alongside the result.</li>
+        <li><strong>Your own labour.</strong> If an option saves or costs you hours, put a value on that time, or the comparison will favour labour-hungry options.</li>
+        <li><strong>Taxes, depreciation, financing and inflation</strong> are not modelled separately. Work either in today’s money with a “real” discount rate (borrowing rate minus inflation) or include price growth with a “nominal” rate, but do not mix the two.</li>
+        <li><strong>Timing.</strong> Cash flows are yearly, at year end. Replacements are bought at the same price. Useful life and the analysis period are whole years, up to 50.</li>
+        <li><strong>Independence.</strong> Each option is compared with the status quo on its own. If two options would be combined, enter the combination as its own option.</li>
+      </ul>
+
+      <h2>Sources</h2>
+      <ol class="sources">
+        <li>Kay, R. D., Edwards, W. M. &amp; Duffy, P. A. (2020). <em>Farm Management</em> (9th ed.). New York: McGraw-Hill Education. Chapters on the time value of money and investment analysis (present value, NPV, IRR, payback, annuity factors).</li>
+        <li>Engle, C. R. (2010). <em>Aquaculture Economics and Financing: Management and Analysis</em>. Ames, IA: Wiley-Blackwell.</li>
+        <li>Engle, C. R. (2015). <em>Economics of Aquaponics</em>. Southern Regional Aquaculture Center (SRAC) Publication No. 5006. <a href="https://srac.msstate.edu/Aquaponics.html" rel="noopener" target="_blank">srac.msstate.edu</a></li>
+        <li>Boardman, A. E., Greenberg, D. H., Vining, A. R. &amp; Weimer, D. L. (2018). <em>Cost-Benefit Analysis: Concepts and Practice</em> (5th ed.). Cambridge: Cambridge University Press.</li>
+        <li>Boehlje, M. &amp; Ehmke, C. <em>Capital Investment Analysis and Project Assessment</em>. Purdue Extension publication EC-731. West Lafayette, IN: Purdue University. <a href="https://edustore.purdue.edu/ec-731.html" rel="noopener" target="_blank">edustore.purdue.edu</a></li>
+      </ol>
+    </article>
+  </main>
+
+  <footer class="site-footer">
+    <div class="wrap">Calculations are estimates. Check the sources above before relying on a result.</div>
+  </footer>
+
+  <script src="../assets/share.js"></script>
+  <script src="../assets/units.js"></script>
+  <script src="../assets/cost-benefit.js"></script>
+</body>
+</html>

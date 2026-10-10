@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sump Drain-Back Calculator</title>
+  <meta name="description" content="Add up the water that drains back from fish tanks, grow beds, NFT channels and pipes when the pump stops, and check whether your sump can hold it without overflowing.">
+  <link rel="stylesheet" href="../assets/style.css">
+  <style>
+    .src-list { display: grid; grid-template-columns: minmax(0, 1fr); gap: 10px; margin-bottom: 10px; }
+    .src-row { border: 1px solid var(--border); border-radius: 12px; background: var(--surface-2); padding: 10px; min-width: 0; }
+    .src-head { display: flex; gap: 8px; align-items: center; margin-bottom: 4px; }
+    .src-head .swatch { width: 20px; height: 20px; border-radius: 5px; flex: none; color: #fff; font-size: .75rem; font-weight: 700; display: grid; place-items: center; }
+    .src-head input {
+      flex: 1; min-width: 0; font: inherit; font-weight: 600; color: var(--text);
+      background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 8px 10px;
+    }
+    .src-head input:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
+    .src-remove {
+      flex: none; font: inherit; font-size: 1.1rem; line-height: 1; width: 36px; height: 36px;
+      border: 1px solid var(--border); border-radius: 10px; background: var(--surface); color: var(--text-muted); cursor: pointer;
+    }
+    .src-remove:hover { border-color: var(--accent); color: var(--text); }
+    .src-type { font-size: .8rem; color: var(--text-muted); margin: 0 0 8px 28px; }
+    .src-type strong { color: var(--text); font-weight: 600; }
+    .src-grid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 8px; }
+    .src-grid .field { margin-bottom: 0; }
+    .src-grid .wide { grid-column: 1 / -1; }
+    .src-grid label { font-size: .8rem; font-weight: 600; margin-bottom: 4px; }
+    .src-grid select { padding: 8px 10px; }
+    .src-vol { font-size: .85rem; color: var(--text-muted); margin-top: 8px; text-align: right; font-variant-numeric: tabular-nums; }
+    .src-vol strong { color: var(--text); }
+    .add-src { display: flex; gap: 8px; }
+    .add-src select { flex: 1; min-width: 0; }
+    .add-src .btn { flex: none; }
+    .section-label { font-size: .85rem; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; color: var(--text-muted); margin: 6px 0 10px; }
+    .result-main .sub { font-size: .95rem; font-weight: 600; margin-top: 4px; }
+    .result-main.warn, .result-main.bad { background: var(--warn-bg); }
+    .result-main.warn .sub, .result-main.bad .sub, .result-main.bad .value { color: var(--warn-text); }
+    .fill-bar span.over { background: var(--warn-text); }
+    .result-list.breakdown li { font-size: .9rem; }
+    .result-list .sw { display: inline-block; width: 10px; height: 10px; border-radius: 2px; margin-right: 6px; vertical-align: 0; }
+    h3.list-head { font-size: .85rem; text-transform: uppercase; letter-spacing: .04em; color: var(--text-muted); margin: 16px 0 4px; }
+    .viz .strong-text { fill: var(--text); font-size: 13px; font-weight: 700; font-family: var(--font); }
+    .viz .small-text { fill: var(--text-muted); font-size: 11px; font-family: var(--font); }
+    .viz .warn-text { fill: var(--warn-text); font-size: 12px; font-weight: 700; font-family: var(--font); }
+    .viz .warn-line { stroke: var(--warn-text); stroke-width: 1.5; stroke-dasharray: 5 4; }
+    .viz .max-line { stroke: var(--accent); stroke-width: 1.5; stroke-dasharray: 2 3; }
+    .viz .max-text { fill: var(--accent); font-size: 12px; font-weight: 600; font-family: var(--font); }
+    .viz .rim-line { stroke: var(--tank-stroke); stroke-width: 1; stroke-dasharray: 1 3; }
+    .viz .spill { fill: var(--warn-text); fill-opacity: .55; }
+    .viz .arrow { stroke: var(--water-deep); stroke-width: 1.5; fill: none; }
+    .viz .arrow-head { fill: var(--water-deep); }
+    .viz .media-dot { fill: var(--tank-back); }
+    .viz .seg-gap { stroke: var(--surface); stroke-width: 1.5; }
+    .viz .axis { stroke: var(--text-muted); stroke-width: 1; fill: none; }
+  </style>
+</head>
+<body>
+  <header class="site-header">
+    <div class="wrap">
+      <a class="brand" href="../">
+        <span class="brand-mark" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3c3 4 6 7 6 11a6 6 0 0 1-12 0c0-4 3-7 6-11z"/></svg>
+        </span>
+        Tank Calculator
+      </a>
+      <nav><a href="../">All calculators</a></nav>
+    </div>
+  </header>
+
+  <main class="wrap">
+    <div class="crumbs"><a href="../">Home</a> / Sump Drain-Back</div>
+    <h1 class="page-title">Sump Drain-Back Calculator</h1>
+    <p class="page-lede">When the pump stops, water above the overflows, in the grow beds and in the pipes drains down into the sump. Add up how much water that is and check whether your sump can catch it without flooding the floor.</p>
+
+    <div class="calc-layout">
+      <!-- Calculator -->
+      <section class="card" aria-labelledby="calc-heading">
+        <h2 id="calc-heading">Calculator</h2>
+
+        <div class="section-label" id="src-label">1. Water that drains back</div>
+        <div class="src-list" id="src-list" role="group" aria-labelledby="src-label"></div>
+        <div class="field">
+          <div class="add-src">
+            <select id="add-type" aria-label="Type of source to add">
+              <option value="tank">Tank with an overflow / standpipe</option>
+              <option value="full">Tank or bed that drains completely</option>
+              <option value="media">Media bed (flood &amp; drain)</option>
+              <option value="dwc">DWC raft canal</option>
+              <option value="nft">NFT channels</option>
+              <option value="pipe">Pipe run</option>
+              <option value="siphon">Back-siphon through return line</option>
+              <option value="other">Other (filter, known volume)</option>
+            </select>
+            <button class="btn" type="button" id="btn-add">+ Add</button>
+          </div>
+          <div class="field-hint">Add every tank, bed and pipe that sits above the sump and can drain into it.</div>
+        </div>
+
+        <div class="section-label" id="sump-label">2. Sump (lowest tank)</div>
+        <div class="field">
+          <label for="sshape">Sump shape</label>
+          <select id="sshape">
+            <option value="rect">Rectangular</option>
+            <option value="round">Round</option>
+          </select>
+        </div>
+        <div class="two-col">
+          <div class="field" data-sfor="rect">
+            <label for="slen">Inside length</label>
+            <div class="input-row"><input id="slen" type="number" inputmode="decimal" min="0" step="any"><select class="unit-select" data-unit-group="length" data-unit-for="slen" data-unit-default="cm" aria-label="Sump length unit"></select></div>
+          </div>
+          <div class="field" data-sfor="rect">
+            <label for="swid">Inside width</label>
+            <div class="input-row"><input id="swid" type="number" inputmode="decimal" min="0" step="any"><select class="unit-select" data-unit-group="length" data-unit-for="swid" data-unit-default="cm" aria-label="Sump width unit"></select></div>
+          </div>
+          <div class="field" data-sfor="round">
+            <label for="sdia">Inside diameter</label>
+            <div class="input-row"><input id="sdia" type="number" inputmode="decimal" min="0" step="any"><select class="unit-select" data-unit-group="length" data-unit-for="sdia" data-unit-default="cm" aria-label="Sump diameter unit"></select></div>
+          </div>
+          <div class="field">
+            <label for="sdepth">Usable depth to rim</label>
+            <div class="input-row"><input id="sdepth" type="number" inputmode="decimal" min="0" step="any"><select class="unit-select" data-unit-group="length" data-unit-for="sdepth" data-unit-default="cm" aria-label="Sump depth unit"></select></div>
+            <div class="field-hint">Floor to the rim, or to the lowest spill point.</div>
+          </div>
+          <div class="field">
+            <label for="srun">Water depth while running</label>
+            <div class="input-row"><input id="srun" type="number" inputmode="decimal" min="0" step="any"><select class="unit-select" data-unit-group="length" data-unit-for="srun" data-unit-default="cm" aria-label="Running water depth unit"></select></div>
+            <div class="field-hint">Measured with the pump on.</div>
+          </div>
+          <div class="field">
+            <label for="smin">Lowest safe depth (pump)</label>
+            <div class="input-row"><input id="smin" type="number" inputmode="decimal" min="0" step="any"><select class="unit-select" data-unit-group="length" data-unit-for="smin" data-unit-default="cm" aria-label="Lowest safe depth unit"></select></div>
+            <div class="field-hint">Optional. Pump intake height plus the cover its maker asks for.</div>
+          </div>
+          <div class="field">
+            <label for="smargin">Safety margin</label>
+            <div class="input-row"><input id="smargin" type="number" inputmode="decimal" min="0" step="any"><span class="unit">%</span></div>
+            <div class="field-hint">Rule of thumb: 20–25% extra.</div>
+          </div>
+        </div>
+
+        <hr class="divider">
+
+        <div class="notice" id="notice" hidden></div>
+
+        <div class="field">
+          <label for="out">Show volumes in</label>
+          <select class="unit-select" id="out" data-unit-group="volume" data-unit-default="L"></select>
+        </div>
+
+        <div class="result-main" id="r-box" aria-live="polite">
+          <div class="label">Drain-back volume when the pump stops</div>
+          <div class="value" id="r-total">–</div>
+          <div class="sub" id="r-status"></div>
+        </div>
+
+        <div class="fill-bar" aria-hidden="true"><span id="r-bar" style="width:0%"></span></div>
+
+        <ul class="result-list">
+          <li><span>Sump free capacity (rim − running level)</span><span class="v" id="r-free">–</span></li>
+          <li><span id="r-spare-label">Spare capacity</span><span class="v" id="r-spare">–</span></li>
+          <li><span id="r-need-label">Recommended free volume</span><span class="v" id="r-need">–</span></li>
+          <li><span>Sump level after drain-back</span><span class="v" id="r-after">–</span></li>
+          <li><span>Rise in sump level</span><span class="v" id="r-rise">–</span></li>
+          <li><span>Highest running level (with margin)</span><span class="v" id="r-maxrun">–</span></li>
+          <li><span>Lowest running level (pump)</span><span class="v" id="r-minrun">–</span></li>
+          <li><span>Usable operating band</span><span class="v" id="r-band">–</span></li>
+        </ul>
+
+        <h3 class="list-head">Drain-back by source</h3>
+        <ul class="result-list breakdown" id="r-breakdown"></ul>
+
+        <div class="share-bar">
+          <button class="btn btn-primary" type="button" id="btn-share">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="m8.6 13.5 6.8 4M15.4 6.5l-6.8 4"/></svg>
+            Share
+          </button>
+          <button class="btn" type="button" id="btn-link">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.5.5l3-3a5 5 0 0 0-7-7l-1.7 1.7"/><path d="M14 11a5 5 0 0 0-7.5-.5l-3 3a5 5 0 0 0 7 7l1.7-1.7"/></svg>
+            Copy link
+          </button>
+          <button class="btn" type="button" id="btn-copy">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h10a1 1 0 0 1 1 1v1"/></svg>
+            Copy results
+          </button>
+          <button class="btn" type="button" id="btn-reset">Reset</button>
+        </div>
+      </section>
+
+      <!-- Visualization -->
+      <section class="card viz-card" aria-labelledby="viz-heading">
+        <h2 id="viz-heading">Visualization</h2>
+        <svg class="viz" id="viz" viewBox="0 0 480 420" role="img" aria-label="Side view of the tanks and beds draining into the sump, with the sump running level, level after drain-back and rim, and a bar comparing drain-back with the sump's free capacity"></svg>
+        <p class="viz-caption" id="viz-caption"></p>
+      </section>
+    </div>
+
+    <article class="article">
+      <h2>How the sump drain-back calculator works</h2>
+      <p>In most aquaponic and recirculating systems one pump in the lowest tank (the sump) lifts water up to the fish tanks and grow beds, and everything else flows back down by gravity. While the pump runs, some water is always “in flight”: a thin layer flowing over each overflow, water standing in flooded beds and channels, and water filling the pipes. When the pump stops (a power cut, a tripped breaker, a blocked intake or maintenance) all of that water drains down into the sump. If the sump does not have room for it, the sump overflows.</p>
+      <p>The calculator adds up that drain-back volume, source by source, and compares it with the free space in the sump between the running water level and the rim. It then tells you how high the sump will fill, how much spare room is left, and the band of running water levels that keeps the pump intake covered while the pump runs and still leaves room for drain-back when it stops.</p>
+
+      <h3>Why it matters</h3>
+      <p>The FAO aquaponics manual (Somerville et al., 2014) puts the sump at the lowest point of the system, where the water from the grow beds collects by gravity before the pump returns it to the fish tank, and treats sump sizing as part of the design. Power failures are among the most common emergencies in recirculating systems, which is why the SRAC fact sheet on managing recirculating systems calls backup power essential (Masser et al., 1999). Even with backup power, a pump can fail or be switched off for cleaning. A sump that floods every time the pump stops wets the floor and electrics, loses water and, in a small system, can leave the fish tank low. A sump run too low, on the other hand, lets the pump suck air when it restarts and the water is pumped back up. This calculator helps you find a level that avoids both.</p>
+
+      <h3>Formulas</h3>
+      <p>All lengths are converted to metres and all volumes to litres before the sums (1 m³ = 1,000 L). “×&nbsp;n” is the count of identical items.</p>
+      <p><strong>Tank with an overflow, weir or standpipe.</strong> While the pump runs, the water surface stands a little above the overflow lip, by the head h needed to push the flow over it. When the flow stops, the tank drains down to the lip, so only that top layer leaves:</p>
+      <div class="formula">Rectangular tank   A = L × W
+Round tank         A = π × D² ÷ 4
+Drain-back         V = A × h × n</div>
+      <p><strong>Tank or bed that drains completely</strong> (outlet at the bottom with nothing to stop it, such as a bed drained through an open bottom fitting): use the full water depth as h in the same formula.</p>
+      <p><strong>Media bed (flood &amp; drain).</strong> Only the space between the media particles holds water. With porosity φ (the pore fraction of the bed):</p>
+      <div class="formula">V = L × W × flooded depth × φ × n</div>
+      <p><strong>DWC canal.</strong> V = L × W × d × n, where d is the depth of water above the canal’s outlet. With an overflow standpipe that is just the head over the standpipe (a centimetre or two); with an outlet at the bottom it is the whole water depth.</p>
+      <p><strong>NFT channels.</strong> The thin nutrient film in each channel drains out. With the film width w and film depth t:</p>
+      <div class="formula">V = channels × channel length × w × t</div>
+      <p><strong>Pipes.</strong> A pipe of inside diameter d<sub>i</sub> and length ℓ holds:</p>
+      <div class="formula">V = π × d<sub>i</sub>² ÷ 4 × ℓ × n</div>
+      <p>Count the pump’s return line (it drains back through the pump unless a check valve holds it) and drain lines that sit above the sump water level. The calculator treats them as full, which is the cautious case. Schedule 40 PVC inside diameters are outside diameter − 2 × minimum wall from ASTM D1785, the same values as the <a href="water-velocity.html">Water Velocity</a> and <a href="head-loss.html">Head Loss</a> calculators.</p>
+      <p><strong>Back-siphon through the return line.</strong> If the pump’s return pipe ends below the water surface in a tank, the pipe stays full when the pump stops and works as a siphon: water flows backwards through the pump into the sump until the falling water surface uncovers the pipe outlet and air gets in (White, 2011). That can be far more water than everything else combined. With the drop s measured from the overflow lip down to the outlet (or down to a siphon-break hole):</p>
+      <div class="formula">V = A<sub>tank</sub> × s × n</div>
+      <p><strong>Sump.</strong> With the sump floor area A<sub>s</sub>, rim depth H, running depth d<sub>run</sub> and safety margin m:</p>
+      <div class="formula">Free capacity       F = A<sub>s</sub> × (H − d<sub>run</sub>)
+Total drain-back    V = Σ V<sub>i</sub>
+Spare (or short)    F − V
+Recommended free    V × (1 + m)
+Level after         d<sub>after</sub> = d<sub>run</sub> + V ÷ A<sub>s</sub>
+Highest run level   d<sub>max</sub> = H − V × (1 + m) ÷ A<sub>s</sub>
+Operating band      d<sub>min</sub> ≤ d<sub>run</sub> ≤ d<sub>max</sub></div>
+      <p>d<sub>min</sub> is the lowest safe depth you enter for the pump. The sump level is at its lowest while the pump runs, because that is when the drain-back water is up in the system. If d<sub>max</sub> is below d<sub>min</sub> there is no safe running level: you need a bigger sump, a smaller drain-back (siphon breaks, shorter or smaller pipes), or both.</p>
+
+      <h3>How high is the water over an overflow?</h3>
+      <p>Measure it if you can: mark the water line on the tank with the pump on, switch the pump off, and measure how far the level falls. For a rough estimate on a free-falling overflow lip or standpipe top, the Francis formula for a sharp-crested weir without end contractions (U.S. Bureau of Reclamation, 2001) can be turned around:</p>
+      <div class="formula">Q = 1.84 × L<sub>w</sub> × h^1.5     (SI: Q in m³/s, L<sub>w</sub> and h in m)
+h = (Q ÷ (1.84 × L<sub>w</sub>))^(2/3)</div>
+      <p>L<sub>w</sub> is the length of the overflow edge; for a round standpipe it is the circumference π × D. For example, 1,500 L/h (0.000417 m³/s) over the top of a 2″ Sch 40 standpipe (ID 52.5 mm, rim length 0.165 m) gives h = (0.000417 ÷ (1.84 × 0.165))<sup>2/3</sup> ≈ 0.012 m, about 1.2 cm. Treat this as an estimate only: the formula was developed for larger, straight weirs, and comb overflows, strainers and fittings that run partly full all hold the level higher.</p>
+
+      <h3>Siphon breaks and check valves</h3>
+      <p>A <strong>siphon break</strong> is a small hole drilled in the return pipe just below the normal water line in the tank. While the pump runs, the hole just squirts a little water. When the pump stops and the level falls to the hole, air rushes in, the water column in the pipe separates, and the siphon stops. Only the water between the overflow lip and the hole drains back. The hole can clog with algae, snails or biofilm, so check it regularly and test it by switching off the pump. A check valve on the pump outlet also stops back-flow, but valves can stick or leak, so it is common practice not to rely on one alone when sizing a sump.</p>
+
+      <h3>Example</h3>
+      <p>The default inputs describe a small media-bed aquaponic system:</p>
+      <ul>
+        <li><strong>Fish tank</strong>, round, 120 cm across, running 2 cm above its standpipe: A = π × 1.2² ÷ 4 = 1.131 m², V = 1.131 × 0.02 = <strong>22.62 L</strong>.</li>
+        <li><strong>Two media beds</strong>, 120 × 100 cm, flooded 25 cm deep, 40% pore space: V = 1.2 × 1.0 × 0.25 × 0.40 × 2 = <strong>240 L</strong>.</li>
+        <li><strong>Return line</strong>, 1″ Sch 40 (ID 1.049″ = 26.64 mm), 4 m: V = π × 0.02664² ÷ 4 × 4 = <strong>2.23 L</strong>.</li>
+        <li><strong>Drain line</strong>, 2″ Sch 40 (ID 2.067″ = 52.50 mm), 3 m: V = π × 0.0525² ÷ 4 × 3 = <strong>6.49 L</strong>.</li>
+        <li><strong>Back-siphon</strong>: the return pipe ends 5 cm below the overflow lip in the fish tank, with no siphon break: V = 1.131 × 0.05 = <strong>56.55 L</strong>.</li>
+      </ul>
+      <p>Total drain-back = 22.62 + 240 + 2.23 + 6.49 + 56.55 = <strong>327.9 L</strong>. The sump is 120 × 80 cm (A<sub>s</sub> = 0.96 m²), 60 cm deep to the rim and runs at 25 cm, so its free capacity is 0.96 × 0.35 = <strong>336 L</strong>. The water fits with only 8.1 L to spare: the level rises 327.9 ÷ 0.96 = 34.2 cm to <strong>59.2 cm</strong>, less than a centimetre below the rim. With a 25% margin the sump should have 327.9 × 1.25 = 409.9 L free, so the highest safe running level is 60 − 409.9 ÷ 9.6 = <strong>17.3 cm</strong> (9.6 L per cm of depth). The pump needs at least 15 cm, which leaves a narrow operating band of 15–17.3 cm. Drilling a siphon break just below the fish tank’s water line would remove most of the 56.55 L back-siphon and widen that band by almost 6 cm.</p>
+
+      <h3>Typical values (rules of thumb)</h3>
+      <table>
+        <thead><tr><th>Item</th><th>Typical value</th></tr></thead>
+        <tbody>
+          <tr><td>Water height over an overflow lip or standpipe</td><td>About 1–3 cm; depends on flow and lip length. Measure it.</td></tr>
+          <tr><td>Media porosity</td><td>Expanded clay about 40%, lava rock about 45%, gravel about 38% (gravel 25–40%, Freeze &amp; Cherry, 1979)</td></tr>
+          <tr><td>NFT film depth</td><td>A few millimetres (Cooper, 1979); varies with flow, slope and roots</td></tr>
+          <tr><td>Sump safety margin</td><td>20–25% extra free volume. A common design habit, not a published standard.</td></tr>
+        </tbody>
+      </table>
+      <p>For flood-and-drain media beds the FAO manual’s sizing advice, as we could only confirm from secondary summaries, is that the sump should at least be able to hold the water in all the media beds, and be slightly oversized so the pump always has water.</p>
+
+      <h3>Limitations and assumptions</h3>
+      <ul>
+        <li><strong>Straight-sided sump.</strong> Free capacity and levels assume vertical walls. Tapered tubs and IBC totes with rounded corners hold a little less per centimetre near the bottom. Use the area at the height of the free space.</li>
+        <li><strong>Worst case at the moment the pump stops.</strong> For flood-and-drain beds the calculator assumes every bed is fully flooded when the pump stops. If the beds cycle out of step, less water is up at any one time, but planning for the worst case is safer.</li>
+        <li><strong>Pipes counted full.</strong> Gravity drain lines usually run partly full, so their real drain-back is smaller. Pipes that sit below the sump water level do not drain into it and should not be counted.</li>
+        <li><strong>Water absorbed by media and roots</strong>, and water clinging to surfaces, drains slowly or not at all. It is ignored, which errs on the safe side.</li>
+        <li><strong>Displacement in the sump.</strong> Pumps, heaters and media in the sump take up room. Subtract their volume from the free space, or reduce the usable depth.</li>
+        <li><strong>Test it.</strong> The best check is to switch the pump off and watch the sump fill. Do it with someone standing by the plug.</li>
+      </ul>
+
+      <h2>Sources</h2>
+      <ol class="sources">
+        <li>Somerville, C., Cohen, M., Pantanella, E., Stankus, A. &amp; Lovatelli, A. (2014). <em>Small-scale aquaponic food production: Integrated fish and plant farming</em>. FAO Fisheries and Aquaculture Technical Paper No. 589. Rome: FAO. Chapter 4 (design of aquaponic units: sump tank, media beds, NFT and DWC). <a href="https://www.fao.org/3/i4021e/i4021e.pdf" rel="noopener" target="_blank">fao.org</a></li>
+        <li>Masser, M. P., Rakocy, J. &amp; Losordo, T. M. (1999). <em>Recirculating Aquaculture Tank Production Systems: Management of Recirculating Systems</em>. SRAC Publication No. 452. Southern Regional Aquaculture Center. <a href="https://www.srac.msstate.edu/pdfs/Fact%20Sheets/452%20Recirculating%20Aquaculture%20Tank%20Production%20Systems-%20Management%20of%20Recirculating%20Systems.pdf" rel="noopener" target="_blank">srac.msstate.edu</a></li>
+        <li>ASTM International. <em>ASTM D1785: Standard Specification for Poly(Vinyl Chloride) (PVC) Plastic Pipe, Schedules 40, 80, and 120</em>. West Conshohocken, PA: ASTM International. <a href="https://www.astm.org/d1785" rel="noopener" target="_blank">astm.org</a></li>
+        <li>U.S. Department of the Interior, Bureau of Reclamation (2001). <em>Water Measurement Manual</em> (3rd ed., revised reprint), Chapter 7: Weirs. Denver, CO: USBR. <a href="https://www.usbr.gov/tsc/techreferences/mands/wmm/" rel="noopener" target="_blank">usbr.gov</a></li>
+        <li>White, F. M. (2011). <em>Fluid Mechanics</em> (7th ed.). New York: McGraw-Hill. Hydrostatics and the Bernoulli equation (siphons).</li>
+        <li>Weisstein, E. W. “Circle” and “Cylinder.” <em>MathWorld</em>, Wolfram Research. <a href="https://mathworld.wolfram.com/Cylinder.html" rel="noopener" target="_blank">mathworld.wolfram.com</a></li>
+        <li>Freeze, R. A. &amp; Cherry, J. A. (1979). <em>Groundwater</em>. Englewood Cliffs, NJ: Prentice-Hall. Table 2.4, range of values of porosity.</li>
+        <li>Cooper, A. J. (1979). <em>The ABC of NFT: Nutrient Film Technique</em>. London: Grower Books.</li>
+      </ol>
+    </article>
+  </main>
+
+  <footer class="site-footer">
+    <div class="wrap">Calculations are estimates. Check the sources above before relying on a result.</div>
+  </footer>
+
+  <script src="../assets/share.js"></script>
+  <script src="../assets/units.js"></script>
+  <script src="../assets/sump-drainback.js"></script>
+</body>
+</html>
