@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Iron Addition Calculator</title>
+  <meta name="description" content="Work out how much chelated iron (Fe-DTPA, Fe-EDDHA, Fe-EDTA) or ferrous sulfate to add to raise iron to a target level in aquaponic and hydroponic systems, with a pH stability check.">
+  <link rel="stylesheet" href="../assets/style.css">
+  <style>
+    .viz .track { fill: var(--surface-2); stroke: var(--border); stroke-width: 1; }
+    .viz .band { fill: var(--accent-soft); stroke: var(--accent); stroke-width: 1; stroke-dasharray: 4 3; }
+    .viz .rise { fill: var(--accent); fill-opacity: .85; }
+    .viz .have { fill: var(--water); fill-opacity: .85; }
+    .viz .marker { stroke: var(--text); stroke-width: 2; }
+    .viz .tick { stroke: var(--text-muted); stroke-width: 1; }
+    .viz .grid { stroke: var(--border); stroke-width: 1; }
+    .viz .strong-text { fill: var(--text); font-size: 12px; font-weight: 700; font-family: var(--font); }
+    .viz .accent-text { fill: var(--accent); font-size: 12px; font-weight: 700; font-family: var(--font); }
+    .viz .warn-text { fill: var(--warn-text); font-size: 12px; font-weight: 700; font-family: var(--font); }
+    .viz .stable { fill: var(--accent); fill-opacity: .55; }
+    .viz .stable.sel { fill-opacity: .95; }
+    .viz .unstable { fill: var(--warn-text); fill-opacity: .18; }
+    .viz .unstable.sel { fill-opacity: .35; }
+    .viz .row-sel { fill: none; stroke: var(--accent); stroke-width: 1.5; }
+    .viz .ph-zone { fill: var(--water-top); fill-opacity: .18; }
+    .viz .ph-line { stroke: var(--text); stroke-width: 2; stroke-dasharray: 4 3; }
+    .viz .jar { fill: var(--surface-2); stroke: var(--tank-stroke); stroke-width: 1.8; stroke-linejoin: round; }
+    .viz .jar-lid { fill: var(--tank-back); stroke: var(--tank-stroke); stroke-width: 1.5; }
+    .viz .powder { fill: #b5532a; fill-opacity: .9; }
+    .viz .liquid { fill: #8a2f1c; fill-opacity: .85; }
+    .status-ok { color: var(--accent); }
+    .status-warn { color: var(--warn-text); }
+  </style>
+</head>
+<body>
+  <header class="site-header">
+    <div class="wrap">
+      <a class="brand" href="../">
+        <span class="brand-mark" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3c3 4 6 7 6 11a6 6 0 0 1-12 0c0-4 3-7 6-11z"/></svg>
+        </span>
+        Tank Calculator
+      </a>
+      <nav><a href="../">All calculators</a></nav>
+    </div>
+  </header>
+
+  <main class="wrap">
+    <div class="crumbs"><a href="../">Home</a> / Iron Addition</div>
+    <h1 class="page-title">Iron Addition Calculator</h1>
+    <p class="page-lede">Find how much chelated iron (Fe-DTPA, Fe-EDDHA, Fe-EDTA) or ferrous sulfate to add to raise the iron level of an aquaponic or hydroponic system to a target, and check whether the product stays in solution at your pH.</p>
+
+    <div class="calc-layout">
+      <!-- Calculator -->
+      <section class="card" aria-labelledby="calc-heading">
+        <h2 id="calc-heading">Calculator</h2>
+
+        <div class="field">
+          <label for="sys">System type</label>
+          <select id="sys">
+            <option value="aqp">Aquaponics (guidance band 1–2 mg/L)</option>
+            <option value="hyd">Hydroponics (typical band 1–3 mg/L)</option>
+          </select>
+        </div>
+
+        <div class="field">
+          <label for="vol">System water volume</label>
+          <div class="input-row"><input id="vol" type="number" inputmode="decimal" min="0" step="any"><select class="unit-select" data-unit-group="volume" data-unit-for="vol" data-unit-default="L" aria-label="Volume unit"></select></div>
+          <div class="field-hint">All the water the iron will mix into: tanks, sump, beds and pipes.</div>
+        </div>
+
+        <div class="two-col">
+          <div class="field">
+            <label for="cur">Current iron (Fe)</label>
+            <div class="input-row"><input id="cur" type="number" inputmode="decimal" min="0" step="any"><select class="unit-select" data-unit-group="concentration" data-unit-for="cur" data-unit-default="mgL" aria-label="Current iron unit"></select></div>
+          </div>
+          <div class="field">
+            <label for="tgt">Target iron (Fe)</label>
+            <div class="input-row"><input id="tgt" type="number" inputmode="decimal" min="0" step="any"><select class="unit-select" data-unit-group="concentration" data-unit-for="tgt" data-unit-default="mgL" aria-label="Target iron unit"></select></div>
+          </div>
+        </div>
+
+        <div class="field">
+          <label for="prod">Iron product</label>
+          <select id="prod">
+            <option value="dtpa">Fe-DTPA chelate (typ. 11% Fe)</option>
+            <option value="eddha">Fe-EDDHA chelate (typ. 6% Fe)</option>
+            <option value="edta">Fe-EDTA chelate (typ. 13% Fe)</option>
+            <option value="fes">Ferrous sulfate heptahydrate (20.1% Fe, not chelated)</option>
+            <option value="other">Other / unknown product</option>
+          </select>
+        </div>
+
+        <div class="two-col">
+          <div class="field">
+            <label for="form">Product form</label>
+            <select id="form">
+              <option value="powder">Powder / granules</option>
+              <option value="liquid">Liquid</option>
+            </select>
+          </div>
+          <div class="field" data-form="powder">
+            <label for="pct">Iron content (w/w)</label>
+            <div class="input-row"><input id="pct" type="number" inputmode="decimal" min="0" max="100" step="any"><span class="unit">% Fe</span></div>
+          </div>
+          <div class="field" data-form="liquid">
+            <label for="liq">Iron strength (w/v)</label>
+            <div class="input-row"><input id="liq" type="number" inputmode="decimal" min="0" step="any"><select class="unit-select" data-unit-group="concentration" data-unit-for="liq" data-unit-default="pct" aria-label="Liquid iron strength unit"></select></div>
+          </div>
+        </div>
+        <div class="field-hint" id="pct-hint" style="margin:-8px 0 14px">Use the % Fe printed on your product label; the preset is a typical value.</div>
+
+        <div class="field">
+          <label for="ph">System pH <span style="font-weight:400;color:var(--text-muted)">(optional)</span></label>
+          <div class="input-row"><input id="ph" type="number" inputmode="decimal" min="0" max="14" step="0.1"><span class="unit">pH</span></div>
+        </div>
+
+        <hr class="divider">
+
+        <div class="notice" id="notice" hidden></div>
+
+        <div class="field" data-form="powder">
+          <label for="mout">Show product in</label>
+          <select id="mout" class="unit-select" data-unit-group="mass" data-unit-default="g" aria-label="Product mass output unit"></select>
+        </div>
+        <div class="field" data-form="liquid">
+          <label for="vout">Show product in</label>
+          <select id="vout" class="unit-select" data-unit-group="volume" data-unit-default="mL" aria-label="Product volume output unit"></select>
+        </div>
+
+        <div class="result-main" aria-live="polite">
+          <div class="label" id="r-main-label">Product to add</div>
+          <div class="value" id="r-main">–</div>
+        </div>
+
+        <ul class="result-list">
+          <li><span>Iron (Fe) added</span><span class="v" id="r-fe">–</span></li>
+          <li><span>Rise in Fe</span><span class="v" id="r-rise">–</span></li>
+          <li><span>Dose per 100 L</span><span class="v" id="r-100l">–</span></li>
+          <li><span>Dose per 100 US gal</span><span class="v" id="r-100g">–</span></li>
+          <li><span>Target vs guidance band</span><span class="v" id="r-band">–</span></li>
+          <li><span>pH compatibility</span><span class="v" id="r-ph">–</span></li>
+        </ul>
+
+        <div class="share-bar">
+          <button class="btn btn-primary" type="button" id="btn-share">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="m8.6 13.5 6.8 4M15.4 6.5l-6.8 4"/></svg>
+            Share
+          </button>
+          <button class="btn" type="button" id="btn-link">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.5.5l3-3a5 5 0 0 0-7-7l-1.7 1.7"/><path d="M14 11a5 5 0 0 0-7.5-.5l-3 3a5 5 0 0 0 7 7l1.7-1.7"/></svg>
+            Copy link
+          </button>
+          <button class="btn" type="button" id="btn-copy">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h10a1 1 0 0 1 1 1v1"/></svg>
+            Copy results
+          </button>
+          <button class="btn" type="button" id="btn-reset">Reset</button>
+        </div>
+      </section>
+
+      <!-- Visualization -->
+      <section class="card viz-card" aria-labelledby="viz-heading">
+        <h2 id="viz-heading">Visualization</h2>
+        <svg class="viz" id="viz" viewBox="0 0 480 400" role="img" aria-label="Iron level from current to target against the guidance band, the product dose, and the pH stability range of each iron chelate"></svg>
+        <p class="viz-caption" id="viz-caption"></p>
+      </section>
+    </div>
+
+    <article class="article">
+      <h2>How the iron addition calculator works</h2>
+      <p>The calculator works out how many grams of iron (Fe) must go into the water to lift it from the <strong>current</strong> level to the <strong>target</strong> level. It then divides by the share of iron in your product to get the amount of product to weigh out (powder) or measure (liquid). Every input has its own unit, so you can enter the system volume in US gallons and the iron level in mg/L, for example. The calculator also checks your system pH against the range in which each type of iron chelate is known to hold its iron.</p>
+
+      <h3>Why iron matters in aquaponics and hydroponics</h3>
+      <p>Plants need iron to make chlorophyll. When it runs short, the youngest leaves turn pale yellow between green veins (interveinal chlorosis). Fish feed supplies little iron, so <strong>aquaponic systems are commonly iron deficient</strong> and need regular iron supplements, especially in the first months (Somerville et al., 2014; Kasozi et al., 2019). In hydroponics, iron is part of the nutrient recipe, but it can drop out of solution when the pH rises.</p>
+      <p>Iron is added in a <strong>chelated</strong> form. A chelate is an organic molecule that wraps around the iron ion and keeps it dissolved. Without one, iron reacts with oxygen and hydroxide in neutral water and settles out as rust-coloured ferric hydroxide that plants cannot use.</p>
+
+      <h3>Formulas</h3>
+      <p>Iron needed, with volume V in litres and concentrations in mg/L:</p>
+      <div class="formula">Fe added (mg) = (C<sub>target</sub> − C<sub>current</sub>) × V</div>
+      <p>Powder or granules, with the label iron content as a mass fraction (11% = 0.11):</p>
+      <div class="formula">Product (g) = Fe added (g) ÷ fraction Fe</div>
+      <p>Liquid, with the label strength in % w/v (1% w/v = 1 g per 100 mL = 10 g/L):</p>
+      <div class="formula">Product (mL) = Fe added (g) ÷ (strength % w/v ÷ 100)</div>
+      <p>Dose rates: product per 100 L = product ÷ V × 100, and per 100 US gallons = product ÷ V × 378.54 (1 US gal = 3.785411784 L exactly).</p>
+
+      <h3>Iron content of common products</h3>
+      <table>
+        <thead><tr><th>Product</th><th>Typical Fe</th><th>Holds iron up to about</th></tr></thead>
+        <tbody>
+          <tr><td>Fe-EDTA (sodium ferric EDTA)</td><td>13%</td><td>pH 6.5</td></tr>
+          <tr><td>Fe-DTPA</td><td>10–11%</td><td>pH 7.5</td></tr>
+          <tr><td>Fe-EDDHA</td><td>6% (labels may also give the ortho-ortho share)</td><td>pH 9</td></tr>
+          <tr><td>Ferrous sulfate heptahydrate, FeSO₄·7H₂O</td><td>20.1%</td><td>Not chelated (see below)</td></tr>
+        </tbody>
+      </table>
+      <p>The chelate percentages are typical label values and vary by brand, so the calculator lets you edit them. The ferrous sulfate figure is exact chemistry: 55.845 ÷ 278.01 = 20.09% Fe, using IUPAC standard atomic weights (Prohaska et al., 2022).</p>
+
+      <h3>Which chelate at which pH</h3>
+      <p>As pH rises, hydroxide and calcium compete with the chelate for the iron. Equilibrium calculations (Norvell, 1972; Lindsay, 1979) and growth trials show the practical upper limits in the table: Fe-EDTA up to about pH 6.5, Fe-DTPA up to about pH 7.5, and Fe-EDDHA up to about pH 9 (Hershkowitz et al., 2025). These limits are approximate and different sources quote slightly different cut-offs, so the calculator shows “near limit” within 0.3 pH units of each one. Aquaponic systems are usually run at pH 6–7 as a compromise between fish, plants and nitrifying bacteria (Somerville et al., 2014), which suits Fe-DTPA. Fe-EDDHA is the safer choice when pH regularly goes above 7.5, but it costs more and tints the water red.</p>
+      <p><strong>Ferrous sulfate is not a chelate.</strong> Dissolved ferrous iron (Fe²⁺) is oxidised by dissolved oxygen, and the rate rises about 100-fold for every 1-unit rise in pH (Stumm &amp; Lee, 1961). In well-aerated water near pH 7 it turns to insoluble ferric hydroxide within minutes to hours. The calculator flags ferrous sulfate as unsuitable above pH 6.0. That cut-off is a rule of thumb, not a sharp limit. Most of the iron will precipitate in an aquaponic system, and it can coat surfaces and fish gills.</p>
+
+      <h3>Target iron levels (rules of thumb)</h3>
+      <ul>
+        <li><strong>Aquaponics:</strong> about 1–2 mg/L Fe. The FAO manual suggests chelated iron at about this level, especially in new systems (Somerville et al., 2014). The University of the Virgin Islands system added chelated iron at 2 mg/L every three weeks (Rakocy et al., 2004). The calculator default is 2 mg/L.</li>
+        <li><strong>Hydroponics:</strong> nutrient recipes commonly contain about 1–3 mg/L Fe. This is a rule of thumb; follow the recipe for your crop.</li>
+      </ul>
+      <p>These are guidance ranges, not hard limits. Plants keep taking up iron, so the level falls between doses. Test again before each top-up.</p>
+
+      <h3>Example</h3>
+      <p>A 1,000 L aquaponic system has no measurable iron (0 mg/L), and the target is 2 mg/L. The iron needed is (2 − 0) × 1,000 = 2,000 mg = <strong>2 g of Fe</strong>. Using Fe-DTPA powder with 11% Fe: 2 ÷ 0.11 = <strong>18.2 g of product</strong>. That is 1.82 g per 100 L, or 18.18 ÷ 1,000 × 378.54 = 6.88 g per 100 US gallons. At pH 7.0 Fe-DTPA is within its stable range (up to about 7.5), so the check passes.</p>
+
+      <h3>Things the calculator does not include</h3>
+      <ul>
+        <li><strong>Test kit accuracy.</strong> Hobby iron test kits are coarse at low levels. A reading of “0” may still mean a little iron is present.</li>
+        <li><strong>Uptake and losses.</strong> Plants, biofilm and solids filters remove iron over time. The result is a single top-up, not a weekly need.</li>
+        <li><strong>Liquid labels in % w/w.</strong> Many liquid products state iron as a percentage by weight. Convert to w/v by multiplying by the product’s specific gravity (for example, 6% w/w × 1.25 g/mL = 7.5% w/v).</li>
+        <li><strong>EDDHA isomers.</strong> Only the ortho-ortho form of Fe-EDDHA is strongly stable at high pH. Products differ in how much of their iron is in that form.</li>
+        <li><strong>Mixing.</strong> Dissolve the product in a bucket of system water and add it slowly where water is moving, not straight onto fish.</li>
+      </ul>
+
+      <h2>Sources</h2>
+      <ol class="sources">
+        <li>Somerville, C., Cohen, M., Pantanella, E., Stankus, A. &amp; Lovatelli, A. (2014). <em>Small-scale aquaponic food production: Integrated fish and plant farming</em>. FAO Fisheries and Aquaculture Technical Paper No. 589. Rome: FAO. <a href="https://www.fao.org/3/i4021e/i4021e.pdf" rel="noopener" target="_blank">fao.org</a></li>
+        <li>Rakocy, J. E., Shultz, R. C., Bailey, D. S. &amp; Thoman, E. S. (2004). Aquaponic production of tilapia and basil: comparing a batch and staggered cropping system. <em>Acta Horticulturae</em>, 648, 63–69.</li>
+        <li>Kasozi, N., Tandlich, R., Fick, M., Kaiser, H. &amp; Wilhelmi, B. (2019). Iron supplementation and management in aquaponic systems: A review. <em>Aquaculture Reports</em>, 15, 100221.</li>
+        <li>Hershkowitz, J. A., Dey, M. G., Heins, R. &amp; Bugbee, B. (2025). Fertigation with Fe-EDTA, Fe-DTPA, and Fe-EDDHA chelates to prevent iron chlorosis of sensitive species in high-pH soilless media. <em>HortScience</em>, 60(3), 404–410. <a href="https://doi.org/10.21273/HORTSCI17892-24" rel="noopener" target="_blank">doi.org/10.21273/HORTSCI17892-24</a></li>
+        <li>Norvell, W. A. (1972). Equilibria of metal chelates in soil solution. In J. J. Mortvedt, P. M. Giordano &amp; W. L. Lindsay (Eds.), <em>Micronutrients in Agriculture</em> (pp. 115–138). Madison, WI: Soil Science Society of America.</li>
+        <li>Lindsay, W. L. (1979). <em>Chemical Equilibria in Soils</em>. New York: John Wiley &amp; Sons.</li>
+        <li>Stumm, W. &amp; Lee, G. F. (1961). Oxygenation of ferrous iron. <em>Industrial &amp; Engineering Chemistry</em>, 53(2), 143–146.</li>
+        <li>Prohaska, T. et al. (2022). Standard atomic weights of the elements 2021 (IUPAC Technical Report). <em>Pure and Applied Chemistry</em>, 94(5), 573–600. <a href="https://www.ciaaw.org/atomic-weights.htm" rel="noopener" target="_blank">ciaaw.org</a></li>
+      </ol>
+    </article>
+  </main>
+
+  <footer class="site-footer">
+    <div class="wrap">Calculations are estimates. Check the sources above before relying on a result.</div>
+  </footer>
+
+  <script src="../assets/share.js"></script>
+  <script src="../assets/units.js"></script>
+  <script src="../assets/iron-addition.js"></script>
+</body>
+</html>

@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Pipe Water Velocity Calculator</title>
+  <meta name="description" content="Find water velocity, Reynolds number and the right PVC Schedule 40 or 80 pipe size for a flow rate in aquaponics, aquaculture and hydroponics plumbing.">
+  <link rel="stylesheet" href="../assets/style.css">
+  <style>
+    .viz .wv-pipe-wall { fill: var(--tank-back); fill-opacity: .55; stroke: var(--tank-stroke); stroke-width: 1.5; }
+    .viz .wv-bore { fill: var(--water); fill-opacity: .85; stroke: var(--tank-stroke); stroke-width: 1.5; }
+    .viz .wv-arrow { stroke: #fff; stroke-width: 2.5; fill: none; stroke-linecap: round; stroke-linejoin: round; }
+    .viz .wv-stream { stroke: var(--water-top); stroke-width: 2; fill: none; stroke-dasharray: 10 14; stroke-linecap: round;
+      animation: wv-dash var(--dur, 1s) linear infinite; }
+    @keyframes wv-dash { to { stroke-dashoffset: -24; } }
+    @media (prefers-reduced-motion: reduce) { .viz .wv-stream { animation: none; } }
+    .viz .wv-track { fill: none; stroke: var(--surface-2); stroke-width: 18; }
+    .viz .wv-zone-low { fill: none; stroke: var(--water); stroke-width: 18; }
+    .viz .wv-zone-ok { fill: none; stroke: var(--accent); stroke-width: 18; }
+    .viz .wv-zone-high { fill: none; stroke: var(--warn-text); stroke-width: 18; stroke-opacity: .8; }
+    .viz .wv-tick { stroke: var(--text-muted); stroke-width: 1; }
+    .viz .wv-needle { stroke: var(--text); stroke-width: 3; stroke-linecap: round; }
+    .viz .wv-hub { fill: var(--text); }
+    .viz .wv-value { fill: var(--text); font-size: 18px; font-weight: 700; font-family: var(--font); }
+    .viz .wv-zone-text { fill: var(--text-muted); font-size: 11px; font-weight: 600; font-family: var(--font); }
+    .wv-status { font-weight: 600; }
+  </style>
+</head>
+<body>
+  <header class="site-header">
+    <div class="wrap">
+      <a class="brand" href="../">
+        <span class="brand-mark" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3c3 4 6 7 6 11a6 6 0 0 1-12 0c0-4 3-7 6-11z"/></svg>
+        </span>
+        Tank Calculator
+      </a>
+      <nav><a href="../">All calculators</a></nav>
+    </div>
+  </header>
+
+  <main class="wrap">
+    <div class="crumbs"><a href="../">Home</a> / Pipe Water Velocity</div>
+    <h1 class="page-title">Pipe Water Velocity Calculator</h1>
+    <p class="page-lede">Find how fast water moves through a pipe at a given flow rate, whether the flow is laminar or turbulent, and which PVC Schedule 40 or 80 pipe keeps the velocity in a sensible range for pump lines and drains.</p>
+
+    <div class="calc-layout">
+      <!-- Calculator -->
+      <section class="card" aria-labelledby="calc-heading">
+        <h2 id="calc-heading">Calculator</h2>
+
+        <div class="field">
+          <span class="label" id="mode-label">What do you want to find?</span>
+          <div class="segmented" role="group" aria-labelledby="mode-label" id="mode-group">
+            <button type="button" data-mode="check" aria-pressed="true">
+              <svg viewBox="0 0 34 26" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M3 8h28M3 18h28M8 13h16m-4-3 4 3-4 3"/></svg>
+              Velocity in a pipe
+            </button>
+            <button type="button" data-mode="size" aria-pressed="false">
+              <svg viewBox="0 0 34 26" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><circle cx="17" cy="13" r="9"/><path d="M8 13h18M10 10l-2 3 2 3M24 10l2 3-2 3"/></svg>
+              Pipe size needed
+            </button>
+          </div>
+        </div>
+
+        <div class="field">
+          <label for="flow">Flow rate</label>
+          <div class="input-row"><input id="flow" type="number" inputmode="decimal" min="0" step="any"><select class="unit-select" data-unit-group="flow" data-unit-for="flow" data-unit-default="gpm" aria-label="Flow rate unit"></select></div>
+        </div>
+
+        <div class="field" data-mode-only="check">
+          <label for="pipe">Pipe</label>
+          <select id="pipe"></select>
+          <div class="field-hint" id="pipe-hint"></div>
+        </div>
+
+        <div class="field" data-mode-only="check" id="id-field">
+          <label for="diam">Pipe inside diameter</label>
+          <div class="input-row"><input id="diam" type="number" inputmode="decimal" min="0" step="any"><select class="unit-select" data-unit-group="length" data-unit-for="diam" data-unit-default="in" aria-label="Inside diameter unit"></select></div>
+          <div class="field-hint">Measure the bore, not the outside of the pipe.</div>
+        </div>
+
+        <div class="two-col" data-mode-only="size">
+          <div class="field">
+            <label for="vt">Target velocity</label>
+            <div class="input-row"><input id="vt" type="number" inputmode="decimal" min="0" step="any"><select class="unit-select" data-unit-group="velocity" data-unit-for="vt" data-unit-default="ftps" aria-label="Target velocity unit"></select></div>
+          </div>
+          <div class="field">
+            <label for="sched">Pipe schedule</label>
+            <select id="sched">
+              <option value="40">PVC Sch 40</option>
+              <option value="80">PVC Sch 80</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="field">
+          <label for="temp">Water temperature</label>
+          <div class="input-row"><input id="temp" type="number" inputmode="decimal" step="any"><select class="unit-select" data-unit-group="temperature" data-unit-for="temp" data-unit-default="C" aria-label="Water temperature unit"></select></div>
+          <div class="field-hint">Used for the viscosity in the Reynolds number (0–50 °C).</div>
+        </div>
+
+        <div class="two-col">
+          <div class="field">
+            <label for="vmin">Minimum velocity</label>
+            <div class="input-row"><input id="vmin" type="number" inputmode="decimal" min="0" step="any"><select class="unit-select" data-unit-group="velocity" data-unit-for="vmin" data-unit-default="ftps" aria-label="Minimum velocity unit"></select></div>
+            <div class="field-hint">Rule of thumb for solids-carrying lines: 2 ft/s (0.6 m/s).</div>
+          </div>
+          <div class="field">
+            <label for="vmax">Maximum velocity</label>
+            <div class="input-row"><input id="vmax" type="number" inputmode="decimal" min="0" step="any"><select class="unit-select" data-unit-group="velocity" data-unit-for="vmax" data-unit-default="ftps" aria-label="Maximum velocity unit"></select></div>
+            <div class="field-hint">Rule of thumb for PVC pressure lines: 5 ft/s (1.5 m/s).</div>
+          </div>
+        </div>
+
+        <hr class="divider">
+
+        <div class="notice" id="notice" hidden></div>
+
+        <div class="field">
+          <label for="out">Show velocity in</label>
+          <select id="out" class="unit-select-out" data-unit-group="velocity" data-unit-default="ftps"></select>
+        </div>
+
+        <div class="result-main" aria-live="polite">
+          <div class="label" id="r-main-label">Water velocity</div>
+          <div class="value" id="r-main">–</div>
+        </div>
+
+        <ul class="result-list">
+          <li data-mode-only="size"><span>Smallest pipe at or below target</span><span class="v" id="r-pick">–</span></li>
+          <li data-mode-only="size"><span>Velocity in that pipe</span><span class="v" id="r-pickv">–</span></li>
+          <li><span>Range check</span><span class="v wv-status" id="r-range">–</span></li>
+          <li><span>Inside diameter used</span><span class="v" id="r-id">–</span></li>
+          <li><span>Cross-sectional area</span><span class="v" id="r-area">–</span></li>
+          <li><span>Reynolds number</span><span class="v" id="r-re">–</span></li>
+          <li><span>Flow regime</span><span class="v" id="r-regime">–</span></li>
+          <li data-mode-only="check"><span>Max flow at the velocity limit</span><span class="v" id="r-qmax">–</span></li>
+          <li><span>Smallest Sch 40 under the limit</span><span class="v" id="r-s40">–</span></li>
+          <li><span>Smallest Sch 80 under the limit</span><span class="v" id="r-s80">–</span></li>
+        </ul>
+
+        <div class="share-bar">
+          <button class="btn btn-primary" type="button" id="btn-share">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="m8.6 13.5 6.8 4M15.4 6.5l-6.8 4"/></svg>
+            Share
+          </button>
+          <button class="btn" type="button" id="btn-link">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.5.5l3-3a5 5 0 0 0-7-7l-1.7 1.7"/><path d="M14 11a5 5 0 0 0-7.5-.5l-3 3a5 5 0 0 0 7 7l1.7-1.7"/></svg>
+            Copy link
+          </button>
+          <button class="btn" type="button" id="btn-copy">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h10a1 1 0 0 1 1 1v1"/></svg>
+            Copy results
+          </button>
+          <button class="btn" type="button" id="btn-reset">Reset</button>
+        </div>
+      </section>
+
+      <!-- Visualization -->
+      <section class="card viz-card" aria-labelledby="viz-heading">
+        <h2 id="viz-heading">Visualization</h2>
+        <svg class="viz" id="viz" viewBox="0 0 360 300" role="img" aria-label="Pipe cross-section with flow arrows and a velocity gauge"></svg>
+        <p class="viz-caption" id="viz-caption"></p>
+      </section>
+    </div>
+
+    <article class="article">
+      <h2>How the pipe water velocity calculator works</h2>
+      <p>Water velocity in a full pipe is simply the flow rate divided by the open area of the bore. The same flow moves much faster through a small pipe than a large one, because the area grows with the square of the diameter: halving the inside diameter makes the water four times faster.</p>
+      <p>Pick a standard PVC pipe from the list (its real inside diameter is filled in for you) or enter any inside diameter. The calculator gives the velocity, the Reynolds number and flow regime, checks the velocity against the minimum and maximum you set, and lists the smallest Schedule 40 and Schedule 80 pipe that stays at or below your maximum. In <strong>Pipe size needed</strong> mode it works backwards from a target velocity to the inside diameter you need and the smallest standard pipe that meets it.</p>
+
+      <h3>Why velocity matters in fish and plant systems</h3>
+      <ul>
+        <li><strong>Too fast</strong> in pump discharge lines wastes energy (friction loss rises roughly with the square of velocity), makes noise, and raises the pressure surge (water hammer) when a valve closes or a pump stops. Surge is the main reason PVC pipe guidance caps velocity.</li>
+        <li><strong>Too slow</strong> in lines that carry fish waste, uneaten feed or root debris lets solids settle and build up, which can clog drains and create low-oxygen pockets.</li>
+        <li><strong>Pipe size is a cost trade-off.</strong> Bigger pipe is slower and cheaper to pump through but costs more to buy. A velocity check is the quickest way to land in the middle.</li>
+      </ul>
+
+      <h3>Formulas</h3>
+      <p>For a full pipe of inside diameter D carrying flow Q:</p>
+      <div class="formula">Area      A = π × D² ÷ 4
+Velocity  v = Q ÷ A
+Diameter for a target velocity:
+          D = √(4 Q ÷ (π v))</div>
+      <p>The Reynolds number compares inertial and viscous forces. ν is the kinematic viscosity of water (dynamic viscosity μ divided by density ρ):</p>
+      <div class="formula">Re = v × D ÷ ν          ν = μ ÷ ρ</div>
+      <p>For flow in circular pipes, the usual engineering limits are: <strong>laminar</strong> below Re ≈ 2,300, <strong>transitional</strong> from about 2,300 to 4,000, and <strong>turbulent</strong> above about 4,000 (Çengel &amp; Cimbala). Almost every pump or drain line in a real system is turbulent.</p>
+
+      <h3>Water viscosity used</h3>
+      <p>The calculator interpolates between these values (liquid water at atmospheric pressure). Warm water is thinner, so the Reynolds number rises with temperature.</p>
+      <table>
+        <thead><tr><th>Temp (°C)</th><th>μ (mPa·s)</th><th>ρ (kg/m³)</th><th>ν (mm²/s)</th></tr></thead>
+        <tbody>
+          <tr><td>0</td><td>1.792</td><td>999.84</td><td>1.792</td></tr>
+          <tr><td>10</td><td>1.306</td><td>999.70</td><td>1.306</td></tr>
+          <tr><td>20</td><td>1.002</td><td>998.21</td><td>1.004</td></tr>
+          <tr><td>25</td><td>0.890</td><td>997.05</td><td>0.893</td></tr>
+          <tr><td>30</td><td>0.797</td><td>995.65</td><td>0.800</td></tr>
+          <tr><td>40</td><td>0.653</td><td>992.22</td><td>0.658</td></tr>
+          <tr><td>50</td><td>0.547</td><td>988.04</td><td>0.554</td></tr>
+        </tbody>
+      </table>
+      <p>Values every 5 °C are used internally. Viscosity from Kestin, Sokolov &amp; Wakeham (1978); density from Tanaka et al. (2001) up to 40 °C and IAPWS-95 (Wagner &amp; Pruß, 2002) above that.</p>
+
+      <h3>PVC pipe inside diameters</h3>
+      <p>ASTM D1785 fixes the <em>outside</em> diameter and the <em>minimum</em> wall thickness of Schedule 40 and 80 PVC pipe; the outside diameter is the same for both schedules, so Schedule 80 has a smaller bore. The calculator uses inside diameter = outside diameter − 2 × minimum wall.</p>
+      <table>
+        <thead><tr><th>Nominal</th><th>OD (in)</th><th>Sch 40 ID (in)</th><th>Sch 80 ID (in)</th></tr></thead>
+        <tbody id="pipe-table"></tbody>
+      </table>
+      <p>Real pipe walls are made a little thicker than the minimum, so manufacturers' <em>average</em> inside diameters are usually 1–3% smaller than these figures. That makes real velocities a few percent higher than shown here.</p>
+
+      <h3>Recommended velocity ranges (rules of thumb)</h3>
+      <p>There is no single correct velocity. These are commonly used design figures, not hard limits, and the calculator lets you change both:</p>
+      <ul>
+        <li><strong>Maximum about 5 ft/s (1.5 m/s) for PVC pressure lines</strong>, and never more than 10 ft/s (3 m/s). University of Florida IFAS extension guidance gives these limits to keep water hammer surges within the pressure rating of plastic pipe (Clark &amp; Haman). Short runs on the suction side of a pump are usually kept slower still.</li>
+        <li><strong>Minimum about 2 ft/s (0.6 m/s) for lines that carry solids.</strong> This is the self-cleansing velocity that sewer design standards require for pipes flowing full (Ten States Standards). Fish-tank drains and solids lines carry lighter material than sewage, so some designers accept less, but going much below 1 ft/s (0.3 m/s) invites settling. Clean-water lines (for example after a filter) have no practical minimum.</li>
+      </ul>
+      <p>The gauge in the visualization shows these zones: blue below your minimum, green between minimum and maximum, amber above your maximum.</p>
+
+      <h3>Example</h3>
+      <p>A pump moves 20 US gpm through 1¼″ Schedule 40 PVC at 20 °C.</p>
+      <div class="formula">Q  = 20 gpm × 3.785411784 L ÷ 60 s = 1.2618 L/s = 0.0012618 m³/s
+D  = 1.380 in = 0.035052 m
+A  = π × 0.035052² ÷ 4 = 0.00096497 m² (1.496 in², 9.65 cm²)
+v  = 0.0012618 ÷ 0.00096497 = 1.308 m/s = 4.29 ft/s
+ν  = 1.002 × 10⁻³ ÷ 998.21 = 1.004 × 10⁻⁶ m²/s
+Re = 1.308 × 0.035052 ÷ 1.004 × 10⁻⁶ ≈ 45,700  → turbulent</div>
+      <p>4.29 ft/s is between the 2 ft/s minimum and the 5 ft/s maximum, so this pipe is a good fit. The 1″ Schedule 40 pipe (ID 1.049 in) would run at 7.42 ft/s, over the limit, so 1¼″ is the smallest Schedule 40 size that works. In Schedule 80, 1¼″ (ID 1.278 in) gives 5.002 ft/s, just over 5 ft/s, so the smallest Schedule 80 size is 1½″ (3.63 ft/s). At 5 ft/s, 1¼″ Schedule 40 can carry up to about 23.3 gpm.</p>
+
+      <h3>Things the calculator does not include</h3>
+      <ul>
+        <li><strong>Partly full pipes.</strong> The formulas assume the pipe runs full. A gravity drain that runs half full has half the flow area in use, so its real velocity at the same flow is higher and depends on slope; use Manning's equation for open-channel flow.</li>
+        <li><strong>Friction loss and pump head.</strong> Velocity is the first step; head loss also depends on pipe length, fittings and roughness.</li>
+        <li><strong>Other pipe types.</strong> Thin-wall, SDR-rated, polyethylene and metric pipes have different inside diameters. Use the custom inside diameter for these.</li>
+        <li><strong>Water hammer itself.</strong> The 5 ft/s guideline reduces surge; it does not replace a surge check for long lines or fast-closing valves.</li>
+      </ul>
+
+      <h2>Sources</h2>
+      <ol class="sources">
+        <li>ASTM International. <em>ASTM D1785: Standard Specification for Poly(Vinyl Chloride) (PVC) Plastic Pipe, Schedules 40, 80, and 120</em>. West Conshohocken, PA: ASTM International. <a href="https://www.astm.org/d1785" rel="noopener" target="_blank">astm.org</a></li>
+        <li>Çengel, Y. A. &amp; Cimbala, J. M. <em>Fluid Mechanics: Fundamentals and Applications</em>. New York: McGraw-Hill. Chapter 8, Internal Flow (Reynolds number and laminar, transitional and turbulent pipe flow).</li>
+        <li>Kestin, J., Sokolov, M. &amp; Wakeham, W. A. (1978). Viscosity of liquid water in the range −8 °C to 150 °C. <em>Journal of Physical and Chemical Reference Data</em>, 7(3), 941–948.</li>
+        <li>Tanaka, M., Girard, G., Davis, R., Peuto, A. &amp; Bignell, N. (2001). Recommended table for the density of water between 0 °C and 40 °C based on recent experimental reports. <em>Metrologia</em>, 38(4), 301–309.</li>
+        <li>Wagner, W. &amp; Pruß, A. (2002). The IAPWS formulation 1995 for the thermodynamic properties of ordinary water substance for general and scientific use. <em>Journal of Physical and Chemical Reference Data</em>, 31(2), 387–535.</li>
+        <li>Clark, G. A. &amp; Haman, D. Z. <em>Water Hammer in Irrigation Systems</em>. Circular 828 (AE066). Gainesville: University of Florida, IFAS Extension. <a href="https://edis.ifas.ufl.edu/publication/AE066" rel="noopener" target="_blank">edis.ifas.ufl.edu</a></li>
+        <li>Great Lakes–Upper Mississippi River Board of State and Provincial Public Health and Environmental Managers. <em>Recommended Standards for Wastewater Facilities</em> (“Ten States Standards”), section 33.41: minimum velocity of 2.0 ft/s when flowing full. Albany, NY: Health Research, Inc.</li>
+        <li>Timmons, M. B. &amp; Ebeling, J. M. (2010). <em>Recirculating Aquaculture</em> (2nd ed.). Ithaca, NY: Cayuga Aqua Ventures. (Background on pump, pipe and solids-removal design in RAS.)</li>
+      </ol>
+    </article>
+  </main>
+
+  <footer class="site-footer">
+    <div class="wrap">Calculations are estimates. Check the sources above before relying on a result.</div>
+  </footer>
+
+  <script src="../assets/share.js"></script>
+  <script src="../assets/units.js"></script>
+  <script src="../assets/water-velocity.js"></script>
+</body>
+</html>

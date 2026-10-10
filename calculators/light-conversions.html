@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Light Conversions: Lux, Foot-candles, PPFD, W/m²</title>
+  <meta name="description" content="Convert lux, foot-candles, PPFD (µmol/m²/s) and W/m² PAR for sunlight, HPS, metal halide, fluorescent and white LED grow lights, and get the daily light integral (DLI) for your photoperiod.">
+  <link rel="stylesheet" href="../assets/style.css">
+  <style>
+    .viz .axis { stroke: var(--tank-stroke); stroke-width: 1.5; fill: none; }
+    .viz .tick { stroke: var(--text-muted); stroke-width: 1; }
+    .viz .tick-text { fill: var(--text-muted); font-size: 11px; font-family: var(--font); }
+    .viz .row-name { fill: var(--text); font-size: 12px; font-weight: 600; font-family: var(--font); }
+    .viz .row-val { fill: var(--accent); font-size: 12px; font-weight: 700; font-family: var(--font); font-variant-numeric: tabular-nums; }
+    .viz .row-val.entered { fill: var(--warn-text); }
+    .viz .head-text { fill: var(--text-muted); font-size: 12px; font-weight: 600; font-family: var(--font); }
+    .viz .marker { stroke: var(--warn-text); stroke-width: 2; }
+    .viz .marker-dot { fill: var(--warn-text); stroke: var(--surface); stroke-width: 1.5; }
+    .viz .track { fill: var(--surface-2); stroke: var(--border); stroke-width: 1; }
+    .viz .band { fill: var(--accent-soft); stroke: var(--accent); stroke-width: 1.5; }
+    .viz .band.hit { fill: var(--accent); fill-opacity: .35; }
+    .viz .sun-line { stroke: var(--warn-text); stroke-width: 1.5; stroke-dasharray: 5 4; }
+    .viz .sun-text { fill: var(--warn-text); font-size: 11px; font-weight: 600; font-family: var(--font); }
+    .viz .spectrum { opacity: .9; }
+    .status { font-size: .95rem; font-weight: 600; margin-top: 2px; }
+  </style>
+</head>
+<body>
+  <header class="site-header">
+    <div class="wrap">
+      <a class="brand" href="../">
+        <span class="brand-mark" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3c3 4 6 7 6 11a6 6 0 0 1-12 0c0-4 3-7 6-11z"/></svg>
+        </span>
+        Tank Calculator
+      </a>
+      <nav><a href="../">All calculators</a></nav>
+    </div>
+  </header>
+
+  <main class="wrap">
+    <div class="crumbs"><a href="../">Home</a> / Light Conversions</div>
+    <h1 class="page-title">Light Conversions: Lux, Foot-candles, PPFD and W/m²</h1>
+    <p class="page-lede">Turn a lux or foot-candle meter reading into PPFD (µmol/m²/s), the unit plants respond to, or go the other way. The answer depends on the lamp's spectrum, so pick the light source. You also get the daily light integral (DLI) for your photoperiod, compared with typical crop needs.</p>
+
+    <div class="calc-layout">
+      <!-- Calculator -->
+      <section class="card" aria-labelledby="calc-heading">
+        <h2 id="calc-heading">Calculator</h2>
+
+        <div class="field">
+          <label for="src">Light source</label>
+          <select id="src">
+            <option value="sun">Sunlight</option>
+            <option value="hps">High-pressure sodium (HPS)</option>
+            <option value="mh">Metal halide (MH)</option>
+            <option value="cwf">Cool-white fluorescent</option>
+            <option value="warmled">Warm white LED (≈3000 K, CRI 80)</option>
+            <option value="coolled">Cool white LED (≈5000 K, CRI 80)</option>
+            <option value="custom">Custom factors</option>
+          </select>
+          <div class="field-hint" id="src-hint"></div>
+        </div>
+
+        <div class="two-col" id="custom-fields" hidden>
+          <div class="field">
+            <label for="flux">PPFD per lux</label>
+            <div class="input-row"><input id="flux" type="number" inputmode="decimal" min="0" step="any"><span class="unit">µmol/m²/s per lx</span></div>
+            <div class="field-hint" id="flux-hint"></div>
+          </div>
+          <div class="field">
+            <label for="fw">PPFD per W/m² PAR</label>
+            <div class="input-row"><input id="fw" type="number" inputmode="decimal" min="0" step="any"><span class="unit">µmol/J</span></div>
+          </div>
+        </div>
+
+        <div class="field">
+          <label for="light">Light reading</label>
+          <div class="input-row"><input id="light" type="number" inputmode="decimal" min="0" step="any"><select class="unit-select" id="light_u" data-light-for="light" aria-label="Light reading unit"></select></div>
+          <div class="field-hint">Lux and foot-candles are weighted to human vision, so converting them to PPFD is only an approximation for plants.</div>
+        </div>
+
+        <div class="field">
+          <label for="hours">Photoperiod (hours of light per day)</label>
+          <div class="input-row"><input id="hours" type="number" inputmode="decimal" min="0" step="any"><select class="unit-select" data-unit-group="time" data-unit-for="hours" data-unit-default="h" aria-label="Photoperiod unit"></select></div>
+          <div class="field-hint">Used for the DLI. Assumes the light stays at this level the whole time.</div>
+        </div>
+
+        <hr class="divider">
+
+        <div class="notice" id="notice" hidden></div>
+
+        <div class="result-main" aria-live="polite">
+          <div class="label">Photosynthetic photon flux density (PPFD)</div>
+          <div class="value" id="r-ppfd">–</div>
+          <div class="status" id="r-status"></div>
+        </div>
+
+        <ul class="result-list">
+          <li><span>Illuminance (lux)</span><span class="v" id="r-lux">–</span></li>
+          <li><span>Illuminance (foot-candles)</span><span class="v" id="r-fc">–</span></li>
+          <li><span>PAR irradiance (400–700 nm)</span><span class="v" id="r-w">–</span></li>
+          <li><span>Daily light integral (DLI)</span><span class="v" id="r-dli">–</span></li>
+          <li><span>Factor used</span><span class="v" id="r-factor">–</span></li>
+        </ul>
+
+        <div class="share-bar">
+          <button class="btn btn-primary" type="button" id="btn-share">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="m8.6 13.5 6.8 4M15.4 6.5l-6.8 4"/></svg>
+            Share
+          </button>
+          <button class="btn" type="button" id="btn-link">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.5.5l3-3a5 5 0 0 0-7-7l-1.7 1.7"/><path d="M14 11a5 5 0 0 0-7.5-.5l-3 3a5 5 0 0 0 7 7l1.7-1.7"/></svg>
+            Copy link
+          </button>
+          <button class="btn" type="button" id="btn-copy">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h10a1 1 0 0 1 1 1v1"/></svg>
+            Copy results
+          </button>
+          <button class="btn" type="button" id="btn-reset">Reset</button>
+        </div>
+      </section>
+
+      <!-- Visualization -->
+      <section class="card viz-card" aria-labelledby="viz-heading">
+        <h2 id="viz-heading">Visualization</h2>
+        <svg class="viz" id="viz" viewBox="0 0 480 360" role="img" aria-label="Parallel scales showing the same light level in PPFD, lux, foot-candles and W/m², and a bar comparing the PPFD with typical crop ranges and full sun"></svg>
+        <p class="viz-caption" id="viz-caption"></p>
+      </section>
+    </div>
+
+    <article class="article">
+      <h2>How the light conversion calculator works</h2>
+      <p>Light can be measured in two different ways. <strong>Photometric</strong> units (lux and foot-candles) count light the way the human eye sees it. The eye is most sensitive to green-yellow light around 555 nm and barely sees deep blue or deep red. <strong>Quantum</strong> units (PPFD, µmol/m²/s) count every photon between 400 and 700 nm equally, which is much closer to how photosynthesis works. <strong>Radiometric</strong> units (W/m²) measure the energy those photons carry.</p>
+      <p>Lux and foot-candles convert to each other exactly. Converting either one to PPFD or W/m², or back, needs a factor that depends on the lamp's spectrum. The calculator takes your reading in any of the four units, converts it to PPFD with the factor for the light source you pick, and then works out the other units from that PPFD.</p>
+      <p><strong>Lux is weighted for human vision, so it is only an approximation for plants.</strong> Two lamps that read the same lux can give quite different PPFD. A quantum (PAR) meter measures PPFD directly and is always the better tool for grow lights.</p>
+
+      <h3>Why it matters in hydroponics and aquaponics</h3>
+      <ul>
+        <li>Many growers own a cheap lux meter or phone app, while crop guidance and grow-light datasheets use PPFD and DLI.</li>
+        <li>Greenhouse and shade-cloth guides are often written in foot-candles, while research papers use µmol/m²/s.</li>
+        <li>Converting a reading to DLI shows whether the plants in your rafts, NFT channels or media beds are getting enough light for the crop, or whether you are paying for light they cannot use.</li>
+      </ul>
+
+      <h3>Formulas</h3>
+      <p><strong>Lux and foot-candles</strong> (exact). One foot-candle is one lumen per square foot, and 1 ft² = 0.09290304 m²:</p>
+      <div class="formula">1 fc = 1 lm/ft² = 1 ÷ 0.09290304 lx = 10.7639 lx
+lux = fc × 10.7639</div>
+      <p><strong>Lux to PPFD and W/m² PAR</strong> (approximate, depends on the light source). f<sub>lux</sub> is µmol/m²/s per lux and f<sub>W</sub> is µmol per joule of 400–700 nm radiation:</p>
+      <div class="formula">PPFD (µmol/m²/s) = lux × f<sub>lux</sub>
+lux              = PPFD ÷ f<sub>lux</sub>
+PPFD             = W/m² (PAR) × f<sub>W</sub>
+W/m² (PAR)       = PPFD ÷ f<sub>W</sub></div>
+      <p><strong>Daily light integral</strong> for a light that stays at the same level for h hours:</p>
+      <div class="formula">DLI (mol/m²/day) = PPFD × h × 3600 s/h ÷ 1,000,000 µmol/mol
+                 = PPFD × h × 0.0036</div>
+
+      <h3>Conversion factors</h3>
+      <table>
+        <thead><tr><th>Light source</th><th>f<sub>lux</sub> (µmol/m²/s per lx)</th><th>lux per µmol/m²/s</th><th>f<sub>W</sub> (µmol/J)</th></tr></thead>
+        <tbody>
+          <tr><td>Sunlight</td><td>0.0185</td><td>54</td><td>4.57</td></tr>
+          <tr><td>High-pressure sodium</td><td>0.0122</td><td>82</td><td>4.98</td></tr>
+          <tr><td>Metal halide</td><td>0.0141</td><td>71</td><td>4.59</td></tr>
+          <tr><td>Cool-white fluorescent</td><td>0.0135</td><td>74</td><td>4.59</td></tr>
+          <tr><td>Warm white LED (3000 K, CRI 80)</td><td>0.0145*</td><td>69</td><td>≈4.9†</td></tr>
+          <tr><td>Cool white LED (5000 K, CRI 80)</td><td>0.0139*</td><td>72</td><td>≈4.6†</td></tr>
+        </tbody>
+      </table>
+      <p>Sunlight, HPS, metal halide and fluorescent factors come from Thimijan &amp; Heins (1983), and the lux factors match the table published by Apogee Instruments. The HPS figure is for standard (mogul-base) lamps. Apogee lists 77 lux per µmol/m²/s for one double-ended HPS lamp, so use the custom option for those.</p>
+      <p>*Thimijan &amp; Heins and Apogee do not give factors for white LEDs, because LED spectra vary so much. The LED lux factors here come from Sharakshane's (2018) regression for phosphor-white LEDs, which predicts the photon flux per 1000 lumens from colour temperature (CCT) and colour rendering index (Ra):</p>
+      <div class="formula">PPFD per klx ≈ −48 + 0.0005·CCT + 12000/CCT + 0.4·Ra + 2000/Ra
+3000 K, Ra 80:  −48 + 1.5 + 4.0 + 32 + 25 = 14.5  →  f<sub>lux</sub> = 0.0145
+5000 K, Ra 80:  −48 + 2.5 + 2.4 + 32 + 25 = 13.9  →  f<sub>lux</sub> = 0.0139</div>
+      <p>Sharakshane reports that white LEDs fall within about 7% of 15 µmol/m²/s per 1000 lux. High-CRI (90+) and very warm LEDs give more photons per lux, up to about 16. †There is no published standard W/m² factor for white LEDs. The values shown are our <strong>estimates</strong> from the photon energy of typical phosphor-white spectra (E = hc/λ, so µmol/J ≈ mean wavelength in nm ÷ 119.6). They are accurate to a few percent at best. If your fixture's datasheet gives PPFD per lux or a spectrum, enter its factors with <em>Custom factors</em>.</p>
+      <p><strong>Do not use a lux meter under red/blue (“blurple”) LEDs.</strong> The eye, and so a lux meter, barely responds to deep red (660 nm) and royal blue (450 nm) light, so the reading badly underestimates PPFD. No single factor fixes that.</p>
+
+      <h3>Typical light levels (rules of thumb)</h3>
+      <p>The range bar in the visualization converts DLI targets into the PPFD needed at your photoperiod (PPFD = DLI ÷ (h × 0.0036)). These are <strong>rules of thumb</strong>. Runkle (MSU) points out that there is no strict “DLI requirement”: the best level also depends on cultivar, temperature, CO₂ and how fast you want the crop to grow.</p>
+      <table>
+        <thead><tr><th>Group</th><th>DLI (mol/m²/day)</th><th>PPFD at 16 h</th><th>Basis</th></tr></thead>
+        <tbody>
+          <tr><td>Seedlings / plugs</td><td>6–15</td><td>104–260</td><td>Runkle: early plugs 6–10, late plugs 10–15</td></tr>
+          <tr><td>Leafy greens &amp; herbs</td><td>12–17</td><td>208–295</td><td>Runkle: 12 or more. Lettuce target 17 (Albright et al. 2000); higher DLI raises tipburn risk in lettuce</td></tr>
+          <tr><td>Fruiting crops (tomato, cucumber, pepper)</td><td>15–30</td><td>260–521</td><td>Runkle: 15 or more; 25–30 for high-wire tomato and cucumber</td></tr>
+          <tr><td>Full sun, clear summer noon</td><td>–</td><td>≈2000 (instantaneous)</td><td>MSU Floriculture; a peak, not a daily average</td></tr>
+        </tbody>
+      </table>
+
+      <h3>Example</h3>
+      <p>A lux meter reads <strong>20,000 lx</strong> at canopy height under warm white LED fixtures, and the lights run <strong>16 hours</strong> a day:</p>
+      <div class="formula">PPFD = 20,000 × 0.0145         = 290 µmol/m²/s
+fc   = 20,000 ÷ 10.7639        = 1,858 fc
+W/m² = 290 ÷ 4.9               = 59.2 W/m² (PAR)
+DLI  = 290 × 16 × 0.0036       = 16.7 mol/m²/day</div>
+      <p>A DLI of 16.7 falls in the leafy greens range (12–17) and the lower end of the fruiting crop range (15–30). It is above the seedling range, so seedlings could be grown with less light or fewer hours. The same 20,000 lx from sunlight would be 20,000 × 0.0185 = 370 µmol/m²/s, and from an HPS lamp only 20,000 × 0.0122 = 244 µmol/m²/s. That spread is why the light source matters.</p>
+
+      <h3>Limitations and assumptions</h3>
+      <ul>
+        <li><strong>Conversions are approximate.</strong> Even for the same lamp type, real spectra differ between brands, ages and dimming levels. Expect errors of 5–10% or more from any lux-to-PPFD conversion.</li>
+        <li><strong>W/m² means PAR-band W/m² only.</strong> A pyranometer or weather-station “solar radiation” value covers 300–3000 nm and is not the same thing. Roughly half of solar energy falls in the 400–700 nm band.</li>
+        <li><strong>DLI assumes constant light.</strong> Sunlight rises and falls during the day, so a single midday reading times the day length overstates the DLI. Use the <a href="daily-light-integral.html">DLI calculator</a> for a sunny-day curve.</li>
+        <li><strong>PPFD is 400–700 nm only.</strong> Far-red light (700–750 nm) from some LEDs can add to photosynthesis and changes plant shape, but it is not counted in PPFD.</li>
+        <li><strong>One reading is one spot.</strong> Light falls off toward the edges of a fixture's footprint. Average several readings across the bed at canopy height.</li>
+      </ul>
+
+      <h2>Sources</h2>
+      <ol class="sources">
+        <li>Thimijan, R. W. &amp; Heins, R. D. (1983). Photometric, radiometric, and quantum light units of measure: A review of procedures for interconversion. <em>HortScience</em>, 18(6), 818–822. <a href="https://doi.org/10.21273/HORTSCI.18.6.818" rel="noopener" target="_blank">doi:10.21273/HORTSCI.18.6.818</a></li>
+        <li>Apogee Instruments. “PPFD to Lux Conversion.” <a href="https://www.apogeeinstruments.com/conversion-ppfd-to-lux/" rel="noopener" target="_blank">apogeeinstruments.com</a></li>
+        <li>Sharakshane, A. (2018). An easy estimate of the PFDD for a plant illuminated with white LEDs: 1000 lx = 15 µmol/s/m². <em>bioRxiv</em> preprint 289280. <a href="https://doi.org/10.1101/289280" rel="noopener" target="_blank">doi:10.1101/289280</a></li>
+        <li>Thompson, A. &amp; Taylor, B. N. (2008). <em>Guide for the Use of the International System of Units (SI)</em>. NIST Special Publication 811, Appendix B (footcandle = 1.076 391 × 10¹ lx). <a href="https://www.nist.gov/pml/special-publication-811" rel="noopener" target="_blank">nist.gov</a></li>
+        <li>Runkle, E. “DLI ‘requirements’.” Michigan State University Floriculture (reprinted from <em>Greenhouse Product News</em>). <a href="https://www.canr.msu.edu/floriculture/uploads/files/dli%20requirements.pdf" rel="noopener" target="_blank">canr.msu.edu</a></li>
+        <li>Albright, L. D., Both, A. J. &amp; Chiu, A. J. (2000). Controlling greenhouse light to a consistent daily integral. <em>Transactions of the ASAE</em>, 43(2), 421–431.</li>
+        <li>Michigan State University Floriculture. “Know your light levels.” <a href="https://www.canr.msu.edu/floriculture/uploads/files/know-your-light-levels.pdf" rel="noopener" target="_blank">canr.msu.edu</a></li>
+        <li>Faust, J. E. &amp; Logan, J. (2018). Daily light integral: A research review and high-resolution maps of the United States. <em>HortScience</em>, 53(9), 1250–1257. <a href="https://doi.org/10.21273/HORTSCI13144-18" rel="noopener" target="_blank">doi:10.21273/HORTSCI13144-18</a></li>
+      </ol>
+    </article>
+  </main>
+
+  <footer class="site-footer">
+    <div class="wrap">Calculations are estimates. Check the sources above before relying on a result.</div>
+  </footer>
+
+  <script src="../assets/share.js"></script>
+  <script src="../assets/units.js"></script>
+  <script src="../assets/light-conversions.js"></script>
+</body>
+</html>

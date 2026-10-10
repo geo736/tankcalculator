@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TAN Conversion (Ammonia) Calculator</title>
+  <meta name="description" content="Convert an ammonia test result between TAN, NH3-N, NH3 and NH4+, find the toxic un-ionized ammonia from pH, temperature and salinity, and convert nitrite and nitrate between ion and nitrogen units.">
+  <link rel="stylesheet" href="../assets/style.css">
+  <style>
+    .status { display: inline-block; margin-top: 6px; padding: 3px 10px; border-radius: 999px; font-size: .85rem; font-weight: 600; background: var(--surface); color: var(--text); border: 1px solid var(--border); }
+    .status[data-level="ok"] { background: var(--accent-soft); color: var(--accent-strong); border-color: var(--accent); }
+    .status[data-level="caution"], .status[data-level="harm"] { background: var(--warn-bg); color: var(--warn-text); border-color: var(--warn-text); }
+    .status[data-level="danger"] { background: var(--warn-text); color: var(--surface); border-color: var(--warn-text); }
+    .result-main .sub { font-size: .9rem; color: var(--text-muted); margin-top: 2px; font-variant-numeric: tabular-nums; }
+    .sub-heading { font-size: .95rem; margin: 18px 0 10px; }
+    .viz .curve { fill: none; stroke: var(--accent); stroke-width: 2.5; stroke-linejoin: round; }
+    .viz .curve-alt { fill: none; stroke: var(--water-deep); stroke-width: 1.6; stroke-dasharray: 6 4; }
+    .viz .grid { stroke: var(--border); stroke-width: 1; }
+    .viz .axis { stroke: var(--text-muted); stroke-width: 1; fill: none; }
+    .viz .point { fill: var(--accent); stroke: var(--surface); stroke-width: 2; }
+    .viz .limit { stroke: var(--warn-text); stroke-width: 1.4; stroke-dasharray: 2 3; }
+    .viz .limit-text { fill: var(--warn-text); font-size: 11px; font-family: var(--font); }
+    .viz .bar-nh4 { fill: var(--water); fill-opacity: .85; }
+    .viz .bar-nh3 { fill: var(--warn-text); }
+    .viz .strong-text { fill: var(--text); font-size: 12px; font-weight: 600; font-family: var(--font); }
+    .viz .curve-text { fill: var(--accent); font-size: 12px; font-weight: 600; font-family: var(--font); }
+    .viz .alt-text { fill: var(--water-deep); font-size: 11px; font-family: var(--font); }
+    @media (prefers-color-scheme: dark) {
+      :root:not([data-theme="light"]) .viz .curve-alt { stroke: var(--water-top); }
+      :root:not([data-theme="light"]) .viz .alt-text { fill: var(--water-top); }
+    }
+    :root[data-theme="dark"] .viz .curve-alt { stroke: var(--water-top); }
+    :root[data-theme="dark"] .viz .alt-text { fill: var(--water-top); }
+  </style>
+</head>
+<body>
+  <header class="site-header">
+    <div class="wrap">
+      <a class="brand" href="../">
+        <span class="brand-mark" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3c3 4 6 7 6 11a6 6 0 0 1-12 0c0-4 3-7 6-11z"/></svg>
+        </span>
+        Tank Calculator
+      </a>
+      <nav><a href="../">All calculators</a></nav>
+    </div>
+  </header>
+
+  <main class="wrap">
+    <div class="crumbs"><a href="../">Home</a> / TAN Conversion (Ammonia)</div>
+    <h1 class="page-title">TAN Conversion (Ammonia) Calculator</h1>
+    <p class="page-lede">Turn an ammonia test reading into total ammonia nitrogen (TAN), NH₃-N, NH₃ and NH₄⁺, and see how much of it is the toxic un-ionized form at your pH, temperature and salinity. Also converts nitrite and nitrate between ion and nitrogen units.</p>
+
+    <div class="calc-layout">
+      <!-- Calculator -->
+      <section class="card" aria-labelledby="calc-heading">
+        <h2 id="calc-heading">Calculator</h2>
+
+        <div class="field">
+          <label for="amm">Ammonia test result</label>
+          <div class="input-row"><input id="amm" type="number" inputmode="decimal" min="0" step="any"><select class="unit-select" data-unit-group="concentration" data-unit-for="amm" data-unit-default="mgL" aria-label="Ammonia result unit"></select></div>
+        </div>
+
+        <div class="field">
+          <label for="basis">Test kit reports it as</label>
+          <select id="basis">
+            <option value="tan">Total ammonia as N (TAN, NH₃-N + NH₄-N)</option>
+            <option value="totnh3">Total ammonia as NH₃</option>
+            <option value="totnh4">Total ammonia as NH₄⁺</option>
+            <option value="nh3">Free (un-ionized) ammonia as NH₃</option>
+            <option value="nh3n">Free (un-ionized) ammonia as N (NH₃-N)</option>
+            <option value="nh4">Ammonium ion only, as NH₄⁺</option>
+            <option value="nh4n">Ammonium ion only, as N (NH₄-N)</option>
+          </select>
+          <div class="field-hint">Check the kit label: “NH₃-N” or “as N” means nitrogen basis; most kits measure total ammonia (NH₃ + NH₄⁺).</div>
+        </div>
+
+        <div class="two-col">
+          <div class="field">
+            <label for="ph">Water pH</label>
+            <div class="input-row"><input id="ph" type="number" inputmode="decimal" min="0" max="14" step="any"><span class="unit">pH</span></div>
+          </div>
+          <div class="field">
+            <label for="temp">Water temperature</label>
+            <div class="input-row"><input id="temp" type="number" inputmode="decimal" step="any"><select class="unit-select" data-unit-group="temperature" data-unit-for="temp" data-unit-default="C" aria-label="Temperature unit"></select></div>
+          </div>
+        </div>
+
+        <div class="field">
+          <label for="sal">Salinity (optional)</label>
+          <div class="input-row"><input id="sal" type="number" inputmode="decimal" min="0" step="any" placeholder="0 for fresh water"><select class="unit-select" data-unit-group="salinity" data-unit-for="sal" data-unit-default="ppt" aria-label="Salinity unit"></select></div>
+          <div class="field-hint">Leave at 0 for fresh water. Full seawater is about 35 ppt.</div>
+        </div>
+
+        <hr class="divider">
+
+        <div class="notice" id="notice" hidden></div>
+
+        <div class="field">
+          <label for="out">Show ammonia results in</label>
+          <select class="unit-select-out" id="out" data-unit-group="concentration" data-unit-default="mgL"></select>
+        </div>
+
+        <div class="result-main" aria-live="polite">
+          <div class="label">Un-ionized (toxic) ammonia, NH₃</div>
+          <div class="value" id="r-nh3">–</div>
+          <div class="sub" id="r-nh3sub"></div>
+          <div class="status" id="r-status" data-level="">–</div>
+        </div>
+
+        <ul class="result-list">
+          <li><span>Share un-ionized (NH₃)</span><span class="v" id="r-pct">–</span></li>
+          <li><span>Un-ionized ammonia as N (NH₃-N)</span><span class="v" id="r-nh3n">–</span></li>
+          <li><span>Total ammonia nitrogen (TAN)</span><span class="v" id="r-tan">–</span></li>
+          <li><span>Total ammonia as NH₃</span><span class="v" id="r-totnh3">–</span></li>
+          <li><span>Total ammonia as NH₄⁺</span><span class="v" id="r-totnh4">–</span></li>
+          <li><span>Ionized ammonium, NH₄⁺ (as N)</span><span class="v" id="r-nh4">–</span></li>
+          <li><span>pKa of NH₄⁺ at this temperature</span><span class="v" id="r-pka">–</span></li>
+        </ul>
+
+        <h3 class="sub-heading">Nitrite and nitrate converter</h3>
+        <div class="two-col">
+          <div class="field">
+            <label for="no2">Nitrite result</label>
+            <div class="input-row"><input id="no2" type="number" inputmode="decimal" min="0" step="any"><select class="unit-select" data-unit-group="concentration" data-unit-for="no2" data-unit-default="mgL" aria-label="Nitrite unit"></select></div>
+          </div>
+          <div class="field">
+            <label for="no2basis">Reported as</label>
+            <select id="no2basis">
+              <option value="ion">Nitrite ion, NO₂⁻</option>
+              <option value="n">Nitrite-N, NO₂-N</option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="no3">Nitrate result</label>
+            <div class="input-row"><input id="no3" type="number" inputmode="decimal" min="0" step="any"><select class="unit-select" data-unit-group="concentration" data-unit-for="no3" data-unit-default="mgL" aria-label="Nitrate unit"></select></div>
+          </div>
+          <div class="field">
+            <label for="no3basis">Reported as</label>
+            <select id="no3basis">
+              <option value="ion">Nitrate ion, NO₃⁻</option>
+              <option value="n">Nitrate-N, NO₃-N</option>
+            </select>
+          </div>
+        </div>
+        <ul class="result-list">
+          <li><span>Nitrite as NO₂⁻</span><span class="v" id="r-no2">–</span></li>
+          <li><span>Nitrite as N (NO₂-N)</span><span class="v" id="r-no2n">–</span></li>
+          <li><span>Nitrate as NO₃⁻</span><span class="v" id="r-no3">–</span></li>
+          <li><span>Nitrate as N (NO₃-N)</span><span class="v" id="r-no3n">–</span></li>
+        </ul>
+
+        <div class="share-bar">
+          <button class="btn btn-primary" type="button" id="btn-share">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="m8.6 13.5 6.8 4M15.4 6.5l-6.8 4"/></svg>
+            Share
+          </button>
+          <button class="btn" type="button" id="btn-link">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.5.5l3-3a5 5 0 0 0-7-7l-1.7 1.7"/><path d="M14 11a5 5 0 0 0-7.5-.5l-3 3a5 5 0 0 0 7 7l1.7-1.7"/></svg>
+            Copy link
+          </button>
+          <button class="btn" type="button" id="btn-copy">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h10a1 1 0 0 1 1 1v1"/></svg>
+            Copy results
+          </button>
+          <button class="btn" type="button" id="btn-reset">Reset</button>
+        </div>
+      </section>
+
+      <!-- Visualization -->
+      <section class="card viz-card" aria-labelledby="viz-heading">
+        <h2 id="viz-heading">Visualization</h2>
+        <svg class="viz" id="viz" viewBox="0 0 480 360" role="img" aria-label="Chart of percent un-ionized ammonia against pH, and a bar splitting total ammonia into NH3 and NH4+"></svg>
+        <p class="viz-caption" id="viz-caption"></p>
+      </section>
+    </div>
+
+    <article class="article">
+      <h2>How the TAN conversion calculator works</h2>
+      <p>Ammonia dissolved in water exists in two forms that are always in balance: <strong>un-ionized ammonia (NH₃)</strong> and the <strong>ammonium ion (NH₄⁺)</strong>. Most test kits measure both together, called total ammonia. The calculator first converts your reading to <strong>total ammonia nitrogen (TAN)</strong>, the mass of nitrogen in both forms. It then uses pH, temperature and (optionally) salinity to work out what share of that nitrogen is in the un-ionized form, and reports the result in every common way of writing it.</p>
+      <p>The same chemical amount can be written very differently. 1 mg/L of TAN (as N) is the same water as 1.22 mg/L “total ammonia as NH₃” or 1.29 mg/L “as NH₄⁺”. Mixing these up is one of the most common sources of confusion when comparing a hobby test kit with a lab report or a published guideline.</p>
+
+      <h3>Why it matters for aquaculture and aquaponics</h3>
+      <p>Fish excrete ammonia through their gills, and in recirculating aquaculture (RAS) and aquaponics it builds up until nitrifying bacteria in the biofilter convert it to nitrite and then nitrate (Timmons &amp; Ebeling, 2010). Un-ionized NH₃ is the form that is toxic to fish because it passes easily across gill membranes; NH₄⁺ is far less toxic (Hargreaves &amp; Tucker, 2004). The toxic share rises roughly tenfold for every one-unit rise in pH, and also rises with temperature. A TAN reading that is harmless at pH 7 can be dangerous at pH 8.5, which is why the same test result must always be read together with pH and temperature.</p>
+
+      <h3>Formulas</h3>
+      <p><strong>1. Convert the reading to TAN (mg/L as N).</strong> Molar masses use the IUPAC standard atomic weights N = 14.007 and H = 1.008, so NH₃ = 17.031 g/mol and NH₄⁺ = 18.039 g/mol.</p>
+      <div class="formula">TAN-N = total NH₃ × 14.007 / 17.031   (= total NH₃ ÷ 1.2159)
+TAN-N = total NH₄⁺ × 14.007 / 18.039  (= total NH₄⁺ ÷ 1.2879)
+NH₃ (as NH₃) = NH₃-N × 1.2159
+NH₄⁺ (as NH₄⁺) = NH₄-N × 1.2879</div>
+
+      <p><strong>2. Find the dissociation constant of ammonium</strong> from the water temperature (Emerson et al., 1975), with T in kelvin:</p>
+      <div class="formula">pKa = 0.09018 + 2729.92 / T        T = °C + 273.15</div>
+
+      <p><strong>3. Salinity correction (optional).</strong> Dissolved salts raise the pKa slightly, so a little less of the ammonia is un-ionized in brackish and sea water (Soderberg &amp; Meade, 1991). The calculator uses the ionic-strength correction in the Florida DEP un-ionized ammonia procedure, with salinity S in g/kg (ppt) and t in °C:</p>
+      <div class="formula">I   = 19.9273 × S / (1000 − 1.005109 × S)
+pKa = 0.09018 + 2729.92 / T + (0.1552 − 0.0003142 × t) × I</div>
+
+      <p><strong>4. Fraction un-ionized</strong> and the split of TAN between the two forms:</p>
+      <div class="formula">f      = 1 / (10^(pKa − pH) + 1)
+NH₃-N  = f × TAN-N
+NH₄-N  = (1 − f) × TAN-N</div>
+      <p>If your kit reports only the free NH₃ (or only NH₄⁺), the calculator runs step 4 in reverse (TAN-N = NH₃-N ÷ f) to recover the total.</p>
+
+      <p><strong>Nitrite and nitrate</strong> use the same idea, with O = 15.999:</p>
+      <div class="formula">NO₂⁻ = NO₂-N × 46.005 / 14.007 = NO₂-N × 3.284
+NO₃⁻ = NO₃-N × 62.004 / 14.007 = NO₃-N × 4.427</div>
+
+      <h3>Worked example (the default inputs)</h3>
+      <p>A test kit reads <strong>1.0 mg/L TAN (as N)</strong> in fresh water at <strong>pH 7.5</strong> and <strong>25 °C</strong>.</p>
+      <ul>
+        <li>T = 25 + 273.15 = 298.15 K, so pKa = 0.09018 + 2729.92 / 298.15 = <strong>9.2464</strong>.</li>
+        <li>f = 1 / (10^(9.2464 − 7.5) + 1) = 1 / (55.77 + 1) = 0.01762, so <strong>1.76%</strong> of the ammonia is un-ionized.</li>
+        <li>NH₃-N = 0.01762 × 1.0 = 0.0176 mg/L, and NH₃ = 0.0176 × 1.2159 = <strong>0.0214 mg/L as NH₃</strong>.</li>
+        <li>The rest, 0.982 mg/L NH₄-N (1.265 mg/L as NH₄⁺), is ionized ammonium.</li>
+      </ul>
+      <p>0.0214 mg/L NH₃ is just above the conservative 0.02 mg/L long-term target, so the calculator flags it as “caution”. At pH 8.0 the same TAN would give 0.065 mg/L NH₃, inside the range where chronic gill damage has been reported.</p>
+      <p>For the default nitrite reading, 0.25 mg/L NO₂⁻ = 0.25 ÷ 3.284 = 0.0761 mg/L NO₂-N. For nitrate, 40 mg/L NO₃⁻ = 40 ÷ 4.427 = 9.04 mg/L NO₃-N.</p>
+
+      <h3>How to read the toxicity status</h3>
+      <p>Tolerance depends strongly on species, life stage, exposure time and other water quality (oxygen, CO₂), so there is no single safe number. The status uses these bands for un-ionized ammonia, in mg/L as NH₃:</p>
+      <table>
+        <thead><tr><th>NH₃ (mg/L)</th><th>Status</th><th>Basis</th></tr></thead>
+        <tbody>
+          <tr><td>below 0.02</td><td>Low</td><td>Conservative long-term target widely used in fish culture (rule of thumb; coldwater fish such as trout are more sensitive)</td></tr>
+          <tr><td>0.02 – 0.06</td><td>Caution</td><td>Above the conservative target, below the level where chronic harm is reported in SRAC 463</td></tr>
+          <tr><td>0.06 – 0.6</td><td>Harmful</td><td>Chronic exposure from about 0.06 mg/L can cause gill and kidney damage and reduced growth (Durborow et al., 1997)</td></tr>
+          <tr><td>0.6 and above</td><td>Dangerous</td><td>Short-term lethal levels for many pond fish begin around 0.6 mg/L (Durborow et al., 1997)</td></tr>
+        </tbody>
+      </table>
+      <p>For aquaponics, the FAO manual (Somerville et al., 2014) recommends keeping TAN below about 1 mg/L, which keeps NH₃ low at the near-neutral pH that suits plants and nitrifying bacteria.</p>
+
+      <h3>Limitations and assumptions</h3>
+      <ul>
+        <li><strong>The Emerson equation</strong> was fitted for fresh water from 0 to 30 °C and is widely used outside that range with small error. The page warns below 0 °C or above 40 °C.</li>
+        <li><strong>The salinity correction is approximate.</strong> Published seawater corrections (for example the method in the US EPA 1989 saltwater criteria) differ slightly from each other; with this method, full seawater (35 ppt) gives an un-ionized share about one-fifth lower than fresh water at the same pH and temperature. Salinity is treated as g/kg (ppt ≈ PSU).</li>
+        <li><strong>pH accuracy dominates.</strong> An error of 0.1 pH unit changes the NH₃ result by about 25%. Measure pH at the same time and place as ammonia; in ponds pH peaks in the late afternoon.</li>
+        <li><strong>mg/L vs ppm.</strong> In fresh water 1 mg/L ≈ 1 ppm. Concentration units here are per litre of water.</li>
+        <li><strong>The toxicity bands are general guidance</strong>, not species-specific limits or regulatory criteria.</li>
+      </ul>
+
+      <h2>Sources</h2>
+      <ol class="sources">
+        <li>Emerson, K., Russo, R. C., Lund, R. E. &amp; Thurston, R. V. (1975). Aqueous ammonia equilibrium calculations: effect of pH and temperature. <em>Journal of the Fisheries Research Board of Canada</em>, 32(12), 2379–2383. <a href="https://doi.org/10.1139/f75-274" rel="noopener" target="_blank">doi.org/10.1139/f75-274</a></li>
+        <li>Durborow, R. M., Crosby, D. M. &amp; Brunson, M. W. (1997). <em>Ammonia in Fish Ponds</em>. Southern Regional Aquaculture Center Publication No. 463. <a href="https://irrec.ifas.ufl.edu/media/irrecifasufledu/teach-aquaculture-/module-5/Ammonia-in-Fish-Ponds.pdf" rel="noopener" target="_blank">PDF</a></li>
+        <li>Hargreaves, J. A. &amp; Tucker, C. S. (2004). <em>Managing Ammonia in Fish Ponds</em>. Southern Regional Aquaculture Center Publication No. 4603. <a href="https://www.srac.msstate.edu/pdfs/Fact%20Sheets/4603%20Managing%20Ammonia%20in%20Fish%20Ponds.pdf" rel="noopener" target="_blank">srac.msstate.edu</a></li>
+        <li>Soderberg, R. W. &amp; Meade, J. W. (1991). The effects of ionic strength on un-ionized ammonia concentration. <em>The Progressive Fish-Culturist</em>, 53(2), 118–120. <a href="https://pubs.usgs.gov/publication/1014818" rel="noopener" target="_blank">pubs.usgs.gov</a></li>
+        <li>Florida Department of Environmental Protection (2001). <em>Calculation of Un-ionized Ammonia in Fresh Water</em>, Standard Operating Procedure, Revision 2 (includes the ionic-strength form for saline water). <a href="https://floridadep.gov/sites/default/files/5-Unionized-Ammonia-SOP_1.pdf" rel="noopener" target="_blank">floridadep.gov</a></li>
+        <li>U.S. Environmental Protection Agency (1989). <em>Ambient Water Quality Criteria for Ammonia (Saltwater) – 1989</em>. EPA 440/5-88-004. Washington, DC.</li>
+        <li>Prohaska, T. et al. (2022). Standard atomic weights of the elements 2021 (IUPAC Technical Report). <em>Pure and Applied Chemistry</em>, 94(5), 573–600. <a href="https://www.ciaaw.org/atomic-weights.htm" rel="noopener" target="_blank">ciaaw.org</a></li>
+        <li>Somerville, C., Cohen, M., Pantanella, E., Stankus, A. &amp; Lovatelli, A. (2014). <em>Small-scale aquaponic food production: Integrated fish and plant farming</em>. FAO Fisheries and Aquaculture Technical Paper No. 589. Rome: FAO. <a href="https://www.fao.org/3/i4021e/i4021e.pdf" rel="noopener" target="_blank">fao.org</a></li>
+        <li>Timmons, M. B. &amp; Ebeling, J. M. (2010). <em>Recirculating Aquaculture</em> (2nd ed.). Ithaca, NY: Cayuga Aqua Ventures.</li>
+      </ol>
+    </article>
+  </main>
+
+  <footer class="site-footer">
+    <div class="wrap">Calculations are estimates. Check the sources above before relying on a result.</div>
+  </footer>
+
+  <script src="../assets/share.js"></script>
+  <script src="../assets/units.js"></script>
+  <script src="../assets/tan-conversion.js"></script>
+</body>
+</html>

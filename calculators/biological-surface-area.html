@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Biofilter Surface Area Calculator</title>
+  <meta name="description" content="Size a nitrifying biofilter from daily feed: TAN produced, biofilm surface area needed, media volume and moving-bed fill fraction for aquaculture and aquaponics.">
+  <link rel="stylesheet" href="../assets/style.css">
+  <style>
+    .viz .cell-need { fill: var(--accent); fill-opacity: .85; }
+    .viz .cell-cap { fill: var(--accent-soft); stroke: var(--accent); stroke-width: 1; }
+    .viz .cell-short { fill: var(--warn-bg); stroke: var(--warn-text); stroke-width: 1.2; stroke-dasharray: 3 2; }
+    .viz .cell-empty { fill: none; stroke: var(--border); stroke-width: 1; }
+    .viz .media { fill: none; stroke: var(--accent-strong); stroke-width: 1.4; }
+    .viz .media-bg { fill: var(--accent); fill-opacity: .25; }
+    .viz .max-line { stroke: var(--warn-text); stroke-width: 1.5; stroke-dasharray: 5 4; }
+    .viz .max-text { fill: var(--warn-text); font-size: 11px; font-weight: 600; font-family: var(--font); }
+    .viz .head-text { fill: var(--text); font-size: 13px; font-weight: 700; font-family: var(--font); }
+    .viz .big-text { fill: var(--text); font-size: 12px; font-weight: 600; font-family: var(--font); }
+    .status { font-size: .9rem; font-weight: 600; margin-top: 6px; }
+    .status.ok { color: var(--accent-strong); }
+    .status.warn { color: var(--warn-text); }
+    .result-main .sub { font-size: .9rem; color: var(--text-muted); margin-top: 2px; }
+    .out-units { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
+    .out-units label { font-size: .8rem; }
+  </style>
+</head>
+<body>
+  <header class="site-header">
+    <div class="wrap">
+      <a class="brand" href="../">
+        <span class="brand-mark" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3c3 4 6 7 6 11a6 6 0 0 1-12 0c0-4 3-7 6-11z"/></svg>
+        </span>
+        Tank Calculator
+      </a>
+      <nav><a href="../">All calculators</a></nav>
+    </div>
+  </header>
+
+  <main class="wrap">
+    <div class="crumbs"><a href="../">Home</a> / Biofilter Surface Area</div>
+    <h1 class="page-title">Biofilter Surface Area Calculator</h1>
+    <p class="page-lede">Size a nitrifying biofilter from the feed you give your fish. Find how much ammonia (TAN) the fish produce each day, how much biofilm surface the bacteria need to remove it, how much media that takes, and how full your filter vessel will be.</p>
+
+    <div class="calc-layout">
+      <!-- Calculator -->
+      <section class="card" aria-labelledby="calc-heading">
+        <h2 id="calc-heading">Calculator</h2>
+
+        <div class="field">
+          <label for="method">TAN production</label>
+          <select id="method">
+            <option value="feed">Estimate from feed and protein (Timmons &amp; Ebeling)</option>
+            <option value="direct">I know the TAN production</option>
+          </select>
+        </div>
+
+        <div class="two-col">
+          <div class="field" data-method="feed">
+            <label for="feed">Daily feed</label>
+            <div class="input-row"><input id="feed" type="number" inputmode="decimal" min="0" step="any"><select class="unit-select" data-unit-group="mass" data-unit-for="feed" data-unit-default="kg" aria-label="Daily feed unit"></select></div>
+            <div class="field-hint">Amount fed per day, at full stocking.</div>
+          </div>
+          <div class="field" data-method="feed">
+            <label for="protein">Feed protein</label>
+            <div class="input-row"><input id="protein" type="number" inputmode="decimal" min="0" max="100" step="any"><span class="unit">%</span></div>
+            <div class="field-hint">From the feed bag; grower feeds are often 30–45%.</div>
+          </div>
+          <div class="field" data-method="direct" hidden>
+            <label for="tan">TAN produced per day</label>
+            <div class="input-row"><input id="tan" type="number" inputmode="decimal" min="0" step="any"><select class="unit-select" data-unit-group="mass" data-unit-for="tan" data-unit-default="g" aria-label="TAN per day unit"></select></div>
+            <div class="field-hint">Total ammonia nitrogen per day.</div>
+          </div>
+          <div class="field">
+            <label for="rate">Areal nitrification rate</label>
+            <div class="input-row"><input id="rate" type="number" inputmode="decimal" min="0" step="any"><select class="unit-select" data-unit-group="arealrate" data-unit-for="rate" data-unit-default="gm2d" aria-label="Nitrification rate unit"></select></div>
+            <div class="field-hint" id="rate-hint">TAN removed per m² of biofilm per day.</div>
+          </div>
+          <div class="field">
+            <label for="safety">Safety factor</label>
+            <div class="input-row"><input id="safety" type="number" inputmode="decimal" min="1" step="any"><span class="unit">×</span></div>
+            <div class="field-hint">1 = none. Leave empty for 1.</div>
+          </div>
+        </div>
+
+        <div class="field">
+          <label for="media">Biofilter media</label>
+          <select id="media">
+            <option value="k1">Moving-bed carrier, K1 type (500 m²/m³)</option>
+            <option value="bioballs">Plastic bio-balls, trickling (≈ 250 m²/m³)</option>
+            <option value="lava">Volcanic gravel / lava rock (≈ 300 m²/m³)</option>
+            <option value="clay">Expanded clay pebbles (≈ 250 m²/m³)</option>
+            <option value="sand">Sand, 1 mm grains (≈ 3,600 m²/m³)</option>
+            <option value="custom">Custom</option>
+          </select>
+        </div>
+
+        <div class="two-col">
+          <div class="field">
+            <label for="ssa">Specific surface area</label>
+            <div class="input-row"><input id="ssa" type="number" inputmode="decimal" min="0" step="any"><select class="unit-select" data-unit-group="specificarea" data-unit-for="ssa" data-unit-default="m2m3" aria-label="Specific surface area unit"></select></div>
+            <div class="field-hint" id="ssa-hint"></div>
+          </div>
+          <div class="field">
+            <label for="vessel">Biofilter vessel volume <span style="font-weight:400;color:var(--text-muted)">(optional)</span></label>
+            <div class="input-row"><input id="vessel" type="number" inputmode="decimal" min="0" step="any"><select class="unit-select" data-unit-group="volume" data-unit-for="vessel" data-unit-default="L" aria-label="Vessel volume unit"></select></div>
+            <div class="field-hint">Working water volume of the filter tank.</div>
+          </div>
+        </div>
+
+        <hr class="divider">
+
+        <div class="notice" id="notice" hidden></div>
+
+        <div class="field out-units">
+          <div>
+            <label for="out-area">Area in</label>
+            <select id="out-area" data-unit-group="area" data-unit-default="m2"></select>
+          </div>
+          <div>
+            <label for="out-vol">Volume in</label>
+            <select id="out-vol" data-unit-group="volume" data-unit-default="L"></select>
+          </div>
+          <div>
+            <label for="out-tan">TAN in</label>
+            <select id="out-tan" data-unit-group="mass" data-unit-default="g"></select>
+          </div>
+        </div>
+
+        <div class="result-main" aria-live="polite">
+          <div class="label">Biofilm surface area needed</div>
+          <div class="value" id="r-area">–</div>
+          <div class="sub" id="r-area-sub"></div>
+        </div>
+
+        <ul class="result-list">
+          <li><span>TAN produced</span><span class="v" id="r-tan">–</span></li>
+          <li><span>Media volume needed</span><span class="v" id="r-vol">–</span></li>
+          <li><span>Media fill of vessel</span><span class="v" id="r-fill">–</span></li>
+        </ul>
+        <div class="fill-bar" aria-hidden="true"><span id="r-fillbar" style="width:0%"></span></div>
+        <div class="status" id="r-status"></div>
+
+        <div class="share-bar">
+          <button class="btn btn-primary" type="button" id="btn-share">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="m8.6 13.5 6.8 4M15.4 6.5l-6.8 4"/></svg>
+            Share
+          </button>
+          <button class="btn" type="button" id="btn-link">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.5.5l3-3a5 5 0 0 0-7-7l-1.7 1.7"/><path d="M14 11a5 5 0 0 0-7.5-.5l-3 3a5 5 0 0 0 7 7l1.7-1.7"/></svg>
+            Copy link
+          </button>
+          <button class="btn" type="button" id="btn-copy">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h10a1 1 0 0 1 1 1v1"/></svg>
+            Copy results
+          </button>
+          <button class="btn" type="button" id="btn-reset">Reset</button>
+        </div>
+      </section>
+
+      <!-- Visualization -->
+      <section class="card viz-card" aria-labelledby="viz-heading">
+        <h2 id="viz-heading">Visualization</h2>
+        <svg class="viz" id="viz" viewBox="0 0 480 320" role="img" aria-label="Squares showing biofilm area needed versus what the vessel can hold, and the filter vessel with its media fill level"></svg>
+        <p class="viz-caption" id="viz-caption"></p>
+      </section>
+    </div>
+
+    <article class="article">
+      <h2>How the biofilter calculator works</h2>
+      <p>Fish excrete ammonia, mostly through their gills, as they digest the protein in their feed. In a recirculating system that ammonia has to be turned into nitrite and then nitrate by nitrifying bacteria. Those bacteria live as a thin film (biofilm) on every wet surface, so the capacity of a biofilter depends on how much <strong>surface</strong> it gives them.</p>
+      <p>The calculator works in three steps:</p>
+      <ol>
+        <li>Estimate the <strong>total ammonia nitrogen (TAN)</strong> produced per day from the daily feed and its protein content.</li>
+        <li>Divide that TAN load by the <strong>areal nitrification rate</strong>, the grams of TAN one square meter of biofilm removes per day, and multiply by a safety factor. That gives the biofilm surface area needed.</li>
+        <li>Divide the area by the media's <strong>specific surface area</strong> (m² of surface per m³ of media) to get the volume of media. If you enter the filter vessel volume, the calculator also shows what fraction of the vessel the media fills.</li>
+      </ol>
+
+      <h3>Why it matters</h3>
+      <p>Too little biofilm surface lets ammonia and nitrite build up, and both are toxic to fish. In recirculating aquaculture (RAS) the biofilter is usually the only place ammonia is removed, so it must be sized for the full feed ration at peak biomass. In aquaponics the plants and the wet surfaces of the grow beds take up and nitrify part of the ammonia too, so a separate biofilter sized with this calculator gives extra margin rather than the bare minimum. The FAO aquaponics manual (Somerville et al., 2014) explains the role of the biofilter and media surface area in small systems.</p>
+
+      <h3>Formulas</h3>
+      <p><strong>1. TAN produced</strong> (Timmons et al., 2002; Ebeling, Timmons &amp; Bisogni, 2006):</p>
+      <div class="formula">P<sub>TAN</sub> (kg/day) = F × PC × 0.092
+
+F  = feed (kg/day)
+PC = protein content of the feed (decimal, e.g. 0.35)</div>
+      <p>The 0.092 constant comes from four assumptions: protein is 16% nitrogen, 80% of the nitrogen is assimilated by the fish, 80% of the assimilated nitrogen is excreted, and 90% of the excreted nitrogen is TAN (the other 10% is urea): 0.16 × 0.8 × 0.8 × 0.9 = 0.0922. Uneaten feed and solids left in the system add to this, and the authors note the formula needs changing for heterotrophic (biofloc) systems where solids are not removed.</p>
+
+      <p><strong>2. Biofilm surface area needed</strong></p>
+      <div class="formula">A (m²) = P<sub>TAN</sub> (g/day) ÷ r<sub>TAN</sub> (g/m²/day) × SF
+
+r<sub>TAN</sub> = areal TAN removal (nitrification) rate
+SF    = safety factor (1 = none)</div>
+
+      <p><strong>3. Media volume and fill fraction</strong></p>
+      <div class="formula">V<sub>media</sub> (m³) = A ÷ SSA
+Fill fraction    = V<sub>media</sub> ÷ V<sub>vessel</sub>
+
+SSA = specific surface area of the media (m²/m³)</div>
+
+      <h3>Choosing the nitrification rate</h3>
+      <p>The areal rate is the most uncertain input. It is not a property of the media alone: it falls with lower temperature, lower dissolved oxygen, more organic matter (BOD) and, above all, with lower TAN concentration, because at the low ammonia levels kept in fish tanks (usually under 1 mg/L) the bacteria are starved for ammonia (Rusten et al., 2006). Published measurements give an idea of the range:</p>
+      <table>
+        <thead><tr><th>Situation</th><th>Areal rate, g TAN/m²/day</th></tr></thead>
+        <tbody>
+          <tr><td>Conservative design, cold water (under about 15 °C) or low TAN</td><td>0.1–0.3 (rule of thumb)</td></tr>
+          <tr><td>Typical warm-water design (20–30 °C)</td><td>0.3–0.6 (rule of thumb)</td></tr>
+          <tr><td>Commercial moving-bed filter on a warm-water tilapia RAS: 267 g TAN/m³/day volumetric rate (Guerdat et al., 2010), divided by 500 m²/m³</td><td>≈ 0.5</td></tr>
+          <tr><td>Well-run Kaldnes moving bed, good oxygen, TAN not limiting (Rusten et al., 2006)</td><td>up to ≈ 1</td></tr>
+        </tbody>
+      </table>
+      <p>The default of 0.5 g/m²/day with a 1.25 safety factor suits a warm-water system. For trout, salmon or other cold-water fish, use 0.2–0.3. If your filter supplier gives a tested rate for your temperature and TAN level, use that.</p>
+
+      <h3>Media specific surface area</h3>
+      <table>
+        <thead><tr><th>Media</th><th>m²/m³</th><th>Basis</th></tr></thead>
+        <tbody>
+          <tr><td>K1-type moving-bed carrier</td><td>500</td><td>Protected (inner) surface of bulk media, manufacturer value used by Rusten et al. (2006)</td></tr>
+          <tr><td>Volcanic gravel / tuff</td><td>300</td><td>Somerville et al. (2014)</td></tr>
+          <tr><td>Plastic bio-balls</td><td>≈ 200–300</td><td>Manufacturer data, varies by product</td></tr>
+          <tr><td>Expanded clay pebbles</td><td>≈ 250</td><td>Commonly quoted figure, rule of thumb</td></tr>
+          <tr><td>Sand, 1 mm grains</td><td>≈ 3,600</td><td>Geometric estimate 6(1 − ε)/d with porosity ε = 0.4</td></tr>
+        </tbody>
+      </table>
+      <p>Specific surface area is only half of the story. Fine media such as sand has a huge area but clogs unless it is fluidized, and the measured nitrification per m² of sand is usually lower than on plastic carriers. Check the manufacturer's data sheet for any plastic media and enter its value as Custom.</p>
+
+      <h3>Moving-bed fill fraction</h3>
+      <p>Moving-bed carriers must stay free to circulate. Rusten et al. (2006) recommend keeping the carrier fill below 70% of the reactor volume; 50–65% is normal in practice. The calculator warns above 70% for moving-bed media. For static media (gravel, clay, bio-balls) the vessel can be filled completely, so it only warns when the media does not fit.</p>
+
+      <h3>Example</h3>
+      <p>A tank is fed <strong>1 kg of 35% protein feed per day</strong>. TAN produced = 1 × 0.35 × 0.092 = 0.0322 kg = <strong>32.2 g TAN/day</strong>. At 0.5 g/m²/day the bacteria need 32.2 ÷ 0.5 = 64.4 m², and with a 1.25 safety factor <strong>80.5 m²</strong> of biofilm. K1-type carrier at 500 m²/m³ gives 80.5 ÷ 500 = 0.161 m³ = <strong>161 L of media</strong>. In a 300 L moving-bed vessel that is a fill of 161 ÷ 300 = <strong>53.7%</strong>, inside the normal 50–65% range.</p>
+
+      <h3>Limitations and assumptions</h3>
+      <ul>
+        <li><strong>All TAN goes to the biofilter.</strong> No credit is taken for water exchange, plant uptake or nitrification on tank walls and pipes.</li>
+        <li><strong>Steady feeding.</strong> Size for the largest daily ration you will feed at peak stocking. Ammonia excretion peaks a few hours after feeding, so a filter sized on the daily average has little spare capacity at those times.</li>
+        <li><strong>A new biofilter needs weeks to mature</strong> before it reaches its full rate.</li>
+        <li><strong>Nitrite.</strong> The calculation is for ammonia removal; the second nitrification step usually keeps up in a mature filter but can lag in a new one.</li>
+        <li>Rates and media areas in the tables are guides, not guarantees. Watch ammonia and nitrite test results and adjust feeding if they rise.</li>
+      </ul>
+
+      <h2>Sources</h2>
+      <ol class="sources">
+        <li>Ebeling, J. M., Timmons, M. B. &amp; Bisogni, J. J. (2006). Engineering analysis of the stoichiometry of photoautotrophic, autotrophic, and heterotrophic removal of ammonia–nitrogen in aquaculture systems. <em>Aquaculture</em>, 257(1–4), 346–358. <a href="https://www.sciencedirect.com/science/article/pii/S004484860600216X" rel="noopener" target="_blank">sciencedirect.com</a></li>
+        <li>Timmons, M. B., Ebeling, J. M., Wheaton, F. W., Summerfelt, S. T. &amp; Vinci, B. J. (2002). <em>Recirculating Aquaculture Systems</em> (2nd ed.). Ithaca, NY: Cayuga Aqua Ventures. See also Timmons, M. B. &amp; Ebeling, J. M. (2010). <em>Recirculating Aquaculture</em> (2nd ed.), chapter on biofiltration.</li>
+        <li>Rusten, B., Eikebrokk, B., Ulgenes, Y. &amp; Lygren, E. (2006). Design and operations of the Kaldnes moving bed biofilm reactors. <em>Aquacultural Engineering</em>, 34(3), 322–331. <a href="https://doi.org/10.1016/j.aquaeng.2005.04.002" rel="noopener" target="_blank">doi.org</a></li>
+        <li>Guerdat, T. C., Losordo, T. M., Classen, J. J., Osborne, J. A. &amp; DeLong, D. P. (2010). An evaluation of commercially available biological filters for recirculating aquaculture systems. <em>Aquacultural Engineering</em>, 42(1), 38–49.</li>
+        <li>Somerville, C., Cohen, M., Pantanella, E., Stankus, A. &amp; Lovatelli, A. (2014). <em>Small-scale aquaponic food production: Integrated fish and plant farming</em>. FAO Fisheries and Aquaculture Technical Paper No. 589. Rome: FAO. <a href="https://www.fao.org/3/i4021e/i4021e.pdf" rel="noopener" target="_blank">fao.org</a></li>
+      </ol>
+    </article>
+  </main>
+
+  <footer class="site-footer">
+    <div class="wrap">Calculations are estimates. Check the sources above before relying on a result.</div>
+  </footer>
+
+  <script src="../assets/share.js"></script>
+  <script src="../assets/units.js"></script>
+  <script src="../assets/biological-surface-area.js"></script>
+</body>
+</html>

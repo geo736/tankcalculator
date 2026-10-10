@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Internal Tank Velocity Calculator</title>
+  <meta name="description" content="Estimate the rotational water velocity in a circular fish tank from the inlet jets, check self-cleaning and fish swimming speed in body lengths per second, and size inlet ports for a target velocity.">
+  <link rel="stylesheet" href="../assets/style.css">
+  <style>
+    .opt { font-weight: 400; color: var(--text-muted); }
+    .result-main .sub { font-size: .9rem; color: var(--text-muted); margin-top: 2px; }
+    .pill { display: inline-block; padding: 1px 8px; border-radius: 999px; font-size: .85rem; font-weight: 600; }
+    .pill-ok { background: var(--accent-soft); color: var(--accent-strong); }
+    .pill-warn { background: var(--warn-bg); color: var(--warn-text); }
+    .viz .jet { stroke: var(--c-aquaculture); stroke-width: 2.5; fill: none; stroke-linecap: round; }
+    .viz .jet-head { fill: var(--c-aquaculture); }
+    .viz .nozzle { fill: var(--tank-stroke); }
+    .viz .swirl { stroke: var(--water-deep); stroke-width: 2.5; fill: none; stroke-linecap: round; }
+    .viz .swirl-head { fill: var(--water-deep); }
+    .viz .drain { fill: var(--surface); stroke: var(--tank-stroke); stroke-width: 1.5; }
+    .viz .fish { fill: var(--surface); stroke: var(--tank-stroke); stroke-width: 1.2; }
+    .viz .band { fill: var(--accent); fill-opacity: .25; }
+    .viz .track { fill: var(--surface-2); stroke: var(--border); stroke-width: 1; }
+    .viz .range { fill: var(--water); fill-opacity: .85; }
+    .viz .title-text { fill: var(--text); font-size: 12px; font-weight: 600; font-family: var(--font); }
+    .viz .band-text { fill: var(--accent-strong); font-size: 11px; font-family: var(--font); }
+    @media (prefers-color-scheme: dark) {
+      :root:not([data-theme="light"]) .viz .swirl { stroke: var(--water-top); }
+      :root:not([data-theme="light"]) .viz .swirl-head { fill: var(--water-top); }
+    }
+    :root[data-theme="dark"] .viz .swirl { stroke: var(--water-top); }
+    :root[data-theme="dark"] .viz .swirl-head { fill: var(--water-top); }
+  </style>
+</head>
+<body>
+  <header class="site-header">
+    <div class="wrap">
+      <a class="brand" href="../">
+        <span class="brand-mark" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3c3 4 6 7 6 11a6 6 0 0 1-12 0c0-4 3-7 6-11z"/></svg>
+        </span>
+        Tank Calculator
+      </a>
+      <nav><a href="../">All calculators</a></nav>
+    </div>
+  </header>
+
+  <main class="wrap">
+    <div class="crumbs"><a href="../">Home</a> / Internal Tank Velocity</div>
+    <h1 class="page-title">Internal Tank Velocity Calculator</h1>
+    <p class="page-lede">Estimate how fast the water rotates in a circular fish tank driven by inlet jets. Check whether the tank should self-clean, how hard the fish are swimming in body lengths per second, and what jet velocity or port size you need for a target velocity.</p>
+
+    <div class="calc-layout">
+      <!-- Calculator -->
+      <section class="card" aria-labelledby="calc-heading">
+        <h2 id="calc-heading">Calculator</h2>
+
+        <div class="two-col">
+          <div class="field">
+            <label for="diameter">Tank diameter</label>
+            <div class="input-row"><input id="diameter" type="number" inputmode="decimal" min="0" step="any"><select class="unit-select" data-unit-group="length" data-unit-for="diameter" data-unit-default="m" aria-label="Tank diameter unit"></select></div>
+            <div class="field-hint">Inside diameter.</div>
+          </div>
+          <div class="field">
+            <label for="depth">Water depth</label>
+            <div class="input-row"><input id="depth" type="number" inputmode="decimal" min="0" step="any"><select class="unit-select" data-unit-group="length" data-unit-for="depth" data-unit-default="m" aria-label="Water depth unit"></select></div>
+          </div>
+          <div class="field">
+            <label for="flow">Total inflow</label>
+            <div class="input-row"><input id="flow" type="number" inputmode="decimal" min="0" step="any"><select class="unit-select" data-unit-group="flow" data-unit-for="flow" data-unit-default="Lpm" aria-label="Inflow unit"></select></div>
+            <div class="field-hint">All water entering through the inlet ports.</div>
+          </div>
+          <div class="field">
+            <label for="ports">Number of inlet ports</label>
+            <div class="input-row"><input id="ports" type="number" inputmode="numeric" min="1" step="1"><span class="unit">ports</span></div>
+            <div class="field-hint">Nozzles or holes in the inlet pipe(s).</div>
+          </div>
+          <div class="field">
+            <label for="portd">Port diameter</label>
+            <div class="input-row"><input id="portd" type="number" inputmode="decimal" min="0" step="any"><select class="unit-select" data-unit-group="length" data-unit-for="portd" data-unit-default="mm" aria-label="Port diameter unit"></select></div>
+            <div class="field-hint">Inside diameter of each opening.</div>
+          </div>
+          <div class="field">
+            <label for="fish">Fish length</label>
+            <div class="input-row"><input id="fish" type="number" inputmode="decimal" min="0" step="any"><select class="unit-select" data-unit-group="length" data-unit-for="fish" data-unit-default="cm" aria-label="Fish length unit"></select></div>
+            <div class="field-hint">Typical total length of the fish.</div>
+          </div>
+          <div class="field">
+            <label for="target">Target tank velocity <span class="opt">(optional)</span></label>
+            <div class="input-row"><input id="target" type="number" inputmode="decimal" min="0" step="any"><select class="unit-select" data-unit-group="velocity" data-unit-for="target" data-unit-default="cmps" aria-label="Target velocity unit"></select></div>
+            <div class="field-hint">Mean rotational velocity you want.</div>
+          </div>
+        </div>
+
+        <hr class="divider">
+
+        <div class="notice" id="notice" hidden></div>
+
+        <div class="field">
+          <label for="vout">Show velocities in</label>
+          <select id="vout" class="unit-select" data-unit-group="velocity" data-unit-default="cmps"></select>
+        </div>
+
+        <div class="result-main" aria-live="polite">
+          <div class="label">Estimated mean tank velocity (rule of thumb)</div>
+          <div class="value" id="r-vt">–</div>
+          <div class="sub" id="r-vt-sub"></div>
+        </div>
+
+        <ul class="result-list">
+          <li><span>Inlet jet velocity</span><span class="v" id="r-vin">–</span></li>
+          <li><span>Fish swimming speed</span><span class="v" id="r-bl">–</span></li>
+          <li><span>Self-cleaning (needs &gt; 15–30 cm/s)</span><span class="v" id="r-clean">–</span></li>
+          <li><span>Tank volume</span><span class="v" id="r-vol">–</span></li>
+          <li><span>Hydraulic retention time</span><span class="v" id="r-hrt">–</span></li>
+          <li><span>Diameter : depth</span><span class="v" id="r-ratio">–</span></li>
+          <li><span>Jet velocity head (minimum)</span><span class="v" id="r-head">–</span></li>
+          <li><span id="r-req-label">Jet velocity for target</span><span class="v" id="r-req">–</span></li>
+          <li><span id="r-reqd-label">Port diameter for target</span><span class="v" id="r-reqd">–</span></li>
+        </ul>
+
+        <div class="share-bar">
+          <button class="btn btn-primary" type="button" id="btn-share">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="m8.6 13.5 6.8 4M15.4 6.5l-6.8 4"/></svg>
+            Share
+          </button>
+          <button class="btn" type="button" id="btn-link">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.5.5l3-3a5 5 0 0 0-7-7l-1.7 1.7"/><path d="M14 11a5 5 0 0 0-7.5-.5l-3 3a5 5 0 0 0 7 7l1.7-1.7"/></svg>
+            Copy link
+          </button>
+          <button class="btn" type="button" id="btn-copy">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h10a1 1 0 0 1 1 1v1"/></svg>
+            Copy results
+          </button>
+          <button class="btn" type="button" id="btn-reset">Reset</button>
+        </div>
+      </section>
+
+      <!-- Visualization -->
+      <section class="card viz-card" aria-labelledby="viz-heading">
+        <h2 id="viz-heading">Visualization</h2>
+        <svg class="viz" id="viz" viewBox="0 0 480 320" role="img" aria-label="Top view of the circular tank with inlet jets, swirl arrows, and a fish-length scale"></svg>
+        <p class="viz-caption" id="viz-caption"></p>
+      </section>
+    </div>
+
+    <article class="article">
+      <h2>How the internal tank velocity calculator works</h2>
+      <p>In a circular culture tank the water enters through one or more inlet pipes with small ports or nozzles aimed along the wall. The jets push the whole body of water around the tank, so it rotates like a slow whirlpool. The speed of that rotation is the <strong>internal tank velocity</strong> (also called rotational or circulation velocity).</p>
+      <p>The calculator first finds the <strong>inlet jet velocity</strong>: the total flow divided by the total open area of all the ports. It then estimates the mean rotational velocity with the design rule of thumb from Timmons, Summerfelt &amp; Vinci (1998): the rotational velocity is roughly <strong>15–20% of the inlet velocity</strong>. Because this ratio is a rule of thumb and depends on the inlet design, the result is shown as a range, not a single number. The middle of the range (17.5%) is used for the drawing.</p>
+
+      <h3>Why tank velocity matters</h3>
+      <ul>
+        <li><strong>Self-cleaning.</strong> The rotating water sweeps uneaten feed and faeces across the floor to the center drain. Timmons et al. (1998) report that velocities greater than about <strong>15–30 cm/s</strong> are needed to move settleable solids to the drain.</li>
+        <li><strong>Fish exercise and welfare.</strong> Water velocities of <strong>0.5–2.0 body lengths per second</strong> are considered best for fish health, muscle tone and respiration (Losordo &amp; Westers, 1994, cited in Timmons et al., 1998). Faster water makes fish spend energy that would otherwise go into growth; very small fish may not be able to hold position at all.</li>
+        <li><strong>Mixing.</strong> A well-rotating tank has fairly uniform water quality from wall to center, so oxygen and waste do not collect in dead zones.</li>
+      </ul>
+      <p>These goals can conflict: a velocity high enough to self-clean may be too fast for small fingerlings. That is why many farms use inlet pipes whose ports can be swapped or rotated, and adjust the velocity as the fish grow (Davidson &amp; Summerfelt, 2004).</p>
+
+      <h3>Formulas</h3>
+      <p><strong>Tank volume and retention time</strong> (D = diameter, d = water depth, Q = total inflow):</p>
+      <div class="formula">V   = π × (D / 2)² × d
+HRT = V / Q
+Exchanges per hour = 3600 s / HRT (in seconds)</div>
+
+      <p><strong>Inlet jet velocity</strong> with n ports of diameter d<sub>p</sub>:</p>
+      <div class="formula">A<sub>ports</sub> = n × π × d<sub>p</sub>² / 4
+v<sub>in</sub>    = Q / A<sub>ports</sub></div>
+
+      <p><strong>Estimated rotational velocity</strong> (rule of thumb, k ≈ 0.15–0.20):</p>
+      <div class="formula">v<sub>tank</sub> ≈ k × v<sub>in</sub>,   k = 0.15 … 0.20</div>
+
+      <p><strong>Fish swimming speed</strong> in body lengths per second (L = fish length):</p>
+      <div class="formula">BL/s = v<sub>tank</sub> / L</div>
+
+      <p><strong>Jet and port size for a target velocity</strong>, rearranging the same relation:</p>
+      <div class="formula">v<sub>in, needed</sub> = v<sub>target</sub> / k
+d<sub>p, needed</sub> = √( 4 × Q / (n × π × v<sub>in, needed</sub>) )</div>
+
+      <p><strong>Velocity head of the jet</strong>, the least extra pressure head the inlet pipe must supply to make jets this fast (friction and nozzle losses come on top, so the real head is higher):</p>
+      <div class="formula">h = v<sub>in</sub>² / (2 g),   g = 9.80665 m/s²</div>
+
+      <h3>Where the 15–20% comes from</h3>
+      <p>Tvinnereim &amp; Skybakmoen (1989) showed that the rotation in a circular tank is driven by the momentum (impulse force) of the inlet jets, F = ρ Q (v<sub>in</sub> − v<sub>tank</sub>), balanced against friction at the walls, floor and fish. Doubling the jet velocity at the same flow therefore increases the rotation, but not in exact proportion for every tank. For design, Timmons et al. (1998) summarize the rotational velocity as roughly proportional to the velocity through the inlet openings, with a constant of about 0.15–0.20 (citing Paul et al., 1991). The real constant depends on the nozzle layout, tank roughness, depth and fish load, so treat the range as a first estimate and measure the velocity in your own tank with a flow meter or a floating object.</p>
+
+      <h3>Example</h3>
+      <p>A 4 m diameter tank holds water 0.8 m deep: V = π × 2² × 0.8 = <strong>10.05 m³</strong> (10,053 L). With 400 L/min (6.667 L/s) of inflow, the retention time is 10,053 ÷ 6.667 = 1,508 s = <strong>25.1 min</strong>, or 2.39 exchanges per hour, inside the 20–32 min range used by Davidson &amp; Summerfelt (2004).</p>
+      <p>The water enters through 8 ports of 25 mm. Total port area = 8 × π × 0.025² ÷ 4 = 0.003927 m², so the jets leave at 0.006667 ÷ 0.003927 = <strong>1.70 m/s</strong>. The estimated rotation is 0.15–0.20 × 1.70 = <strong>25.5–34.0 cm/s</strong>. For 20 cm fish that is <strong>1.27–1.70 body lengths per second</strong>, within the 0.5–2.0 BL/s guidance, and the velocity is in or above the 15–30 cm/s band needed to carry solids to the drain.</p>
+      <p>To aim for 30 cm/s you need jets of 30 ÷ 0.20 = 1.50 m/s to 30 ÷ 0.15 = 2.00 m/s. With the same flow and 8 ports, that means ports of about <strong>23.0–26.6 mm</strong>.</p>
+
+      <h3>Limitations and assumptions</h3>
+      <ul>
+        <li><strong>The 15–20% ratio is a rule of thumb.</strong> It is not a fitted equation for your tank. Real tanks can be faster or slower, especially with unusual nozzle angles, very deep tanks, baffles or heavy fish loads.</li>
+        <li><strong>Velocity is not uniform.</strong> The water is usually fastest near the wall and slowest near the center. The calculator gives a single mean value.</li>
+        <li><strong>Jets must be aimed along the wall.</strong> The estimate assumes ports point roughly tangentially in the same direction. Ports aimed at the center or against each other produce little rotation.</li>
+        <li><strong>Swimming ability depends on species, size and temperature.</strong> 0.5–2.0 BL/s is a general guide; check species-specific data for sensitive or very small fish.</li>
+        <li><strong>Self-cleaning also needs drain flow.</strong> Rotation moves solids to the center, but the center drain must take enough flow to remove them. Davidson &amp; Summerfelt (2004) found a bottom-center drain flow of at least 5–6 L/min per m² of tank floor flushed settleable solids quickly.</li>
+        <li><strong>Geometry.</strong> Timmons et al. (1998) recommend diameter-to-depth ratios of about 5:1 to 10:1 for good rotation and self-cleaning; the result list shows your ratio against this range.</li>
+      </ul>
+
+      <h2>Sources</h2>
+      <ol class="sources">
+        <li>Timmons, M. B., Summerfelt, S. T. &amp; Vinci, B. J. (1998). Review of circular tank technology and management. <em>Aquacultural Engineering</em>, 18(1), 51–69. <a href="https://doi.org/10.1016/S0144-8609(98)00023-5" rel="noopener" target="_blank">doi.org</a></li>
+        <li>Tvinnereim, K. &amp; Skybakmoen, S. (1989). Water exchange and self-cleaning in fish-rearing tanks. In N. De Pauw, E. Jaspers, H. Ackefors &amp; N. Wilkins (Eds.), <em>Aquaculture: A Biotechnology in Progress</em> (pp. 1041–1047). Bredene, Belgium: European Aquaculture Society.</li>
+        <li>Paul, T. C., Sayal, S. K., Sakhuja, V. S. &amp; Dhillon, G. S. (1991). Vortex-settling basin design considerations. <em>Journal of Hydraulic Engineering</em>, 117(2), 172–189.</li>
+        <li>Losordo, T. M. &amp; Westers, H. (1994). System carrying capacity and flow estimation. In M. B. Timmons &amp; T. M. Losordo (Eds.), <em>Aquaculture Water Reuse Systems: Engineering Design and Management</em> (pp. 9–60). Amsterdam: Elsevier.</li>
+        <li>Davidson, J. &amp; Summerfelt, S. T. (2004). Solids flushing, mixing, and water velocity profiles within large (10 and 150 m³) circular ‘Cornell-type’ dual-drain tanks. <em>Aquacultural Engineering</em>, 32(1), 245–271. <a href="https://www.sciencedirect.com/science/article/pii/S0144860904000214" rel="noopener" target="_blank">sciencedirect.com</a></li>
+        <li>Khater, E.-S., Ali, S., Abbas, W. &amp; Morsy, O. (2022). Flow patterns in circular fish tanks and its relations with flow rate and nozzle features. <em>Scientific Reports</em>, 12, 12883. <a href="https://doi.org/10.1038/s41598-022-17186-z" rel="noopener" target="_blank">doi.org</a></li>
+      </ol>
+    </article>
+  </main>
+
+  <footer class="site-footer">
+    <div class="wrap">Calculations are estimates. Check the sources above before relying on a result.</div>
+  </footer>
+
+  <script src="../assets/share.js"></script>
+  <script src="../assets/units.js"></script>
+  <script src="../assets/internal-tank-velocity.js"></script>
+</body>
+</html>

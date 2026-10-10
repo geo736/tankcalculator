@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Grow Bed Volume Calculator</title>
+  <meta name="description" content="Find the volume, water held, planting area and number of plant sites of media beds, deep water culture rafts and NFT channels for aquaponics and hydroponics.">
+  <link rel="stylesheet" href="../assets/style.css">
+  <style>
+    .status { font-size: .9rem; font-weight: 600; margin-top: 4px; }
+    .status.ok { color: var(--accent-strong); }
+    .status.warn { color: var(--warn-text); }
+    .viz .bed-wall { fill: none; stroke: var(--tank-stroke); stroke-width: 2; stroke-linejoin: round; }
+    .viz .bed-inside { fill: var(--surface-2); fill-opacity: .55; }
+    .viz .pebble { fill: var(--tank-back); fill-opacity: .75; stroke: var(--tank-stroke); stroke-opacity: .35; stroke-width: .6; }
+    .viz .raft { fill: var(--surface); stroke: var(--tank-stroke); stroke-width: 1.5; }
+    .viz .stem { stroke: var(--accent); stroke-width: 2; fill: none; stroke-linecap: round; }
+    .viz .leaf { fill: var(--accent); fill-opacity: .75; stroke: var(--accent-strong); stroke-width: 1; }
+    .viz .root { stroke: var(--tank-stroke); stroke-opacity: .55; stroke-width: 1; fill: none; stroke-linecap: round; }
+    .viz .tick { stroke: var(--accent); stroke-width: 2; stroke-linecap: round; }
+    .viz .name-text { fill: var(--text); font-size: 12px; font-weight: 600; font-family: var(--font); }
+  </style>
+</head>
+<body>
+  <header class="site-header">
+    <div class="wrap">
+      <a class="brand" href="../">
+        <span class="brand-mark" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3c3 4 6 7 6 11a6 6 0 0 1-12 0c0-4 3-7 6-11z"/></svg>
+        </span>
+        Tank Calculator
+      </a>
+      <nav><a href="../">All calculators</a></nav>
+    </div>
+  </header>
+
+  <main class="wrap">
+    <div class="crumbs"><a href="../">Home</a> / Grow Bed Volume</div>
+    <h1 class="page-title">Grow Bed Volume Calculator</h1>
+    <p class="page-lede">Find how much water the plant side of an aquaponic or hydroponic system holds, how much growing area it gives you and how many plants fit. Works for media beds, deep water culture (raft) beds and NFT channels.</p>
+
+    <div class="calc-layout">
+      <!-- Calculator -->
+      <section class="card" aria-labelledby="calc-heading">
+        <h2 id="calc-heading">Calculator</h2>
+
+        <div class="field">
+          <span class="label" id="type-label">Bed type</span>
+          <div class="segmented" role="group" aria-labelledby="type-label" id="type-group">
+            <button type="button" data-type="media" aria-pressed="true">
+              <svg viewBox="0 0 34 26" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M3 9v14h28V9"/><circle cx="9" cy="18" r="2"/><circle cx="16" cy="15" r="2"/><circle cx="23" cy="19" r="2"/><path d="M10 9V4M24 9V4"/></svg>
+              Media bed
+            </button>
+            <button type="button" data-type="dwc" aria-pressed="false">
+              <svg viewBox="0 0 34 26" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M3 6v17h28V6M5 10h24v3H5zM11 10V4M23 10V4M11 13v6M23 13v6"/></svg>
+              Deep water (raft)
+            </button>
+            <button type="button" data-type="nft" aria-pressed="false">
+              <svg viewBox="0 0 34 26" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3" y="15" width="8" height="7"/><rect x="13" y="15" width="8" height="7"/><rect x="23" y="15" width="8" height="7"/><path d="M7 15V8M17 15V8M27 15V8"/></svg>
+              NFT channels
+            </button>
+          </div>
+        </div>
+
+        <!-- Media bed -->
+        <div class="two-col">
+          <div class="field" data-for="media">
+            <label for="m-length">Bed length</label>
+            <div class="input-row"><input id="m-length" type="number" inputmode="decimal" min="0" step="any"><select class="unit-select" data-unit-group="length" data-unit-for="m-length" data-unit-default="cm" aria-label="Bed length unit"></select></div>
+          </div>
+          <div class="field" data-for="media">
+            <label for="m-width">Bed width</label>
+            <div class="input-row"><input id="m-width" type="number" inputmode="decimal" min="0" step="any"><select class="unit-select" data-unit-group="length" data-unit-for="m-width" data-unit-default="cm" aria-label="Bed width unit"></select></div>
+          </div>
+          <div class="field" data-for="media">
+            <label for="m-depth">Media depth</label>
+            <div class="input-row"><input id="m-depth" type="number" inputmode="decimal" min="0" step="any"><select class="unit-select" data-unit-group="length" data-unit-for="m-depth" data-unit-default="cm" aria-label="Media depth unit"></select></div>
+            <div class="field-hint">FAO: about 30 cm (12 in) is typical.</div>
+          </div>
+          <div class="field" data-for="media">
+            <label for="m-beds">Number of beds</label>
+            <div class="input-row"><input id="m-beds" type="number" inputmode="numeric" min="1" step="1"><span class="unit">beds</span></div>
+          </div>
+          <div class="field" data-for="media">
+            <label for="m-media">Media</label>
+            <select id="m-media">
+              <option value="clay">Expanded clay (typical 40%)</option>
+              <option value="lava">Lava rock (typical 45%)</option>
+              <option value="gravel">Gravel (typical 38%)</option>
+              <option value="custom">Custom</option>
+            </select>
+          </div>
+          <div class="field" data-for="media">
+            <label for="m-por">Water-filled pore space</label>
+            <div class="input-row"><input id="m-por" type="number" inputmode="decimal" min="0" max="100" step="any"><span class="unit">%</span></div>
+            <div class="field-hint">Typical value, not exact. Measure yours for accuracy.</div>
+          </div>
+        </div>
+
+        <!-- Deep water culture -->
+        <div class="two-col">
+          <div class="field" data-for="dwc">
+            <label for="d-length">Canal length</label>
+            <div class="input-row"><input id="d-length" type="number" inputmode="decimal" min="0" step="any"><select class="unit-select" data-unit-group="length" data-unit-for="d-length" data-unit-default="cm" aria-label="Canal length unit"></select></div>
+          </div>
+          <div class="field" data-for="dwc">
+            <label for="d-width">Canal width</label>
+            <div class="input-row"><input id="d-width" type="number" inputmode="decimal" min="0" step="any"><select class="unit-select" data-unit-group="length" data-unit-for="d-width" data-unit-default="cm" aria-label="Canal width unit"></select></div>
+          </div>
+          <div class="field" data-for="dwc">
+            <label for="d-water">Water depth</label>
+            <div class="input-row"><input id="d-water" type="number" inputmode="decimal" min="0" step="any"><select class="unit-select" data-unit-group="length" data-unit-for="d-water" data-unit-default="cm" aria-label="Water depth unit"></select></div>
+            <div class="field-hint">FAO: about 30 cm is typical.</div>
+          </div>
+          <div class="field" data-for="dwc">
+            <label for="d-raft">Raft thickness</label>
+            <div class="input-row"><input id="d-raft" type="number" inputmode="decimal" min="0" step="any"><select class="unit-select" data-unit-group="length" data-unit-for="d-raft" data-unit-default="cm" aria-label="Raft thickness unit"></select></div>
+          </div>
+          <div class="field" data-for="dwc">
+            <label for="d-beds">Number of canals</label>
+            <div class="input-row"><input id="d-beds" type="number" inputmode="numeric" min="1" step="1"><span class="unit">canals</span></div>
+          </div>
+        </div>
+
+        <!-- NFT -->
+        <div class="two-col">
+          <div class="field" data-for="nft">
+            <label for="n-count">Number of channels</label>
+            <div class="input-row"><input id="n-count" type="number" inputmode="numeric" min="1" step="1"><span class="unit">channels</span></div>
+          </div>
+          <div class="field" data-for="nft">
+            <label for="n-length">Channel length</label>
+            <div class="input-row"><input id="n-length" type="number" inputmode="decimal" min="0" step="any"><select class="unit-select" data-unit-group="length" data-unit-for="n-length" data-unit-default="cm" aria-label="Channel length unit"></select></div>
+          </div>
+          <div class="field" data-for="nft">
+            <label for="n-profile">Channel profile</label>
+            <select id="n-profile">
+              <option value="rect">Rectangular gully</option>
+              <option value="round">Round pipe</option>
+            </select>
+          </div>
+          <div class="field" data-for="nft" data-profile="rect">
+            <label for="n-width">Channel inside width</label>
+            <div class="input-row"><input id="n-width" type="number" inputmode="decimal" min="0" step="any"><select class="unit-select" data-unit-group="length" data-unit-for="n-width" data-unit-default="cm" aria-label="Channel width unit"></select></div>
+          </div>
+          <div class="field" data-for="nft" data-profile="rect">
+            <label for="n-height">Channel inside height</label>
+            <div class="input-row"><input id="n-height" type="number" inputmode="decimal" min="0" step="any"><select class="unit-select" data-unit-group="length" data-unit-for="n-height" data-unit-default="cm" aria-label="Channel height unit"></select></div>
+          </div>
+          <div class="field" data-for="nft" data-profile="round">
+            <label for="n-diam">Pipe inside diameter</label>
+            <div class="input-row"><input id="n-diam" type="number" inputmode="decimal" min="0" step="any"><select class="unit-select" data-unit-group="length" data-unit-for="n-diam" data-unit-default="cm" aria-label="Pipe diameter unit"></select></div>
+            <div class="field-hint">FAO: 11 cm for mixed crops, 7.5 cm for leafy greens.</div>
+          </div>
+          <div class="field" data-for="nft">
+            <label for="n-film">Water film depth</label>
+            <div class="input-row"><input id="n-film" type="number" inputmode="decimal" min="0" step="any"><select class="unit-select" data-unit-group="length" data-unit-for="n-film" data-unit-default="mm" aria-label="Water film depth unit"></select></div>
+            <div class="field-hint">A shallow film; measure it while the pump runs.</div>
+          </div>
+          <div class="field" data-for="nft">
+            <label for="n-pitch">Channel spacing (centre to centre)</label>
+            <div class="input-row"><input id="n-pitch" type="number" inputmode="decimal" min="0" step="any"><select class="unit-select" data-unit-group="length" data-unit-for="n-pitch" data-unit-default="cm" aria-label="Channel spacing unit"></select></div>
+          </div>
+        </div>
+
+        <!-- Common -->
+        <div class="two-col">
+          <div class="field">
+            <label for="crop">Crop spacing preset</label>
+            <select id="crop">
+              <option value="lettuce">Lettuce (FAO 18–30 cm)</option>
+              <option value="basil">Basil (FAO 15–25 cm)</option>
+              <option value="tomato">Tomato (FAO 40–60 cm)</option>
+              <option value="custom">Custom</option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="spacing">Plant spacing</label>
+            <div class="input-row"><input id="spacing" type="number" inputmode="decimal" min="0" step="any"><select class="unit-select" data-unit-group="length" data-unit-for="spacing" data-unit-default="cm" aria-label="Plant spacing unit"></select></div>
+            <div class="field-hint" id="spacing-hint">Centre to centre, on a square grid.</div>
+          </div>
+        </div>
+
+        <hr class="divider">
+
+        <div class="notice" id="notice" hidden></div>
+
+        <div class="two-col">
+          <div class="field">
+            <label for="out-v">Show volume in</label>
+            <select id="out-v" class="unit-select-out" data-unit-group="volume" data-unit-default="L"></select>
+          </div>
+          <div class="field">
+            <label for="out-a">Show area in</label>
+            <select id="out-a" class="unit-select-out" data-unit-group="area" data-unit-default="m2"></select>
+          </div>
+        </div>
+
+        <div class="result-main" aria-live="polite">
+          <div class="label" id="r-main-label">Water in the beds</div>
+          <div class="value" id="r-water">–</div>
+        </div>
+
+        <div class="fill-bar" aria-hidden="true"><span id="r-fillbar" style="width:0%"></span></div>
+
+        <ul class="result-list">
+          <li><span id="r-gross-label">Gross bed volume</span><span class="v" id="r-gross">–</span></li>
+          <li><span id="r-each-label">Water per bed</span><span class="v" id="r-each">–</span></li>
+          <li><span>Water as share of bed volume</span><span class="v" id="r-fill">–</span></li>
+          <li><span>Water weight</span><span class="v" id="r-weight">–</span></li>
+          <li><span id="r-area-label">Planting area</span><span class="v" id="r-area">–</span></li>
+          <li><span>Plant sites</span><span class="v" id="r-sites">–</span></li>
+          <li><span>Planting density</span><span class="v" id="r-density">–</span></li>
+          <li><span>Water per plant site</span><span class="v" id="r-perplant">–</span></li>
+          <li id="r-extra-row"><span id="r-extra-label">–</span><span class="v" id="r-extra">–</span></li>
+        </ul>
+        <div class="status" id="r-status"></div>
+
+        <div class="share-bar">
+          <button class="btn btn-primary" type="button" id="btn-share">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="m8.6 13.5 6.8 4M15.4 6.5l-6.8 4"/></svg>
+            Share
+          </button>
+          <button class="btn" type="button" id="btn-link">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.5.5l3-3a5 5 0 0 0-7-7l-1.7 1.7"/><path d="M14 11a5 5 0 0 0-7.5-.5l-3 3a5 5 0 0 0 7 7l1.7-1.7"/></svg>
+            Copy link
+          </button>
+          <button class="btn" type="button" id="btn-copy">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h10a1 1 0 0 1 1 1v1"/></svg>
+            Copy results
+          </button>
+          <button class="btn" type="button" id="btn-reset">Reset</button>
+        </div>
+      </section>
+
+      <!-- Visualization -->
+      <section class="card viz-card" aria-labelledby="viz-heading">
+        <h2 id="viz-heading">Visualization</h2>
+        <svg class="viz" id="viz" viewBox="0 0 480 320" role="img" aria-label="Cross-section of the grow bed with its water level and plants at the chosen spacing"></svg>
+        <p class="viz-caption" id="viz-caption"></p>
+      </section>
+    </div>
+
+    <article class="article">
+      <h2>How the grow bed volume calculator works</h2>
+      <p>The calculator works out four things for the plant side of your system: the <strong>gross volume</strong> of the beds or channels, the <strong>water they hold</strong> while the system runs, the <strong>planting area</strong>, and the <strong>number of plant sites</strong> that fit at the spacing you choose. Every measurement has its own unit. Everything is converted to meters before the calculation, and the results are shown in the volume and area units you pick.</p>
+      <p>How much water a bed holds depends on its type:</p>
+      <ul>
+        <li><strong>Media bed.</strong> The bed is full of gravel, lava rock or expanded clay, so water can only fill the gaps between the particles. When the bed floods to the top of the media, the water held is the bed volume times the <em>water-filled pore space</em> (the share of the bed that is gaps).</li>
+        <li><strong>Deep water culture (DWC, raft).</strong> Plants float on foam rafts over a canal of water, so the water is simply length × width × water depth.</li>
+        <li><strong>Nutrient film technique (NFT).</strong> A thin film of water runs along the bottom of each channel. The water held is the cross-section of that film times the channel length. This is small, which is why most of the water in an NFT system sits in the sump or fish tank.</li>
+      </ul>
+      <p>This page does not tell you how much media to buy (see the <a href="growing-media-fill.html">Growing Media Fill calculator</a>) or whether your beds are the right size for your fish tank (see the <a href="grow-bed-ratio.html">Grow Bed Ratio calculator</a>).</p>
+
+      <h3>Why it matters for aquaponics and hydroponics</h3>
+      <ul>
+        <li><strong>Total system volume.</strong> Water in the beds is part of the system. Add it to the fish tank, sump and filters when you dose minerals, buffers or nutrients, or when you work out turnover.</li>
+        <li><strong>Sump sizing.</strong> In a flood-and-drain media bed the water held in the bed leaves the sump each time the bed fills. In NFT, the water in the channels drains back to the sump when the pump stops. The sump must be able to hold that water without overflowing.</li>
+        <li><strong>Thermal and chemical stability.</strong> DWC holds a large volume of water, which buffers temperature and water quality. NFT holds very little in the channels, so the reservoir does that job (Somerville et al., 2014; Maucieri et al., 2019).</li>
+        <li><strong>Weight.</strong> Water weighs about 1 kg per liter. Deep water canals and flooded media beds are heavy, so check what your floor, stand or roof can carry.</li>
+        <li><strong>Plant count.</strong> The planting area and spacing decide how many plants you can grow, and therefore how much feed and nutrient the system has to supply.</li>
+      </ul>
+
+      <h3>Formulas</h3>
+      <p>For n beds (or canals, or channels). Bed length L, width W, media depth D, water depth d, raft thickness t, water-filled pore space φ, channel length L<sub>c</sub>, plant spacing s.</p>
+      <p><strong>Media bed</strong>, flooded to the top of the media:</p>
+      <div class="formula">Gross volume = L × W × D × n
+Water        = Gross volume × φ
+Area         = L × W × n</div>
+
+      <p><strong>Deep water culture</strong>. The canal must be at least as deep as the water plus the raft:</p>
+      <div class="formula">Water            = L × W × d × n
+Gross volume     = L × W × (d + t) × n
+Min. canal depth = d + t
+Area             = L × W × n</div>
+
+      <p><strong>NFT channels</strong>. Film depth h; rectangular gully of inside width w and height H, or round pipe of inside radius r:</p>
+      <div class="formula">Rectangular:  film area A = w × h
+              channel area = w × H
+Round pipe:   film area A = r² · arccos((r − h) / r) − (r − h) · √(2rh − h²)
+              channel area = π r²
+Water         = A × L<sub>c</sub> × n
+Gross volume  = channel area × L<sub>c</sub> × n
+Area          = L<sub>c</sub> × channel spacing × n</div>
+      <p>The round-pipe film is a circular segment, the same geometry used for a partly filled horizontal tank.</p>
+
+      <p><strong>Plant sites</strong>. Each plant gets a square of side s, so only whole plants count (⌊ ⌋ means round down):</p>
+      <div class="formula">Media bed / DWC:  sites = ⌊L ÷ s⌋ × ⌊W ÷ s⌋ × n
+NFT:              sites = ⌊L<sub>c</sub> ÷ s⌋ × n
+Density           = sites ÷ area   (plants per m²)
+Water weight      = Water (L) × 0.998 kg/L</div>
+      <p>On a square grid, spacing s gives at most 1 ÷ s² plants per m² (20 cm gives 25 per m²). Rounding down to whole rows means small beds come out a little lower. Staggered (offset) rows can fit a few more plants than a square grid.</p>
+
+      <h3>Typical values (rules of thumb)</h3>
+      <p>These come from the FAO aquaponics manual (Somerville et al., 2014). They are guide values, not fixed rules. The calculator shows whether your planting density falls inside the FAO range for the crop you choose.</p>
+      <table>
+        <thead><tr><th>Item</th><th>Typical value</th></tr></thead>
+        <tbody>
+          <tr><td>Media bed depth</td><td>About 30 cm (15–20 cm can do for small leafy greens)</td></tr>
+          <tr><td>DWC canal water depth</td><td>About 30 cm</td></tr>
+          <tr><td>NFT pipe diameter</td><td>11 cm for mixed or fruiting crops; 7.5 cm for leafy greens</td></tr>
+          <tr><td>NFT plant holes</td><td>At least 21 cm between hole centres</td></tr>
+          <tr><td>Lettuce</td><td>18–30 cm spacing, 20–25 heads per m²</td></tr>
+          <tr><td>Basil</td><td>15–25 cm spacing, 8–40 plants per m²</td></tr>
+          <tr><td>Tomato</td><td>40–60 cm spacing, 3–5 plants per m²</td></tr>
+        </tbody>
+      </table>
+      <p>The media presets are <strong>typical values, not exact figures</strong>, and match the <a href="growing-media-fill.html">Growing Media Fill calculator</a>: expanded clay 40%, lava rock 45% and gravel 38% (gravel porosity is 25–40%; Freeze &amp; Cherry, 1979). Pore space depends on particle size, shape and packing. To measure yours, fill a bucket of known volume with media, then measure how much water it takes to fill it to the top. That volume divided by the bucket volume is φ.</p>
+
+      <h3>Example</h3>
+      <p><strong>Media bed (the default).</strong> One bed 120 cm long, 100 cm wide, with 30 cm of expanded clay. Gross volume = 1.2 × 1.0 × 0.3 = 0.36 m³ = <strong>360 L</strong>. Flooded at 40% pore space it holds 360 × 0.40 = <strong>144 L</strong> of water, which weighs 144 × 0.998 = 143.7 kg. The planting area is 1.2 × 1.0 = <strong>1.2 m²</strong>. At 20 cm lettuce spacing, ⌊120 ÷ 20⌋ × ⌊100 ÷ 20⌋ = 6 × 5 = <strong>30 plant sites</strong>, or 25 per m², at the top of the FAO range of 20–25 heads per m². That is 144 ÷ 30 = 4.8 L of bed water per plant.</p>
+      <p><strong>Deep water culture.</strong> One canal 240 × 120 cm with 30 cm of water and a 4 cm raft holds 2.4 × 1.2 × 0.3 = 0.864 m³ = <strong>864 L</strong>. It needs to be at least 34 cm deep, a gross volume of 979.2 L. The raft area is 2.88 m², and at 20 cm spacing it fits 12 × 6 = <strong>72 plants</strong> (25 per m², 12 L of water per plant).</p>
+      <p><strong>NFT.</strong> Six rectangular channels 300 cm long, 10 cm wide and 7.5 cm high, with a 5 mm film. Each holds 0.10 × 0.005 × 3 = 0.0015 m³ = 1.5 L, so the six hold <strong>9 L</strong>, out of a gross channel volume of 6 × 22.5 = 135 L. At 20 cm spacing each channel has ⌊300 ÷ 20⌋ = 15 sites, <strong>90 plants</strong> in all. With the channels 20 cm apart they cover 6 × 3 × 0.2 = 3.6 m² (25 per m²), with only 0.1 L of channel water per plant.</p>
+
+      <h3>Things the calculator does not include</h3>
+      <ul>
+        <li><strong>The dry zone of a media bed.</strong> In a flood-and-drain bed the water usually stops a few centimetres below the media surface, so the top layer stays dry. The water figure assumes the bed floods to the top of the media, so the real figure is a little lower. To allow for it, enter the flooded depth as the media depth.</li>
+        <li><strong>Water absorbed into the media.</strong> Expanded clay and lava rock soak up some water inside each particle. This adds weight but is not counted as free water here.</li>
+        <li><strong>Raft displacement.</strong> A floating raft and the plant roots displace a small amount of water. The DWC water figure uses the water depth you measure with the rafts in place, so it is close enough for dosing.</li>
+        <li><strong>NFT film depth.</strong> NFT relies on a very shallow, moving film (Cooper, 1979). Its depth changes with flow rate, slope and root mass, so the channel water is an estimate. Measure the film while the pump runs.</li>
+        <li><strong>Plumbing, sumps and fish tanks.</strong> Add these separately for the total system volume.</li>
+        <li><strong>Bell siphons, standpipes and media guards.</strong> These take up a little space in the bed and are ignored.</li>
+      </ul>
+
+      <h2>Sources</h2>
+      <ol class="sources">
+        <li>Somerville, C., Cohen, M., Pantanella, E., Stankus, A. &amp; Lovatelli, A. (2014). <em>Small-scale aquaponic food production: Integrated fish and plant farming</em>. FAO Fisheries and Aquaculture Technical Paper No. 589. Rome: FAO. Chapter 4 (media bed, NFT and DWC units) and Appendix 1 (vegetable production guidelines, plant spacing). <a href="https://www.fao.org/3/i4021e/i4021e.pdf" rel="noopener" target="_blank">fao.org</a></li>
+        <li>Maucieri, C., Nicoletto, C., van Os, E., Anseeuw, D., Van Havermaet, R. &amp; Junge, R. (2019). Hydroponic technologies. In S. Goddek, A. Joyce, B. Kotzen &amp; G. M. Burnell (Eds.), <em>Aquaponics Food Production Systems</em> (pp. 77–110). Cham: Springer (open access). <a href="https://doi.org/10.1007/978-3-030-15943-6_4" rel="noopener" target="_blank">doi:10.1007/978-3-030-15943-6_4</a></li>
+        <li>Cooper, A. J. (1979). <em>The ABC of NFT: Nutrient Film Technique</em>. London: Grower Books.</li>
+        <li>Freeze, R. A. &amp; Cherry, J. A. (1979). <em>Groundwater</em>. Englewood Cliffs, NJ: Prentice-Hall. Table 2.4, range of values of porosity.</li>
+        <li>U.S. Geological Survey, Water Science School. “Water Density.” <a href="https://www.usgs.gov/special-topics/water-science-school/science/water-density" rel="noopener" target="_blank">usgs.gov</a></li>
+        <li>Weisstein, E. W. “Circular Segment.” <em>MathWorld</em>, Wolfram Research. <a href="https://mathworld.wolfram.com/CircularSegment.html" rel="noopener" target="_blank">mathworld.wolfram.com</a></li>
+        <li>National Institute of Standards and Technology. <em>NIST Handbook 44</em>, Appendix C: General Tables of Units of Measurement. <a href="https://www.nist.gov/pml/owm/publications/nist-handbooks/handbook-44" rel="noopener" target="_blank">nist.gov</a></li>
+      </ol>
+    </article>
+  </main>
+
+  <footer class="site-footer">
+    <div class="wrap">Calculations are estimates. Check the sources above before relying on a result.</div>
+  </footer>
+
+  <script src="../assets/share.js"></script>
+  <script src="../assets/units.js"></script>
+  <script src="../assets/grow-bed-volume.js"></script>
+</body>
+</html>

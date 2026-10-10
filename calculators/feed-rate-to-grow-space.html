@@ -68,12 +68,12 @@
         <div class="field">
           <label for="crop">Crop type (feed rate ratio)</label>
           <select id="crop">
-            <option value="leafy">Leafy greens: 40–50 g/m²/day (FAO)</option>
-            <option value="fruiting">Fruiting vegetables: 50–80 g/m²/day (FAO)</option>
-            <option value="raft">Raft / DWC, UVI system: 60–100 g/m²/day (Rakocy)</option>
+            <option value="leafy">Leafy greens · 40–50</option>
+            <option value="fruiting">Fruiting vegetables · 50–80</option>
+            <option value="raft">Raft (UVI system) · 60–100</option>
             <option value="custom">Custom range…</option>
           </select>
-          <div class="field-hint">Ratios are design guidelines for a 32% protein fish feed, not exact limits.</div>
+          <div class="field-hint">g feed per m² per day. Leafy and fruiting: FAO; raft: Rakocy et al. These are design guidelines for a 32% protein feed, not exact limits.</div>
         </div>
 
         <div class="two-col" id="custom-fields" hidden>
@@ -135,7 +135,7 @@
             <select id="outa" class="unit-select" data-unit-group="area" data-unit-default="m2"></select>
           </div>
           <div class="field">
-            <label for="outf">Show feed in (per day)</label>
+            <label for="outf">Show feed in</label>
             <select id="outf" class="unit-select" data-unit-group="mass" data-unit-default="g"></select>
           </div>
         </div>
@@ -148,9 +148,9 @@
         </div>
 
         <ul class="result-list">
-          <li><span>Grow area range</span><span class="v" id="r-arange">–</span></li>
+          <li><span>Area this feed supports</span><span class="v" id="r-arange">–</span></li>
           <li><span id="r-amid-label">Design point (mid ratio)</span><span class="v" id="r-amid">–</span></li>
-          <li><span>Daily feed supported</span><span class="v" id="r-frange">–</span></li>
+          <li><span>Feed your area supports</span><span class="v" id="r-frange">–</span></li>
           <li><span>Fish biomass supported</span><span class="v" id="r-bio">–</span></li>
           <li><span>Feed rate ratio used</span><span class="v" id="r-ratio">–</span></li>
           <li><span>Your actual ratio</span><span class="v" id="r-actual">–</span></li>

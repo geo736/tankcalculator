@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Battery Life Estimator</title>
+  <meta name="description" content="Estimate how long backup batteries will run air pumps, aerators, water pumps and other critical aquaculture, aquaponics and hydroponics loads during a power outage.">
+  <link rel="stylesheet" href="../assets/style.css">
+  <style>
+    .load-list { display: grid; gap: 10px; margin-bottom: 10px; }
+    .load-row {
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      background: var(--surface-2);
+      padding: 10px;
+    }
+    .load-head { display: flex; gap: 8px; align-items: center; margin-bottom: 8px; }
+    .load-head .swatch { width: 12px; height: 12px; border-radius: 3px; flex: none; }
+    .load-head input {
+      flex: 1; min-width: 0; font: inherit; font-weight: 600; color: var(--text);
+      background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 8px 10px;
+    }
+    .load-head input:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
+    .load-remove {
+      flex: none; font: inherit; font-size: 1.1rem; line-height: 1; width: 36px; height: 36px;
+      border: 1px solid var(--border); border-radius: 10px; background: var(--surface); color: var(--text-muted); cursor: pointer;
+    }
+    .load-remove:hover { border-color: var(--accent); color: var(--text); }
+    .load-grid { display: grid; grid-template-columns: minmax(0, 1.5fr) minmax(0, .8fr) minmax(0, 1fr); gap: 8px; }
+    .load-grid .field { margin-bottom: 0; }
+    .load-grid label { font-size: .8rem; font-weight: 600; margin-bottom: 4px; }
+    @media (max-width: 480px) {
+      .load-grid { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
+      .load-grid .f-power { grid-column: 1 / -1; }
+    }
+    .add-load { display: flex; gap: 8px; }
+    .add-load select { flex: 1; min-width: 0; }
+    .add-load .btn { flex: none; }
+    details.advanced { border: 1px dashed var(--border); border-radius: 12px; padding: 10px 12px; margin: 4px 0 14px; }
+    details.advanced summary { cursor: pointer; font-weight: 600; font-size: .9rem; }
+    details.advanced[open] summary { margin-bottom: 10px; }
+    .out-units { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+    .out-units label { font-size: .8rem; }
+    .result-main .sub { font-size: .9rem; color: var(--text-muted); margin-top: 2px; }
+    .viz .soc-line { fill: none; stroke: var(--accent); stroke-width: 2.5; stroke-linejoin: round; }
+    .viz .soc-area { fill: var(--accent); fill-opacity: .14; }
+    .viz .grid-line { stroke: var(--border); stroke-width: 1; }
+    .viz .axis { stroke: var(--text-muted); stroke-width: 1; }
+    .viz .cutoff-line { stroke: var(--warn-text); stroke-width: 1.5; stroke-dasharray: 5 4; }
+    .viz .cutoff-text { fill: var(--warn-text); font-size: 12px; font-weight: 600; font-family: var(--font); }
+    .viz .target-line { stroke: var(--water-deep); stroke-width: 1.5; stroke-dasharray: 3 3; }
+    .viz .strong-text { fill: var(--text); font-size: 13px; font-weight: 700; font-family: var(--font); }
+    .viz .batt-fill { fill: var(--accent); }
+    .viz .batt-fill.low { fill: var(--warn-text); }
+    .viz .seg-gap { stroke: var(--surface); stroke-width: 1.5; }
+  </style>
+</head>
+<body>
+  <header class="site-header">
+    <div class="wrap">
+      <a class="brand" href="../">
+        <span class="brand-mark" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3c3 4 6 7 6 11a6 6 0 0 1-12 0c0-4 3-7 6-11z"/></svg>
+        </span>
+        Tank Calculator
+      </a>
+      <nav><a href="../">All calculators</a></nav>
+    </div>
+  </header>
+
+  <main class="wrap">
+    <div class="crumbs"><a href="../">Home</a> / Battery Life Estimator</div>
+    <h1 class="page-title">Battery Life Estimator</h1>
+    <p class="page-lede">Estimate how long a backup battery bank will keep air pumps, aerators, water pumps and other critical loads running during a power outage, and how many batteries you need to reach a target runtime.</p>
+
+    <div class="calc-layout">
+      <!-- Calculator -->
+      <section class="card" aria-labelledby="calc-heading">
+        <h2 id="calc-heading">Calculator</h2>
+
+        <div class="field">
+          <label for="chem">Battery type</label>
+          <select id="chem">
+            <option value="flooded">Flooded lead-acid (deep-cycle)</option>
+            <option value="agm">AGM / gel lead-acid (sealed)</option>
+            <option value="lfp">Lithium iron phosphate (LiFePO4)</option>
+            <option value="custom">Custom</option>
+          </select>
+          <div class="field-hint" id="chem-hint"></div>
+        </div>
+
+        <div class="two-col">
+          <div class="field">
+            <label for="cap">Capacity per battery</label>
+            <div class="input-row"><input id="cap" type="number" inputmode="decimal" min="0" step="any"><span class="unit">Ah</span></div>
+          </div>
+          <div class="field">
+            <label for="volt">Nominal voltage</label>
+            <div class="input-row"><input id="volt" type="number" inputmode="decimal" min="0" step="any"><span class="unit">V</span></div>
+          </div>
+          <div class="field">
+            <label for="count">Number of batteries</label>
+            <div class="input-row"><input id="count" type="number" inputmode="numeric" min="1" step="1"></div>
+          </div>
+          <div class="field">
+            <label for="wiring">Wiring</label>
+            <select id="wiring">
+              <option value="parallel">Parallel</option>
+              <option value="series">Series</option>
+              <option value="total">Just the total</option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="dod">Usable depth of discharge</label>
+            <div class="input-row"><input id="dod" type="number" inputmode="decimal" min="0" max="100" step="any"><span class="unit">%</span></div>
+          </div>
+          <div class="field">
+            <label for="health">Capacity available</label>
+            <div class="input-row"><input id="health" type="number" inputmode="decimal" min="0" max="100" step="any"><span class="unit">%</span></div>
+            <div class="field-hint">Of rated Ah. Lower it for old or cold batteries.</div>
+          </div>
+        </div>
+
+        <div class="field">
+          <label for="path">How the loads are powered</label>
+          <select id="path">
+            <option value="ac">AC loads through an inverter</option>
+            <option value="dc">DC loads, no inverter</option>
+          </select>
+        </div>
+        <div class="two-col" id="inv-fields">
+          <div class="field">
+            <label for="eff">Inverter efficiency</label>
+            <div class="input-row"><input id="eff" type="number" inputmode="decimal" min="0" max="100" step="any"><span class="unit">%</span></div>
+          </div>
+          <div class="field">
+            <label for="idle">Inverter no-load draw</label>
+            <div class="input-row"><input id="idle" type="number" inputmode="decimal" min="0" step="any"><select class="unit-select" data-unit-group="power" data-unit-for="idle" data-unit-default="W" aria-label="Inverter no-load draw unit"></select></div>
+            <div class="field-hint">From the datasheet (no-load current × voltage).</div>
+          </div>
+        </div>
+
+        <div class="field">
+          <span class="label" id="loads-label">Critical loads</span>
+          <div class="load-list" id="load-list" role="group" aria-labelledby="loads-label"></div>
+          <div class="add-load">
+            <select id="add-preset" aria-label="Load to add"></select>
+            <button class="btn" type="button" id="btn-add">+ Add load</button>
+          </div>
+          <div class="field-hint">Preset wattages are typical figures only. Use the rating on your own equipment. Duty cycle is the share of time the device runs (100% = runs all the time).</div>
+        </div>
+
+        <div class="field">
+          <label for="target">Target runtime</label>
+          <div class="input-row"><input id="target" type="number" inputmode="decimal" min="0" step="any"><select class="unit-select" data-unit-group="time" data-unit-for="target" data-unit-default="h" aria-label="Target runtime unit"></select></div>
+        </div>
+
+        <details class="advanced" id="advanced">
+          <summary>Advanced: Peukert correction</summary>
+          <div class="two-col">
+            <div class="field">
+              <label for="peuk">Peukert exponent k</label>
+              <div class="input-row"><input id="peuk" type="number" inputmode="decimal" min="1" max="2" step="0.01"></div>
+            </div>
+            <div class="field">
+              <label for="rateh">Capacity rated at</label>
+              <div class="input-row"><input id="rateh" type="number" inputmode="decimal" min="0" step="any"><select class="unit-select" data-unit-group="time" data-unit-for="rateh" data-unit-default="h" aria-label="Capacity rating period unit"></select></div>
+            </div>
+          </div>
+          <div class="field-hint">Lead-acid batteries give less than their rated Ah when discharged faster than the rating period (usually 20 h). k = 1.25 is a common average for lead-acid and about 1.05 for lithium; 1.00 turns the correction off. Use your battery’s datasheet value if it has one.</div>
+        </details>
+
+        <hr class="divider">
+
+        <div class="notice" id="notice" hidden></div>
+
+        <div class="out-units">
+          <div class="field">
+            <label for="out-time">Runtime in</label>
+            <select class="unit-select" id="out-time" data-unit-group="time" data-unit-default="h"></select>
+          </div>
+          <div class="field">
+            <label for="out-energy">Energy in</label>
+            <select class="unit-select" id="out-energy" data-unit-group="energy" data-unit-default="Wh"></select>
+          </div>
+          <div class="field">
+            <label for="out-power">Power in</label>
+            <select class="unit-select" id="out-power" data-unit-group="power" data-unit-default="W"></select>
+          </div>
+        </div>
+
+        <div class="result-main" aria-live="polite">
+          <div class="label">Estimated runtime to cutoff</div>
+          <div class="value" id="r-runtime">–</div>
+          <div class="sub" id="r-runtime-alt"></div>
+        </div>
+
+        <div class="fill-bar" aria-hidden="true"><span id="r-bar" style="width:0%"></span></div>
+
+        <ul class="result-list">
+          <li><span>Battery bank</span><span class="v" id="r-bank">–</span></li>
+          <li><span>Usable energy (rated)</span><span class="v" id="r-usable">–</span></li>
+          <li><span>Usable energy at this load</span><span class="v" id="r-usable-p">–</span></li>
+          <li><span>Total average load</span><span class="v" id="r-load">–</span></li>
+          <li><span>Drawn from batteries</span><span class="v" id="r-draw">–</span></li>
+          <li><span>Current per battery</span><span class="v" id="r-current">–</span></li>
+          <li><span>Batteries for target runtime</span><span class="v" id="r-need">–</span></li>
+        </ul>
+
+        <div class="share-bar">
+          <button class="btn btn-primary" type="button" id="btn-share">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="m8.6 13.5 6.8 4M15.4 6.5l-6.8 4"/></svg>
+            Share
+          </button>
+          <button class="btn" type="button" id="btn-link">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.5.5l3-3a5 5 0 0 0-7-7l-1.7 1.7"/><path d="M14 11a5 5 0 0 0-7.5-.5l-3 3a5 5 0 0 0 7 7l1.7-1.7"/></svg>
+            Copy link
+          </button>
+          <button class="btn" type="button" id="btn-copy">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h10a1 1 0 0 1 1 1v1"/></svg>
+            Copy results
+          </button>
+          <button class="btn" type="button" id="btn-reset">Reset</button>
+        </div>
+      </section>
+
+      <!-- Visualization -->
+      <section class="card viz-card" aria-labelledby="viz-heading">
+        <h2 id="viz-heading">Visualization</h2>
+        <svg class="viz" id="viz" viewBox="0 0 480 360" role="img" aria-label="Battery state of charge over time until cutoff, and a stacked bar of what each load draws"></svg>
+        <p class="viz-caption" id="viz-caption"></p>
+      </section>
+    </div>
+
+    <article class="article">
+      <h2>How the battery life estimator works</h2>
+      <p>The calculator works out how much energy the battery bank can safely give, how much power your critical equipment draws on average, and divides one by the other. In steps:</p>
+      <ol>
+        <li><strong>Bank energy.</strong> Each battery stores roughly its capacity in amp-hours (Ah) times its nominal voltage, in watt-hours (Wh) (Reddy, 2011). The batteries are added together. Wiring them in series raises the voltage and wiring them in parallel raises the amp-hours, but the total energy is the same either way.</li>
+        <li><strong>Usable energy.</strong> You should not drain a battery completely. The usable depth of discharge (DoD) is the share of the capacity you plan to use before the inverter or controller cuts off. A second percentage lets you derate the battery for age or cold.</li>
+        <li><strong>Average load.</strong> For each device, power × quantity × duty cycle. A pump on a timer that runs 15 minutes per hour has a 25% duty cycle.</li>
+        <li><strong>Battery draw.</strong> AC equipment runs through an inverter that wastes some energy as heat, so the battery supplies the AC load divided by the inverter efficiency, plus the inverter’s own no-load draw.</li>
+        <li><strong>Peukert correction (lead-acid).</strong> Lead-acid batteries give fewer amp-hours when they are discharged faster than the rate their capacity is rated at, usually the 20-hour rate. The calculator reduces the usable energy by Peukert’s law when the current per battery is higher than that rated current.</li>
+        <li><strong>Runtime</strong> = usable energy ÷ battery draw. The calculator also tries larger banks until the runtime reaches your target.</li>
+      </ol>
+
+      <h3>Why backup runtime matters</h3>
+      <p>In recirculating aquaculture, aquaponics and hydroponics, pumps and blowers keep oxygen in the water and water moving through filters and roots. When the power goes out, dissolved oxygen in a heavily stocked fish tank can fall to dangerous levels quickly, and deep-water or NFT plant roots also lose their oxygen and flow. The SRAC fact sheet on managing recirculating systems states that backup power is essential (Masser et al., 1999). A generator with an automatic transfer switch is the usual first line of defence. A battery bank with an inverter, or a DC air pump on its own battery, is a quiet and simple way to keep aeration going during short outages or until the generator starts. This calculator tells you whether the bank you have is enough.</p>
+
+      <h3>Formulas</h3>
+      <p>N = number of batteries, C = rated capacity per battery (Ah), V = nominal voltage per battery, DoD = usable depth of discharge, A = capacity available (age/cold derating), η = inverter efficiency (1 for DC loads).</p>
+      <div class="formula">Nominal energy   E_nom = N × C × V
+Usable energy    E_use = E_nom × DoD × A
+Average AC load  P_avg = Σ (P_i × qty_i × duty_i)
+Battery draw     P_bat = P_avg ÷ η + P_no-load
+Current/battery  I     = P_bat ÷ (N × V)
+Runtime          t     = E_use × f ÷ P_bat</div>
+      <p>Every battery carries the same current whatever the wiring: in series the whole bank current flows through each battery, and in parallel the larger bank current is shared equally between the batteries. That is why the current per battery is P<sub>bat</sub> ÷ (N × V) in all cases.</p>
+      <p><strong>Peukert factor.</strong> Peukert’s law (Peukert, 1897) says a battery rated at C amp-hours over H hours lasts t = H × (C ÷ (I × H))<sup>k</sup> hours at a constant current I. Dividing by the simple estimate C ÷ I gives the fraction of rated capacity you actually get:</p>
+      <div class="formula">f = (C ÷ (I × H))^(k − 1),   capped at f ≤ 1</div>
+      <p>The cap is a conservative choice. At currents below the rated current the formula predicts more than the rated capacity, but real batteries gain less than that, so the calculator never credits extra capacity. Peukert’s law is only an approximation; the exponent is normally worked out from two rated discharge times, such as the 5-hour and 20-hour ratings on a datasheet (Victron Energy).</p>
+
+      <h3>Battery types and usable depth of discharge</h3>
+      <table>
+        <thead><tr><th>Type</th><th>Default DoD</th><th>Default k</th><th>Notes</th></tr></thead>
+        <tbody>
+          <tr><td>Flooded lead-acid</td><td>50%</td><td>1.25</td><td>Rule of thumb. Deeper discharges shorten cycle life sharply.</td></tr>
+          <tr><td>AGM / gel lead-acid</td><td>50%</td><td>1.25</td><td>Same rule of thumb. Many AGM datasheets give a lower k (closer to 1.1).</td></tr>
+          <tr><td>LiFePO4</td><td>80%</td><td>1.05</td><td>Conservative. Many makers allow 90–100%, limited by the battery’s BMS.</td></tr>
+        </tbody>
+      </table>
+      <p>Battery University gives typical end-of-discharge voltages of 1.75 V per cell for lead-acid (10.5 V for a 12 V battery) and 3.0 V per cell for most lithium-ion; by that point about 95% of the energy is used. Going all the way to that voltage is a 100% discharge, and lead-acid batteries cycled that deeply last far fewer cycles. That is why 50% is the common rule of thumb for lead-acid backup banks. The k values are Victron’s suggested defaults when the real value is unknown: 1.25 for lead-acid and 1.05 for lithium.</p>
+
+      <h3>Typical load presets</h3>
+      <table>
+        <thead><tr><th>Preset</th><th>Typical power</th></tr></thead>
+        <tbody>
+          <tr><td>Small aquarium air pump</td><td>3 W</td></tr>
+          <tr><td>Battery-backup DC air pump</td><td>3 W</td></tr>
+          <tr><td>Linear air pump, about 60 L/min</td><td>50 W</td></tr>
+          <tr><td>Linear air pump, about 120 L/min</td><td>110 W</td></tr>
+          <tr><td>Small submersible water pump</td><td>30 W</td></tr>
+          <tr><td>Medium submersible water pump</td><td>100 W</td></tr>
+          <tr><td>1/4 hp surface aerator (electrical input)</td><td>300 W</td></tr>
+          <tr><td>Controller, alarm or router</td><td>10 W</td></tr>
+        </tbody>
+      </table>
+      <p>These are typical figures meant as a starting point, not data from a standard. Power use differs a lot between brands, so read the watts (or volts × amps) from your own equipment’s label. A 1/4 hp motor delivers about 186 W at the shaft, and small motors are well under 100% efficient, so the electrical input is higher.</p>
+
+      <h3>Example</h3>
+      <p>Two 12 V, 100 Ah AGM batteries in parallel power two 50 W linear air pumps running all the time and a 100 W water pump on a 50% timer, through an inverter with 85% efficiency (no-load draw ignored).</p>
+      <div class="formula">E_nom = 2 × 100 Ah × 12 V          = 2,400 Wh
+E_use = 2,400 × 0.50 × 1.00         = 1,200 Wh
+P_avg = 2 × 50 W + 100 W × 0.50     = 150 W
+P_bat = 150 ÷ 0.85                  = 176.5 W
+I     = 176.5 ÷ (2 × 12)            = 7.35 A per battery
+Rated current C ÷ H = 100 ÷ 20      = 5 A
+f     = (5 ÷ 7.35)^(1.25 − 1) = 0.68^0.25 = 0.908
+t     = 1,200 × 0.908 ÷ 176.5       = 6.17 h ≈ 6 h 10 min</div>
+      <p>Without the Peukert correction the same bank would be estimated at 6.8 h, so the faster discharge costs about 40 minutes. For a 12-hour target the bank needs <strong>4 batteries</strong>: with four in parallel the current falls to 3.7 A per battery, below the 20-hour rate, and the runtime is 2,400 Wh ÷ 176.5 W = 13.6 h.</p>
+
+      <h3>Limitations and assumptions</h3>
+      <ul>
+        <li><strong>Cold.</strong> Batteries deliver less in the cold. Battery University reports that a battery giving 100% at 27 °C (80 °F) typically delivers only about 50% at −18 °C (0 °F). Lower “Capacity available” for unheated sheds and winter outages.</li>
+        <li><strong>Age.</strong> Capacity fades with use. IEEE Std 485 treats a lead-acid battery as at end of life when it can give only 80% of its rated capacity, so sizing practice adds about 25% to cover ageing. Use about 80% capacity available to plan for an old bank.</li>
+        <li><strong>Voltage sag.</strong> The calculator uses nominal voltage. Under heavy load a lead-acid battery’s voltage drops, and the inverter may shut off at its low-voltage cutoff before the planned DoD is reached.</li>
+        <li><strong>Start-up surge.</strong> Pumps and aerator motors draw several times their running power for a moment when they start. This barely changes runtime, but the inverter’s surge rating must cover it.</li>
+        <li><strong>Inverter idle draw.</strong> An inverter uses power even with little load. With small air pumps this can be most of the drain, so enter the no-load figure from the datasheet.</li>
+        <li><strong>Starting charge.</strong> The estimate assumes the batteries are fully charged when the outage starts. Keep the bank on a float or maintenance charger.</li>
+        <li><strong>Peukert is approximate</strong> and assumes a constant current. Pumps cycling on and off are treated as their average current. Peukert’s law describes lead-acid well and lithium only loosely.</li>
+      </ul>
+
+      <h2>Sources</h2>
+      <ol class="sources">
+        <li>Battery University. “BU-501: Basics about Discharging.” Cadex Electronics. <a href="https://batteryuniversity.com/article/bu-501-basics-about-discharging" rel="noopener" target="_blank">batteryuniversity.com</a></li>
+        <li>Battery University. “BU-502: Discharging at High and Low Temperatures.” Cadex Electronics. <a href="https://batteryuniversity.com/article/bu-502-discharging-at-high-and-low-temperatures" rel="noopener" target="_blank">batteryuniversity.com</a></li>
+        <li>Peukert, W. (1897). Über die Abhängigkeit der Kapazität von der Entladestromstärke bei Bleiakkumulatoren. <em>Elektrotechnische Zeitschrift</em>, 18, 287–288.</li>
+        <li>Victron Energy. <em>BMV-712 Smart battery monitor manual</em>, “Battery capacity and Peukert exponent” and the Peukert exponent setting (default 1.25; 1.25 suggested for lead-acid and 1.05 for lithium when unknown). <a href="https://www.victronenergy.com/media/pg/BMV-712_Smart/en/battery-capacity-and-peukert-exponent.html" rel="noopener" target="_blank">victronenergy.com</a></li>
+        <li>IEEE (2020). <em>IEEE Std 485-2020: IEEE Recommended Practice for Sizing Lead-Acid Batteries for Stationary Applications</em>. New York: IEEE.</li>
+        <li>Reddy, T. B. (Ed.) (2011). <em>Linden’s Handbook of Batteries</em> (4th ed.). New York: McGraw-Hill.</li>
+        <li>Masser, M. P., Rakocy, J. &amp; Losordo, T. M. (1999). <em>Recirculating Aquaculture Tank Production Systems: Management of Recirculating Systems</em>. SRAC Publication No. 452. Southern Regional Aquaculture Center. <a href="https://www.srac.msstate.edu/pdfs/Fact%20Sheets/452%20Recirculating%20Aquaculture%20Tank%20Production%20Systems-%20Management%20of%20Recirculating%20Systems.pdf" rel="noopener" target="_blank">srac.msstate.edu</a></li>
+      </ol>
+    </article>
+  </main>
+
+  <footer class="site-footer">
+    <div class="wrap">Calculations are estimates. Check the sources above before relying on a result.</div>
+  </footer>
+
+  <script src="../assets/share.js"></script>
+  <script src="../assets/units.js"></script>
+  <script src="../assets/battery-life.js"></script>
+</body>
+</html>

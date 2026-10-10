@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Drum Filter Sizing Calculator</title>
+  <meta name="description" content="Size a rotating drum (microscreen) filter for a recirculating aquaculture or aquaponics system: required submerged screen area, solids load and backwash water use.">
+  <link rel="stylesheet" href="../assets/style.css">
+  <style>
+    .viz .screen { fill: var(--surface); stroke: var(--tank-stroke); stroke-width: 1.5; stroke-dasharray: 3 2; }
+    .viz .screen-arc { fill: none; stroke: var(--accent); stroke-width: 5; stroke-linecap: round; }
+    .viz .bar-track { fill: var(--surface-2, var(--border)); stroke: var(--border); }
+    .viz .bar-req { fill: var(--tank-back); }
+    .viz .bar-ok { fill: var(--accent); }
+    .viz .bar-bad { fill: var(--warn-text); }
+    .viz .spray { stroke: var(--water-deep); stroke-width: 1.5; stroke-dasharray: 2 3; }
+    .viz .trough { fill: none; stroke: var(--tank-stroke); stroke-width: 2; }
+    .viz .accent-text { fill: var(--accent); font-size: 12px; font-weight: 600; font-family: var(--font); }
+  </style>
+</head>
+<body>
+  <header class="site-header">
+    <div class="wrap">
+      <a class="brand" href="../">
+        <span class="brand-mark" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3c3 4 6 7 6 11a6 6 0 0 1-12 0c0-4 3-7 6-11z"/></svg>
+        </span>
+        Tank Calculator
+      </a>
+      <nav><a href="../">All calculators</a></nav>
+    </div>
+  </header>
+
+  <main class="wrap">
+    <div class="crumbs"><a href="../">Home</a> / Drum Filter Sizing</div>
+    <h1 class="page-title">Drum Filter Sizing Calculator</h1>
+    <p class="page-lede">Estimate how much submerged screen a rotating drum (microscreen) filter needs for your flow, check whether a given drum is big enough, and see the solids load and backwash water it will produce.</p>
+
+    <div class="calc-layout">
+      <!-- Calculator -->
+      <section class="card" aria-labelledby="calc-heading">
+        <h2 id="calc-heading">Calculator</h2>
+
+        <div class="two-col">
+          <div class="field">
+            <label for="flow">Flow to the filter</label>
+            <div class="input-row"><input id="flow" type="number" inputmode="decimal" min="0" step="any"><select class="unit-select" data-unit-group="flow" data-unit-for="flow" data-unit-default="m3ph" aria-label="Flow unit"></select></div>
+          </div>
+          <div class="field">
+            <label for="feed">Daily feed</label>
+            <div class="input-row"><input id="feed" type="number" inputmode="decimal" min="0" step="any"><select class="unit-select" data-unit-group="mass" data-unit-for="feed" data-unit-default="kg" aria-label="Daily feed unit"></select></div>
+            <div class="field-hint">Mass of feed per day.</div>
+          </div>
+          <div class="field">
+            <label for="tssfrac">Solids produced</label>
+            <div class="input-row"><input id="tssfrac" type="number" inputmode="decimal" min="0" max="100" step="any"><span class="unit">% of feed</span></div>
+            <div class="field-hint">Dry suspended solids per feed. 25% is the Timmons &amp; Ebeling design value.</div>
+          </div>
+          <div class="field">
+            <label for="mesh">Screen mesh opening</label>
+            <select id="mesh">
+              <option value="40">40 µm</option>
+              <option value="60">60 µm</option>
+              <option value="80">80 µm</option>
+              <option value="100">100 µm</option>
+              <option value="120">120 µm</option>
+            </select>
+            <div class="field-hint">Changing the mesh loads a typical loading rate below.</div>
+          </div>
+          <div class="field">
+            <label for="hlr">Screen hydraulic loading</label>
+            <div class="input-row"><input id="hlr" type="number" inputmode="decimal" min="0" step="any"><select class="unit-select" data-unit-group="hydload" data-unit-for="hlr" data-unit-default="m3m2h" aria-label="Hydraulic loading unit"></select></div>
+            <div class="field-hint" id="hlr-hint">Flow per m² of submerged screen. Rule-of-thumb value; use the maker's rating.</div>
+          </div>
+          <div class="field">
+            <label for="sub">Screen submergence</label>
+            <div class="input-row"><input id="sub" type="number" inputmode="decimal" min="0" max="100" step="any"><span class="unit">% of D</span></div>
+            <div class="field-hint">Inside water depth as % of drum diameter (often ~60–70%).</div>
+          </div>
+          <div class="field">
+            <label for="diameter">Drum diameter</label>
+            <div class="input-row"><input id="diameter" type="number" inputmode="decimal" min="0" step="any"><select class="unit-select" data-unit-group="length" data-unit-for="diameter" data-unit-default="m" aria-label="Drum diameter unit"></select></div>
+          </div>
+          <div class="field">
+            <label for="length">Drum screen length</label>
+            <div class="input-row"><input id="length" type="number" inputmode="decimal" min="0" step="any"><select class="unit-select" data-unit-group="length" data-unit-for="length" data-unit-default="m" aria-label="Drum length unit"></select></div>
+          </div>
+          <div class="field">
+            <label for="bwvol">Backwash water per cleaning</label>
+            <div class="input-row"><input id="bwvol" type="number" inputmode="decimal" min="0" step="any"><select class="unit-select" data-unit-group="volume" data-unit-for="bwvol" data-unit-default="L" aria-label="Backwash volume unit"></select></div>
+          </div>
+          <div class="field">
+            <label for="bwfreq">Cleanings per hour</label>
+            <div class="input-row"><input id="bwfreq" type="number" inputmode="decimal" min="0" step="any"><span class="unit">per h</span></div>
+          </div>
+        </div>
+
+        <hr class="divider">
+
+        <div class="notice" id="notice" hidden></div>
+
+        <div class="two-col">
+          <div class="field">
+            <label for="out-area">Show area in</label>
+            <select id="out-area" class="unit-select" data-unit-group="area" data-unit-default="m2"></select>
+          </div>
+          <div class="field">
+            <label for="out-vol">Show water volume in</label>
+            <select id="out-vol" class="unit-select" data-unit-group="volume" data-unit-default="L"></select>
+          </div>
+        </div>
+
+        <div class="result-main" aria-live="polite">
+          <div class="label">Required submerged screen area</div>
+          <div class="value" id="r-req">–</div>
+        </div>
+
+        <div class="fill-bar" aria-hidden="true"><span id="r-bar" style="width:0%"></span></div>
+
+        <ul class="result-list">
+          <li><span>Submerged area of this drum</span><span class="v" id="r-avail">–</span></li>
+          <li><span>Does the drum meet it?</span><span class="v" id="r-ok">–</span></li>
+          <li><span>Drum capacity at this loading</span><span class="v" id="r-cap">–</span></li>
+          <li><span>Suggested drum</span><span class="v" id="r-suggest">–</span></li>
+          <li><span>Solids load</span><span class="v" id="r-tss">–</span></li>
+          <li><span>Solids per submerged screen area</span><span class="v" id="r-tssarea">–</span></li>
+          <li><span>Solids added per pass (average)</span><span class="v" id="r-conc">–</span></li>
+          <li><span>Backwash water per day</span><span class="v" id="r-bw">–</span></li>
+          <li><span>Backwash as % of flow</span><span class="v" id="r-bwpct">–</span></li>
+        </ul>
+
+        <div class="share-bar">
+          <button class="btn btn-primary" type="button" id="btn-share">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="m8.6 13.5 6.8 4M15.4 6.5l-6.8 4"/></svg>
+            Share
+          </button>
+          <button class="btn" type="button" id="btn-link">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.5.5l3-3a5 5 0 0 0-7-7l-1.7 1.7"/><path d="M14 11a5 5 0 0 0-7.5-.5l-3 3a5 5 0 0 0 7 7l1.7-1.7"/></svg>
+            Copy link
+          </button>
+          <button class="btn" type="button" id="btn-copy">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h10a1 1 0 0 1 1 1v1"/></svg>
+            Copy results
+          </button>
+          <button class="btn" type="button" id="btn-reset">Reset</button>
+        </div>
+      </section>
+
+      <!-- Visualization -->
+      <section class="card viz-card" aria-labelledby="viz-heading">
+        <h2 id="viz-heading">Visualization</h2>
+        <svg class="viz" id="viz" viewBox="0 0 480 320" role="img" aria-label="Cross-section of the drum filter with its submerged screen arc, and a bar comparing required and available screen area"></svg>
+        <p class="viz-caption" id="viz-caption"></p>
+      </section>
+    </div>
+
+    <article class="article">
+      <h2>How the drum filter sizing calculator works</h2>
+      <p>A rotating drum filter (also called a microscreen or drum screen) is a slowly turning cylinder covered with a fine mesh. Water from the fish tanks flows into the drum and out through the part of the screen that is under water. Particles bigger than the mesh opening stay on the inside of the screen. When the screen clogs, the water level inside rises; the drum then turns and a spray bar at the top blasts the screen from the outside, washing the trapped solids into a trough that carries them to waste.</p>
+      <p>Only the <strong>submerged</strong> part of the screen filters water, so the calculator works with the submerged (effective) screen area. It does three things:</p>
+      <ul>
+        <li>divides your flow by a screen <strong>hydraulic loading rate</strong> to find the submerged area you need, and compares it with the submerged area of the drum you entered;</li>
+        <li>estimates the <strong>solids load</strong> from your daily feed;</li>
+        <li>totals the <strong>backwash water</strong> the spray bar uses per day and compares it with the flow.</li>
+      </ul>
+
+      <h3>Why it matters</h3>
+      <p>In recirculating aquaculture (RAS) and aquaponics, uneaten feed and fish faeces must be taken out quickly, before they break apart, release ammonia and phosphorus, use up oxygen and clog biofilters and plant roots. Cripps &amp; Bergheim (2000) stress removing solids as early and as gently as possible, and drum microscreens are one of the most widely used tools for this. An undersized drum backwashes almost constantly, wastes water and can overflow its bypass, sending unfiltered water back to the fish. An oversized drum just costs more.</p>
+
+      <h3>Formulas</h3>
+      <p><strong>Required submerged screen area</strong>, with flow Q and hydraulic loading rate HLR (flow per unit of submerged screen):</p>
+      <div class="formula">A<sub>req</sub> = Q ÷ HLR          (Q in m³/h, HLR in m³/m²/h → m²)</div>
+
+      <p><strong>Submerged screen area of a drum</strong> with diameter D, screen length L and inside water depth h = s × D (s = submergence as a fraction of D). The wetted part of the circle is a circular arc with central angle θ:</p>
+      <div class="formula">θ          = 2 × arccos(1 − 2h/D)      (radians)
+f          = θ ÷ 2π                    (wetted fraction of the circumference)
+A<sub>screen</sub>   = π × D × L                 (whole cylinder screen)
+A<sub>sub</sub>      = f × π × D × L = (θ/2) × D × L</div>
+      <p>The end plates are treated as solid (no screen), which is how most drum filters are built. At 65% submergence, θ = 2 × arccos(−0.3) = 3.751 rad, so 59.7% of the screen surface is under water.</p>
+
+      <p><strong>Drum check and suggested size</strong>:</p>
+      <div class="formula">Capacity           = HLR × A<sub>sub</sub>
+Length needed      = A<sub>req</sub> ÷ (f × π × D)            (same diameter)
+Diameter needed    = √(A<sub>req</sub> ÷ (f × π × L/D))       (same length-to-diameter ratio)</div>
+
+      <p><strong>Solids load</strong>, with daily feed F and solids fraction p (kg dry TSS per kg feed):</p>
+      <div class="formula">TSS (kg/day)         = p × F
+Solids per area      = TSS ÷ A<sub>sub</sub>          (kg/m²/day)
+Solids added per pass = TSS ÷ (Q × 24 h)     (kg/m³ = 1000 mg/L)</div>
+      <p>Timmons &amp; Ebeling (<em>Recirculating Aquaculture</em>) use p = 0.25, i.e. about <strong>0.25 kg of suspended solids (dry weight) per kg of feed</strong>, for mass-balance design. This is a design rule of thumb: the real figure depends on feed digestibility, feed waste and the species, so the calculator lets you change it. "Solids added per pass" is the average rise in TSS the water picks up between one pass through the filter and the next, assuming all solids reach the filter.</p>
+
+      <p><strong>Backwash water</strong>, with V<sub>bw</sub> per cleaning and n cleanings per hour:</p>
+      <div class="formula">Backwash per day = V<sub>bw</sub> × n × 24
+Backwash % flow  = Backwash per day ÷ (Q × 24 h) × 100</div>
+
+      <h3>Hydraulic loading rate: rule-of-thumb values</h3>
+      <p>There is no single published standard for drum-filter hydraulic loading. The capacity of a screen depends on its mesh opening, the submerged area, the TSS concentration, the particle size distribution and how often it backwashes (Dolan, Murphy &amp; O'Hehir, 2013), and manufacturers rate their own models for those conditions. The values the calculator loads when you pick a mesh are <strong>illustrative starting values</strong> within the roughly 10–25 m³/m²/h range implied by published drum examples (Ali, 2013, reports drums of 1.58–27.87 m² screen for flows of 25–200 m³/h). They are not taken from a standard. Coarser mesh passes more water per m², so the default rises with mesh size:</p>
+      <table>
+        <thead><tr><th>Mesh opening</th><th>Starting HLR (rule of thumb)</th></tr></thead>
+        <tbody id="hlr-table">
+          <tr><td>40 µm</td><td>10 m³/m²/h</td></tr>
+          <tr><td>60 µm</td><td>15 m³/m²/h</td></tr>
+          <tr><td>80 µm</td><td>18 m³/m²/h</td></tr>
+          <tr><td>100 µm</td><td>20 m³/m²/h</td></tr>
+          <tr><td>120 µm</td><td>24 m³/m²/h</td></tr>
+        </tbody>
+      </table>
+      <p>Lightly stocked systems with clean water (ponds, low-feed aquaponics) can load a screen much harder; heavily fed RAS with fine, sticky solids may need less. For a real purchase, enter the manufacturer's rated flow for your mesh divided by the drum's submerged screen area, or simply compare your flow with the rated flow. <strong>Use manufacturer data for the final selection.</strong></p>
+
+      <h3>Submergence and backwash water</h3>
+      <p>Drums are commonly run with the screen roughly 60–70% submerged (a rule of thumb; the actual level is set by the drum's design and its backwash level switch). Note that the calculator expresses submergence as water depth inside the drum as a percentage of its diameter; some manufacturers quote the percentage of screen area instead. The calculator shows both.</p>
+      <p>Backwash water use depends on the spray bar, the mesh and the solids load. In a trial on a Danish recirculating eel farm, drum filter backwash water ranged from about 0.06% of the flow with a 100 µm screen to 0.23% with a 30 µm screen (Global Aquaculture Alliance, Responsible Seafood Advocate). Finer mesh traps more solids and backwashes more often. Backwash water leaves the system and must be replaced with clean make-up water, and the sludge it carries needs treatment or disposal.</p>
+
+      <h3>Example</h3>
+      <p>A system pumps <strong>30 m³/h</strong> through a 60 µm drum and the fish eat <strong>20 kg of feed per day</strong>. With an HLR of 15 m³/m²/h the drum needs 30 ÷ 15 = <strong>2.00 m²</strong> of submerged screen.</p>
+      <p>A drum 1.0 m in diameter with 1.2 m of screen length has π × 1.0 × 1.2 = 3.77 m² of screen. At 65% submergence, 59.7% of it is wet: 3.77 × 0.597 = <strong>2.25 m²</strong>, so it meets the requirement with about 12% to spare and could handle about 33.8 m³/h at this loading.</p>
+      <p>Solids: 20 × 0.25 = <strong>5 kg TSS per day</strong>, or 5 ÷ 2.25 = 2.22 kg per m² of submerged screen per day. Daily flow is 30 × 24 = 720 m³, so the water picks up on average 5 ÷ 720 = 0.0069 kg/m³ = <strong>6.9 mg/L</strong> of TSS per pass.</p>
+      <p>Backwash: 10 L × 6 cleanings per hour × 24 h = <strong>1,440 L per day</strong>, which is 1.44 ÷ 720 = <strong>0.20%</strong> of the flow.</p>
+
+      <h3>Limitations and assumptions</h3>
+      <ul>
+        <li><strong>Hydraulic loading values are rules of thumb.</strong> Real capacity depends on solids concentration, particle size, water temperature, biofilm and backwash settings. Always check against the manufacturer's flow rating.</li>
+        <li><strong>Geometry.</strong> Screen area is the curved surface only (end plates solid), with the inside water level set by the submergence you enter. Support frames and panel edges reduce the open screen area; manufacturers' "effective" area may be lower than π × D × L.</li>
+        <li><strong>Solids.</strong> The feed-to-TSS fraction is a mass-balance design value. A drum does not capture everything: particles smaller than the mesh pass through, so most systems still need fine solids control (foam fractionation, settling, or a finer screen).</li>
+        <li><strong>Peak flows.</strong> Size for the maximum flow the pump can deliver, plus any return flows routed through the filter.</li>
+      </ul>
+
+      <h2>Sources</h2>
+      <ol class="sources">
+        <li>Timmons, M. B. &amp; Ebeling, J. M. (2010). <em>Recirculating Aquaculture</em> (2nd ed.). Ithaca, NY: Cayuga Aqua Ventures. (Mass-balance design value of 0.25 kg TSS per kg feed; solids removal and microscreen filters.)</li>
+        <li>Cripps, S. J. &amp; Bergheim, A. (2000). Solids management and removal for intensive land-based aquaculture production systems. <em>Aquacultural Engineering</em>, 22(1–2), 33–56.</li>
+        <li>Dolan, E., Murphy, N. &amp; O'Hehir, M. (2013). Factors influencing optimal micro-screen drum filter selection for recirculating aquaculture systems. <em>Aquacultural Engineering</em>, 56, 42–50. <a href="https://doi.org/10.1016/j.aquaeng.2013.04.005" rel="noopener" target="_blank">doi.org/10.1016/j.aquaeng.2013.04.005</a></li>
+        <li>Ali, S. A. (2013). Design and evaluate a drum screen filter driven by undershot waterwheel for aquaculture recirculating systems. <em>Aquacultural Engineering</em>, 54, 38–44.</li>
+        <li>Global Aquaculture Alliance. “Drum filter efficiency as particle separator in a recirculated system.” <em>Responsible Seafood Advocate</em>. <a href="https://www.globalseafood.org/advocate/drum-filter-efficiency-as-particle-separator-in-a-recirculated-system/" rel="noopener" target="_blank">globalseafood.org</a></li>
+        <li>Weisstein, E. W. “Circular Segment.” <em>MathWorld</em>, Wolfram Research. <a href="https://mathworld.wolfram.com/CircularSegment.html" rel="noopener" target="_blank">mathworld.wolfram.com</a></li>
+      </ol>
+    </article>
+  </main>
+
+  <footer class="site-footer">
+    <div class="wrap">Calculations are estimates. Use the drum manufacturer's data for final selection.</div>
+  </footer>
+
+  <script src="../assets/share.js"></script>
+  <script src="../assets/units.js"></script>
+  <script src="../assets/drum-filter-sizing.js"></script>
+</body>
+</html>
