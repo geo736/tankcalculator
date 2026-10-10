@@ -64,7 +64,7 @@ Every input that has a unit gets its **own** unit dropdown – never one shared 
 - [x] Light Conversions – `calculators/light-conversions.html`
 - [x] Head Loss – `calculators/head-loss.html`
 - [x] Internal Tank Velocity – `calculators/internal-tank-velocity.html`
-- [ ] Sump Drain-Back
+- [x] Sump Drain-Back
 - [x] Battery Life Estimator – `calculators/battery-life.html`
 - [x] UV Filtration Sizing – `calculators/uv-sterilizer-sizing.html`
 - [x] Drum Filter Sizing – `calculators/drum-filter-sizing.html`

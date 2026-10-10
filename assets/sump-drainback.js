@@ -556,27 +556,25 @@
     const srcs = m.src.filter(function (s) { return s.L > 0; });
     if (!srcs.length && !m.sumpOk) { svg.setAttribute('viewBox', '0 0 ' + VW + ' 300'); return; }
 
-    // --- Sources row(s) ---
-    const perRow = Math.min(5, Math.max(1, srcs.length));
-    const nRows = Math.max(1, Math.ceil(srcs.length / 5));
-    const gapX = 14;
-    const iw = Math.min(70, (452 - (perRow - 1) * gapX) / perRow - 8);
+    // --- Sources: one row of icons; labels alternate between two lines when crowded ---
+    const n = Math.max(1, srcs.length);
+    const cellW = 452 / n;
+    const iw = Math.min(70, cellW - 10);
     const ih = 44;
-    const rowH = ih + 34;
+    const stagger = n > 5;
     el('text', { x: 14, y: 16, 'text-anchor': 'start', class: 'dim-text' }, 'Drains back when the pump stops');
     const iconPos = [];
     srcs.forEach(function (s, i) {
-      const r = Math.floor(i / 5), inRow = Math.min(5, srcs.length - r * 5), col = i % 5;
-      const cellW = 452 / inRow;
-      const cx = 14 + cellW * (col + 0.5);
-      const y = 28 + r * rowH;
+      const cx = 14 + cellW * (i + 0.5);
+      const y = 28;
       drawIcon(s, cx - iw / 2, y, iw, ih);
-      el('text', { x: cx, y: y + ih + 15, 'text-anchor': 'middle', class: 'small-text' }, s.idx + ' · ' + volShort(s.L));
-      iconPos.push({ x: cx, y: y + ih + 20, s: s });
+      const ly = y + ih + 15 + (stagger && i % 2 ? 14 : 0);
+      el('text', { x: cx, y: ly, 'text-anchor': 'middle', class: 'small-text' }, s.idx + ' · ' + volShort(s.L));
+      iconPos.push({ x: cx, y: ly + 5, s: s });
     });
 
     // --- Sump ---
-    const sumpTop = 28 + nRows * rowH + 40;
+    const sumpTop = 28 + ih + (stagger ? 48 : 34) + 50;
     const SW = 230, SH = 150;
     const sx = (VW - SW) / 2 - 20, sx1 = sx + SW;
     const sb = sumpTop + SH; // floor y
@@ -584,11 +582,12 @@
       const k = SH / m.H; // px per metre
       const Y = function (d) { return sb - d * k; };
       const yRim = Y(m.H);
+      const spillTop = m.status === 'bad' ? Math.min(26, (m.after - m.H) * k) : 0;
 
       // arrows from sources to sump
       iconPos.forEach(function (p, i) {
         const tx = sx + SW * (i + 1) / (iconPos.length + 1);
-        el('path', { d: 'M' + p.x + ',' + p.y + ' C' + p.x + ',' + (p.y + 24) + ' ' + tx + ',' + (yRim - 34) + ' ' + tx + ',' + (yRim - 6), class: 'arrow', 'marker-end': 'url(#sd-arrow)' });
+        el('path', { d: 'M' + p.x + ',' + p.y + ' C' + p.x + ',' + (p.y + 24) + ' ' + tx + ',' + (yRim - spillTop - 30) + ' ' + tx + ',' + (yRim - spillTop - 6), class: 'arrow', 'marker-end': 'url(#sd-arrow)' });
       });
 
       el('rect', { x: sx, y: yRim, width: SW, height: SH, class: 'tank-glass' });
@@ -607,10 +606,9 @@
         d0 = d1;
       });
       if (m.status === 'bad') {
-        spillPx = Math.min(26, (m.after - m.H) * k);
+        spillPx = spillTop;
         // water heaped above the rim and running down the outside walls
         el('path', { class: 'spill', d: 'M' + (sx - 10) + ',' + sb + ' L' + (sx - 4) + ',' + (yRim - spillPx) + ' H' + (sx1 + 4) + ' L' + (sx1 + 10) + ',' + sb + ' H' + (sx1 + 2) + ' V' + yRim + ' H' + (sx - 2) + ' V' + sb + 'Z' });
-        el('text', { x: sx + SW / 2, y: yRim - spillPx - 6, 'text-anchor': 'middle', class: 'warn-text' }, 'overflow ' + volShort(-m.spare));
       } else if (m.total > 0) {
         el('line', { x1: sx, y1: Y(m.after), x2: sx1, y2: Y(m.after), stroke: 'var(--water-deep)', 'stroke-width': 1.5 });
       }
@@ -627,11 +625,12 @@
 
       // right-hand labels
       const labs = [{ y: yRim + 4, t: 'rim ' + depthOut(m.H), c: 'dim-text' }];
+      if (m.status === 'bad') labs.push({ y: yRim - spillPx + 4, t: 'overflow ' + volShort(-m.spare), c: 'warn-text' });
       if (m.total > 0 && m.status !== 'bad') labs.push({ y: Y(m.after) + 4, t: 'after ' + depthOut(m.after), c: 'depth-text' });
       labs.push({ y: yRun + 4, t: 'running ' + depthOut(m.run), c: 'depth-text' });
       if (m.maxRun > 0 && m.margin > 0) labs.push({ y: Y(m.maxRun) + 4, t: 'max run ' + depthOut(m.maxRun), c: 'max-text' });
       if (m.min !== null && m.min < m.H) labs.push({ y: Y(m.min) + 4, t: 'pump min ' + depthOut(m.min), c: 'warn-text' });
-      spread(labs, 14, yRim - 6, sb + 4).forEach(function (l) {
+      spread(labs, 14, yRim - 30, sb + 4).forEach(function (l) {
         el('text', { x: sx1 + 14, y: l.y, 'text-anchor': 'start', class: l.c }, l.t);
       });
       // left: free capacity dimension
