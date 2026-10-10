@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Growing Media Fill Calculator</title>
+  <meta name="description" content="Work out how much expanded clay, lava rock, gravel, perlite, coco coir or rockwool to buy for aquaponic grow beds and hydroponic containers: volume, bags, cost, dry and saturated weight.">
+  <link rel="stylesheet" href="../assets/style.css">
+</head>
+<body>
+  <header class="site-header">
+    <div class="wrap">
+      <a class="brand" href="../">
+        <span class="brand-mark" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3c3 4 6 7 6 11a6 6 0 0 1-12 0c0-4 3-7 6-11z"/></svg>
+        </span>
+        Tank Calculator
+      </a>
+      <nav><a href="../">All calculators</a></nav>
+    </div>
+  </header>
+
+  <main class="wrap">
+    <div class="crumbs"><a href="../">Home</a> / Growing Media Fill</div>
+    <h1 class="page-title">Growing Media Fill Calculator</h1>
+    <p class="page-lede">Find how much grow media to buy for your grow beds or containers: the volume, the number of bags and the cost. It also gives the dry weight, the water the media holds when flooded, and the saturated weight your stand or floor has to carry.</p>
+
+    <div class="calc-layout">
+      <!-- Calculator -->
+      <section class="card" aria-labelledby="calc-heading">
+        <h2 id="calc-heading">Calculator</h2>
+
+        <div class="field">
+          <span class="label" id="shape-label">Bed shape</span>
+          <div class="segmented" role="group" aria-labelledby="shape-label" id="shape-group">
+            <button type="button" data-shape="rect" aria-pressed="true">
+              <svg viewBox="0 0 34 26" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M3 10h22v12H3zM3 10l6-5h22l-6 5M25 22l6-5V5"/><path d="M3 15h22" stroke-dasharray="2 2"/></svg>
+              Rectangular bed
+            </button>
+            <button type="button" data-shape="round" aria-pressed="false">
+              <svg viewBox="0 0 34 26" fill="none" stroke="currentColor" stroke-width="1.6"><ellipse cx="17" cy="6" rx="10" ry="3"/><path d="M7 6l2 15a8 2.6 0 0 0 16 0l2-15"/></svg>
+              Round container
+            </button>
+          </div>
+        </div>
+
+        <div class="two-col">
+          <div class="field" data-for="rect">
+            <label for="length">Bed length</label>
+            <div class="input-row"><input id="length" type="number" inputmode="decimal" min="0" step="any"><select class="unit-select" data-unit-group="length" data-unit-for="length" data-unit-default="cm" aria-label="Bed length unit"></select></div>
+          </div>
+          <div class="field" data-for="rect">
+            <label for="width">Bed width</label>
+            <div class="input-row"><input id="width" type="number" inputmode="decimal" min="0" step="any"><select class="unit-select" data-unit-group="length" data-unit-for="width" data-unit-default="cm" aria-label="Bed width unit"></select></div>
+          </div>
+          <div class="field" data-for="round">
+            <label for="diameter">Inside diameter</label>
+            <div class="input-row"><input id="diameter" type="number" inputmode="decimal" min="0" step="any"><select class="unit-select" data-unit-group="length" data-unit-for="diameter" data-unit-default="cm" aria-label="Diameter unit"></select></div>
+          </div>
+          <div class="field">
+            <label for="height">Bed wall height</label>
+            <div class="input-row"><input id="height" type="number" inputmode="decimal" min="0" step="any"><select class="unit-select" data-unit-group="length" data-unit-for="height" data-unit-default="cm" aria-label="Bed wall height unit"></select></div>
+          </div>
+          <div class="field">
+            <label for="fill">Media fill depth</label>
+            <div class="input-row"><input id="fill" type="number" inputmode="decimal" min="0" step="any"><select class="unit-select" data-unit-group="length" data-unit-for="fill" data-unit-default="cm" aria-label="Fill depth unit"></select></div>
+            <div class="field-hint">Media beds are usually about 30 cm (12 in) deep.</div>
+          </div>
+          <div class="field">
+            <label for="beds">Number of beds</label>
+            <div class="input-row"><input id="beds" type="number" inputmode="numeric" min="1" step="1"><span class="unit">beds</span></div>
+          </div>
+        </div>
+
+        <div class="field">
+          <label for="media">Media type</label>
+          <select id="media">
+            <option value="leca">Expanded clay (LECA, clay pebbles)</option>
+            <option value="lava">Lava rock / scoria</option>
+            <option value="gravel">River gravel (siliceous)</option>
+            <option value="perlite">Perlite (coarse)</option>
+            <option value="coir">Coco coir (expanded)</option>
+            <option value="rockwool">Rockwool (cubes / granulate)</option>
+            <option value="custom">Other / custom</option>
+          </select>
+          <div class="field-hint" id="media-hint"></div>
+        </div>
+
+        <div class="two-col">
+          <div class="field">
+            <label for="density">Bulk density (dry, loose)</label>
+            <div class="input-row"><input id="density" type="number" inputmode="decimal" min="0" step="any"><select class="unit-select" data-unit-group="density" data-unit-for="density" data-unit-default="kgm3" aria-label="Bulk density unit"></select></div>
+          </div>
+          <div class="field">
+            <label for="porosity">Water-filled pore space</label>
+            <div class="input-row"><input id="porosity" type="number" inputmode="decimal" min="0" max="100" step="any"><span class="unit">%</span></div>
+          </div>
+        </div>
+        <div class="field-hint" id="preset-hint" style="margin-top:-6px;margin-bottom:14px"></div>
+
+        <div class="two-col">
+          <div class="field">
+            <label for="bag">Bag size</label>
+            <div class="input-row"><input id="bag" type="number" inputmode="decimal" min="0" step="any"><select class="unit-select" data-unit-group="volume" data-unit-for="bag" data-unit-default="L" aria-label="Bag size unit"></select></div>
+            <div class="field-hint">Common: 10, 40, 50 L; 1, 1.5, 2 ft³.</div>
+          </div>
+          <div class="field">
+            <label for="price">Price per bag</label>
+            <div class="input-row"><input id="price" type="number" inputmode="decimal" min="0" step="any"><span class="unit">per bag</span></div>
+          </div>
+          <div class="field">
+            <label for="extra">Extra for settling</label>
+            <div class="input-row"><input id="extra" type="number" inputmode="decimal" min="0" step="any"><span class="unit">%</span></div>
+            <div class="field-hint">Optional. Loose media settles and some is lost when rinsing.</div>
+          </div>
+        </div>
+
+        <hr class="divider">
+
+        <div class="notice" id="notice" hidden></div>
+
+        <div class="two-col">
+          <div class="field">
+            <label for="vout">Show volume in</label>
+            <select id="vout" class="unit-out" data-unit-group="volume" data-unit-default="L"></select>
+          </div>
+          <div class="field">
+            <label for="mout">Show weight in</label>
+            <select id="mout" class="unit-out" data-unit-group="mass" data-unit-default="kg"></select>
+          </div>
+        </div>
+
+        <div class="result-main" aria-live="polite">
+          <div class="label">Media to buy</div>
+          <div class="value" id="r-buy">–</div>
+        </div>
+
+        <ul class="result-list">
+          <li><span>Bags to buy</span><span class="v" id="r-bags">–</span></li>
+          <li><span>Total cost</span><span class="v" id="r-cost">–</span></li>
+          <li><span>Bed volume filled</span><span class="v" id="r-bed">–</span></li>
+          <li><span>Dry weight of media</span><span class="v" id="r-dry">–</span></li>
+          <li><span>Water held when flooded</span><span class="v" id="r-water">–</span></li>
+          <li><span>Weight when saturated</span><span class="v" id="r-sat">–</span></li>
+          <li><span>Floor load, saturated</span><span class="v" id="r-load">–</span></li>
+          <li><span>Fill depth (rule of thumb)</span><span class="v" id="r-depth">–</span></li>
+        </ul>
+
+        <div class="share-bar">
+          <button class="btn btn-primary" type="button" id="btn-share">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="m8.6 13.5 6.8 4M15.4 6.5l-6.8 4"/></svg>
+            Share
+          </button>
+          <button class="btn" type="button" id="btn-link">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.5.5l3-3a5 5 0 0 0-7-7l-1.7 1.7"/><path d="M14 11a5 5 0 0 0-7.5-.5l-3 3a5 5 0 0 0 7 7l1.7-1.7"/></svg>
+            Copy link
+          </button>
+          <button class="btn" type="button" id="btn-copy">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h10a1 1 0 0 1 1 1v1"/></svg>
+            Copy results
+          </button>
+          <button class="btn" type="button" id="btn-reset">Reset</button>
+        </div>
+      </section>
+
+      <!-- Visualization -->
+      <section class="card viz-card" aria-labelledby="viz-heading">
+        <h2 id="viz-heading">Visualization</h2>
+        <svg class="viz" id="viz" viewBox="0 0 480 320" role="img" aria-label="Cross-section of the grow bed filled with media, and the bags needed"></svg>
+        <p class="viz-caption" id="viz-caption"></p>
+      </section>
+    </div>
+
+    <article class="article">
+      <h2>How the growing media calculator works</h2>
+      <p>The calculator finds the volume of media that fits in one bed up to the fill depth you enter, multiplies it by the number of beds, and adds the extra percentage you choose for settling. That is the volume to buy. Dividing by the bag size and rounding up gives the number of bags. Every dimension has its own unit, so you can enter the bed in feet and the bag in liters.</p>
+      <p>Two properties of the media then give the weights:</p>
+      <ul>
+        <li><strong>Bulk density</strong> is the dry weight of a loose-filled volume of media, air gaps included (for example kg per m³ or lb per ft³). It gives the dry weight you have to carry.</li>
+        <li><strong>Water-filled pore space</strong> is the share of the bed volume that water can fill when the bed is flooded to the top of the media. It gives the water held in the bed and, added to the dry weight, the saturated weight.</li>
+      </ul>
+
+      <h3>Why it matters for aquaponics and hydroponics</h3>
+      <p>In a media-bed aquaponic unit the media is more than plant support. It is also the mechanical filter that traps fish solids and the surface where nitrifying bacteria live. The FAO aquaponics manual (Somerville et al., 2014) describes a media bed about <strong>30 cm (12 in) deep</strong> as having three layers: a dry zone at the top, a root zone where water floods and drains, and a solids collection and mineralization zone at the bottom. Kasozi et al. (2020) found different bacterial communities in each of these zones. The manual recommends about 30 cm for large fruiting crops such as tomatoes and 15–20 cm for small leafy greens. The SRAC fact sheet on small-scale aquaponics notes that most media beds are 6–12 in (15–30 cm) deep. These are rules of thumb, and the calculator shows which band your fill depth falls in.</p>
+      <p>Media is heavy. A bed full of wet gravel can weigh several hundred kilograms per square meter, so the saturated weight and floor load help you size a stand, check a deck or balcony, or choose a lighter medium. The water held in the media also matters: when a flood-and-drain bed fills, that water leaves the fish tank or sump, and the sump must be large enough to take it back when the bed drains.</p>
+
+      <h3>Formulas</h3>
+      <p><strong>Bed volume</strong> for one bed, with fill depth d (limited to the wall height):</p>
+      <div class="formula">Rectangular bed:  V<sub>bed</sub> = L × W × d
+Round container:  V<sub>bed</sub> = π × (D ÷ 2)² × d</div>
+
+      <p><strong>Volume to buy and bags</strong> for n beds with an extra settling allowance e (%):</p>
+      <div class="formula">V<sub>buy</sub> = V<sub>bed</sub> × n × (1 + e ÷ 100)
+Bags   = ⌈ V<sub>buy</sub> ÷ V<sub>bag</sub> ⌉   (rounded up)
+Cost   = Bags × price per bag</div>
+
+      <p><strong>Weights</strong>, with bulk density ρ<sub>b</sub>, water-filled pore space φ and water density ρ<sub>w</sub> = 0.998 kg/L (freshwater at 20 °C):</p>
+      <div class="formula">Dry weight     = V<sub>buy</sub> × ρ<sub>b</sub>
+Water held     = φ × V<sub>bed</sub> × n
+Saturated mass = Dry weight + Water held × ρ<sub>w</sub>
+Floor load     = Saturated mass of one bed ÷ bed footprint area</div>
+      <p>The dry weight uses the volume you buy, because the extra media settles into the same bed. The water uses the installed bed volume, because that is the space that floods.</p>
+
+      <h3>Typical media values used by the presets</h3>
+      <p>The presets are <strong>typical values, not exact figures</strong>. Bulk density and pore space change with particle size, grade, how the media is packed and how wet it is when sold. Use the figure on your bag or the supplier's data sheet when you have it.</p>
+      <table>
+        <thead><tr><th>Media</th><th>Bulk density (kg/m³)</th><th>Water-filled pore space</th><th>Basis</th></tr></thead>
+        <tbody>
+          <tr><td>Expanded clay (LECA)</td><td>350</td><td>40%</td><td>Typical manufacturer values (about 300–450 kg/m³ for 8–16 mm grades). Most of the pellet's internal pores stay full of air, so the water held is mainly the gaps between pellets.</td></tr>
+          <tr><td>Lava rock / scoria</td><td>900</td><td>45%</td><td>Typical value; varies a lot by source and grade</td></tr>
+          <tr><td>River gravel</td><td>1650</td><td>38%</td><td>Porosity of gravel is 25–40% (Freeze &amp; Cherry, 1979). 1650 kg/m³ = (1 − 0.38) × 2650 kg/m³ quartz particle density</td></tr>
+          <tr><td>Perlite (coarse)</td><td>100</td><td>70%</td><td>Typical horticultural perlite (Raviv &amp; Lieth, 2008, give ranges)</td></tr>
+          <tr><td>Coco coir</td><td>70</td><td>90%</td><td>Coir dust has very low bulk density and very high total pore space (Abad et al., 2005)</td></tr>
+          <tr><td>Rockwool</td><td>70</td><td>95%</td><td>Typical manufacturer values; rockwool is about 95% pore space</td></tr>
+        </tbody>
+      </table>
+
+      <h3>Example</h3>
+      <p>One rectangular bed, 120 cm long, 60 cm wide and 35 cm high, filled with expanded clay to 30 cm. Bed volume = 1.2 × 0.6 × 0.3 = 0.216 m³ = <strong>216 L</strong>. With 5% extra for settling you need 216 × 1.05 = <strong>226.8 L</strong>. In 50 L bags that is 226.8 ÷ 50 = 4.54, rounded up to <strong>5 bags</strong>, which at 30 per bag cost <strong>150</strong>.</p>
+      <p>At 350 kg/m³ (0.35 kg/L) the dry media weighs 226.8 × 0.35 = <strong>79.4 kg</strong>. Flooded, it holds 0.40 × 216 = <strong>86.4 L</strong> of water (86.2 kg). The saturated bed weighs 79.4 + 86.2 = <strong>165.6 kg</strong>, spread over 1.2 × 0.6 = 0.72 m², or about <strong>230 kg/m²</strong> (47 lb/ft²), before the weight of the bed itself, the plants and any standing water.</p>
+
+      <h3>Things the calculator does not include</h3>
+      <ul>
+        <li><strong>The container.</strong> Add the weight of the bed, the stand, the plumbing and the plants.</li>
+        <li><strong>Water absorbed into the particles.</strong> Expanded clay, lava rock and perlite also soak up some water inside each particle over time, which adds weight. Coir and rockwool hold water after draining. Use a higher pore space value for a safety margin.</li>
+        <li><strong>Bell siphons, standpipes and media guards.</strong> These take up a small amount of space in the bed. Subtract their volume if they are large.</li>
+        <li><strong>Media that floats.</strong> Perlite floats when a bed floods, and some light expanded clay floats until it is soaked. Perlite, coir and rockwool are hydroponic substrates; for aquaponic flood-and-drain beds, expanded clay, lava rock or non-calcareous gravel are the usual choices. Limestone or marble gravel slowly raises pH and is best avoided (Somerville et al., 2014).</li>
+        <li><strong>Compressed coir.</strong> Coir bricks expand when soaked. Enter the expanded volume per brick from the label as the bag size.</li>
+      </ul>
+
+      <h2>Sources</h2>
+      <ol class="sources">
+        <li>Somerville, C., Cohen, M., Pantanella, E., Stankus, A. &amp; Lovatelli, A. (2014). <em>Small-scale aquaponic food production: Integrated fish and plant farming</em>. FAO Fisheries and Aquaculture Technical Paper No. 589. Rome: FAO. Chapter 4, media bed technique. <a href="https://www.fao.org/3/i4021e/i4021e.pdf" rel="noopener" target="_blank">fao.org</a></li>
+        <li>Southern Regional Aquaculture Center. <em>Principles of Small-Scale Aquaponics</em>. SRAC Publication No. 5007. <a href="https://www.srac.msstate.edu/pdfs/Fact%20Sheets/5007%20Principles%20of%20Small-Scale%20Aquaponics.pdf" rel="noopener" target="_blank">srac.msstate.edu</a></li>
+        <li>Kasozi, N., Kaiser, H. &amp; Wilhelmi, B. (2020). Metabarcoding analysis of bacterial communities associated with media grow bed zones in an aquaponic system. <em>International Journal of Microbiology</em>, 2020, 8884070. <a href="https://doi.org/10.1155/2020/8884070" rel="noopener" target="_blank">doi:10.1155/2020/8884070</a></li>
+        <li>Freeze, R. A. &amp; Cherry, J. A. (1979). <em>Groundwater</em>. Englewood Cliffs, NJ: Prentice-Hall. Table 2.4, range of values of porosity.</li>
+        <li>Abad, M., Fornes, F., Carrión, C., Noguera, V., Noguera, P., Maquieira, Á. &amp; Puchades, R. (2005). Physical properties of various coconut coir dusts compared to peat. <em>HortScience</em>, 40(7), 2138–2144. <a href="https://doi.org/10.21273/HORTSCI.40.7.2138" rel="noopener" target="_blank">doi:10.21273/HORTSCI.40.7.2138</a></li>
+        <li>Raviv, M. &amp; Lieth, J. H. (Eds.) (2008). <em>Soilless Culture: Theory and Practice</em>. Amsterdam: Elsevier.</li>
+        <li>U.S. Geological Survey, Water Science School. “Water Density.” <a href="https://www.usgs.gov/special-topics/water-science-school/science/water-density" rel="noopener" target="_blank">usgs.gov</a></li>
+        <li>National Institute of Standards and Technology. <em>NIST Handbook 44</em>, Appendix C: General Tables of Units of Measurement. <a href="https://www.nist.gov/pml/owm/publications/nist-handbooks/handbook-44" rel="noopener" target="_blank">nist.gov</a></li>
+      </ol>
+    </article>
+  </main>
+
+  <footer class="site-footer">
+    <div class="wrap">Calculations are estimates. Check the sources above before relying on a result.</div>
+  </footer>
+
+  <script src="../assets/share.js"></script>
+  <script src="../assets/units.js"></script>
+  <script src="../assets/growing-media-fill.js"></script>
+</body>
+</html>

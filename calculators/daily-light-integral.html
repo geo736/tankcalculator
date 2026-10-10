@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Daily Light Integral (DLI) Calculator</title>
+  <meta name="description" content="Calculate daily light integral (DLI) from PPFD, lux or W/m² and photoperiod, compare it with crop targets, or find the PPFD or hours needed to reach a target DLI.">
+  <link rel="stylesheet" href="../assets/style.css">
+  <style>
+    .viz .light-area { fill: var(--warn-bg); stroke: var(--warn-text); stroke-width: 2; stroke-linejoin: round; }
+    .viz .light-text { fill: var(--warn-text); font-size: 13px; font-weight: 700; font-family: var(--font); }
+    .viz .axis { stroke: var(--tank-stroke); stroke-width: 1.5; fill: none; }
+    .viz .grid { stroke: var(--border); stroke-width: 1; }
+    .viz .target-line { stroke: var(--accent); stroke-width: 1.5; stroke-dasharray: 5 4; fill: none; }
+    .viz .target-text { fill: var(--accent); font-size: 12px; font-weight: 600; font-family: var(--font); }
+    .viz .gauge-track { fill: var(--surface-2); stroke: var(--border); stroke-width: 1; }
+    .viz .gauge-band { fill: var(--accent-soft); stroke: var(--accent); stroke-width: 1.5; }
+    .viz .gauge-marker { fill: var(--text); stroke: var(--surface); stroke-width: 1.5; }
+    .viz .gauge-text { fill: var(--text); font-size: 12px; font-weight: 700; font-family: var(--font); }
+    .status { font-size: .95rem; font-weight: 600; margin-top: 2px; }
+  </style>
+</head>
+<body>
+  <header class="site-header">
+    <div class="wrap">
+      <a class="brand" href="../">
+        <span class="brand-mark" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3c3 4 6 7 6 11a6 6 0 0 1-12 0c0-4 3-7 6-11z"/></svg>
+        </span>
+        Tank Calculator
+      </a>
+      <nav><a href="../">All calculators</a></nav>
+    </div>
+  </header>
+
+  <main class="wrap">
+    <div class="crumbs"><a href="../">Home</a> / Daily Light Integral</div>
+    <h1 class="page-title">Daily Light Integral (DLI) Calculator</h1>
+    <p class="page-lede">Work out how much photosynthetic light your plants get per day from a PAR, lux or W/m² reading and the hours of light, and see whether it suits lettuce, herbs, fruiting crops, microgreens or seedlings. You can also find the light level or the photoperiod needed to hit a target DLI.</p>
+
+    <div class="calc-layout">
+      <!-- Calculator -->
+      <section class="card" aria-labelledby="calc-heading">
+        <h2 id="calc-heading">Calculator</h2>
+
+        <div class="field">
+          <span class="label" id="mode-label">Calculate</span>
+          <div class="segmented" role="group" aria-labelledby="mode-label" id="mode-group" style="grid-template-columns: repeat(3, 1fr);">
+            <button type="button" data-mode="dli" aria-pressed="true">
+              <svg viewBox="0 0 34 26" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M3 22h28M7 22V9h20v13"/><path d="M10 12h14M10 15h14M10 18h14" stroke-opacity=".5"/></svg>
+              DLI
+            </button>
+            <button type="button" data-mode="ppfd" aria-pressed="false">
+              <svg viewBox="0 0 34 26" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M3 22h28M7 22V9h20v13"/><path d="M17 3v4M13 5l4-2 4 2"/></svg>
+              Light needed
+            </button>
+            <button type="button" data-mode="hours" aria-pressed="false">
+              <svg viewBox="0 0 34 26" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="17" cy="13" r="9"/><path d="M17 8v5l4 3"/></svg>
+              Hours needed
+            </button>
+          </div>
+        </div>
+
+        <div class="field">
+          <label for="crop">Crop</label>
+          <select id="crop"></select>
+          <div class="field-hint" id="crop-hint"></div>
+        </div>
+
+        <div class="two-col">
+          <div class="field">
+            <label for="pattern">Light pattern</label>
+            <select id="pattern">
+              <option value="const">Constant (grow lights)</option>
+              <option value="sine">Sunny day (sine curve)</option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="src">Light source</label>
+            <select id="src">
+              <option value="led">White LED</option>
+              <option value="sun">Sunlight</option>
+              <option value="hps">High-pressure sodium</option>
+              <option value="mh">Metal halide</option>
+              <option value="cwf">Cool-white fluorescent</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="field" data-for="dli hours">
+          <label for="ppfd" id="ppfd-label">Light intensity (PPFD)</label>
+          <div class="input-row"><input id="ppfd" type="number" inputmode="decimal" min="0" step="any"><select class="unit-select" id="ppfd_u" data-light-for="ppfd" aria-label="Light intensity unit"></select></div>
+          <div class="field-hint" id="ppfd-hint"></div>
+        </div>
+
+        <div class="field" data-for="dli ppfd">
+          <label for="hours" id="hours-label">Photoperiod (hours of light per day)</label>
+          <div class="input-row"><input id="hours" type="number" inputmode="decimal" min="0" step="any"><select class="unit-select" data-unit-group="time" data-unit-for="hours" data-unit-default="h" aria-label="Photoperiod unit"></select></div>
+        </div>
+
+        <div class="field">
+          <label for="target" id="target-label">Target DLI</label>
+          <div class="input-row"><input id="target" type="number" inputmode="decimal" min="0" step="any"><span class="unit">mol/m²/day</span></div>
+          <div class="field-hint">Filled in from the crop's range midpoint; type your own value to override.</div>
+        </div>
+
+        <hr class="divider">
+
+        <div class="notice" id="notice" hidden></div>
+
+        <div class="result-main" aria-live="polite">
+          <div class="label" id="r-main-label">Daily light integral</div>
+          <div class="value" id="r-main">–</div>
+          <div class="status" id="r-status"></div>
+        </div>
+
+        <ul class="result-list">
+          <li><span>DLI</span><span class="v" id="r-dli">–</span></li>
+          <li><span>Crop range (rule of thumb)</span><span class="v" id="r-range">–</span></li>
+          <li><span>Light intensity used</span><span class="v" id="r-ppfd">–</span></li>
+          <li><span>Photoperiod</span><span class="v" id="r-hours">–</span></li>
+          <li><span id="r-need-ppfd-label">PPFD for target DLI</span><span class="v" id="r-need-ppfd">–</span></li>
+          <li><span>Hours for target at this light</span><span class="v" id="r-need-hours">–</span></li>
+        </ul>
+
+        <div class="field" style="margin-top:12px">
+          <label for="out_u">Show light intensity results in</label>
+          <select id="out_u" data-light-out></select>
+        </div>
+
+        <div class="share-bar">
+          <button class="btn btn-primary" type="button" id="btn-share">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="m8.6 13.5 6.8 4M15.4 6.5l-6.8 4"/></svg>
+            Share
+          </button>
+          <button class="btn" type="button" id="btn-link">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.5.5l3-3a5 5 0 0 0-7-7l-1.7 1.7"/><path d="M14 11a5 5 0 0 0-7.5-.5l-3 3a5 5 0 0 0 7 7l1.7-1.7"/></svg>
+            Copy link
+          </button>
+          <button class="btn" type="button" id="btn-copy">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h10a1 1 0 0 1 1 1v1"/></svg>
+            Copy results
+          </button>
+          <button class="btn" type="button" id="btn-reset">Reset</button>
+        </div>
+      </section>
+
+      <!-- Visualization -->
+      <section class="card viz-card" aria-labelledby="viz-heading">
+        <h2 id="viz-heading">Visualization</h2>
+        <svg class="viz" id="viz" viewBox="0 0 480 340" role="img" aria-label="Light level over 24 hours with the shaded area equal to the DLI, and a gauge comparing the DLI with the crop range"></svg>
+        <p class="viz-caption" id="viz-caption"></p>
+      </section>
+    </div>
+
+    <article class="article">
+      <h2>How the DLI calculator works</h2>
+      <p><strong>Daily light integral (DLI)</strong> is the total number of photosynthetically active photons (400–700 nm) that land on one square meter of plant canopy in one day. It is measured in <strong>moles of photons per square meter per day</strong> (mol/m²/day). Torres &amp; Lopez (Purdue Extension) compare it to a rain gauge: a PAR meter reading (PPFD, in µmol/m²/s) is like the rainfall rate at one moment, while DLI is the total collected over the whole day.</p>
+      <p>The calculator multiplies light intensity by the number of seconds the light is on. If you enter lux, foot-candles or W/m², it first converts the reading to PPFD with an approximate factor for the light source you pick. It then compares the DLI with a typical range for the crop you chose, and works out the PPFD (or the hours) you would need to reach your target DLI.</p>
+
+      <h3>Why DLI matters in hydroponics and aquaponics</h3>
+      <p>Plant growth, yield and quality track the total light received per day much more closely than the brightness at any one moment. Faust &amp; Logan (2018) review how DLI affects rooting, growth, flowering and quality across many crops. In practice DLI helps you:</p>
+      <ul>
+        <li>choose how bright to run grow lights over rafts, NFT channels or media beds, and for how long;</li>
+        <li>decide when a greenhouse needs supplemental light (short winter days) or shade (bright summer days);</li>
+        <li>trade intensity for hours: the same DLI can come from a dimmer light on for longer, which often means smaller, cheaper fixtures;</li>
+        <li>avoid too much light on sensitive crops, e.g. lettuce, where high DLI raises the risk of tipburn.</li>
+      </ul>
+
+      <h3>Formulas</h3>
+      <p><strong>Constant light</strong> (grow lights at a fixed level, PPFD in µmol/m²/s, photoperiod h in hours):</p>
+      <div class="formula">DLI = PPFD × h × 3600 s/h ÷ 1,000,000 µmol/mol
+    = PPFD × h × 0.0036</div>
+      <p><strong>Sunny day</strong> (light rises and falls as a half sine wave from sunrise to sunset, PPFD<sub>peak</sub> at solar noon, day length h). The average of a half sine wave is 2/π ≈ 0.637 of its peak:</p>
+      <div class="formula">DLI = (2/π) × PPFD<sub>peak</sub> × h × 0.0036</div>
+      <p><strong>Reverse calculations</strong> (k = 1 for constant light, k = 2/π for the sunny-day curve):</p>
+      <div class="formula">PPFD needed  = DLI<sub>target</sub> ÷ (k × h × 0.0036)
+Hours needed = DLI<sub>target</sub> ÷ (k × PPFD × 0.0036)</div>
+
+      <h3>Converting lux, foot-candles and W/m² to PPFD</h3>
+      <p>Lux and foot-candles measure light as the human eye sees it; plants respond to photons across 400–700 nm. The conversion depends on the spectrum of the lamp, so the factors below are <strong>approximate</strong>. A PAR (quantum) meter is always the better instrument. The W/m² factors apply only to <em>PAR-band</em> radiation (400–700 nm). A pyranometer or weather-station “solar radiation” reading covers all solar wavelengths and cannot be used directly.</p>
+      <div class="formula">PPFD = lux × f<sub>lux</sub>
+PPFD = foot-candles × 10.764 × f<sub>lux</sub>
+PPFD = W/m² (PAR) × f<sub>W</sub></div>
+      <table>
+        <thead><tr><th>Light source</th><th>f<sub>lux</sub> (µmol/m²/s per lux)</th><th>f<sub>W</sub> (µmol/J)</th></tr></thead>
+        <tbody>
+          <tr><td>Sunlight</td><td>0.0185</td><td>4.57</td></tr>
+          <tr><td>White LED</td><td>≈0.015*</td><td>≈4.7*</td></tr>
+          <tr><td>High-pressure sodium</td><td>0.0122</td><td>4.98</td></tr>
+          <tr><td>Metal halide</td><td>0.0141</td><td>4.59</td></tr>
+          <tr><td>Cool-white fluorescent</td><td>0.0135</td><td>4.59</td></tr>
+        </tbody>
+      </table>
+      <p>Sunlight, HPS, metal halide and fluorescent factors are from Thimijan &amp; Heins (1983), the values also tabulated by Apogee Instruments. *White LEDs vary with colour temperature and colour rendering. The lux factor is Sharakshane's (2018) estimate (1000 lx ≈ 15 µmol/m²/s, roughly 13–16 for typical white LEDs). The W/m² factor is our estimate from the photon energy E = hc/λ at a mean PAR wavelength of about 560 nm (560 ÷ 119.6 ≈ 4.7 µmol/J). <strong>Do not use a lux meter under red/blue (“blurple”) LEDs.</strong> Lux meters barely respond to deep red and blue light, so the reading badly underestimates PPFD. 1 foot-candle = 1 lm/ft² = 10.764 lux exactly.</p>
+
+      <h3>Crop DLI ranges</h3>
+      <p>These are <strong>rules of thumb</strong>, not exact requirements. The best DLI depends on cultivar, temperature, CO₂, growth stage and how fast you want the crop to grow. Stallknecht (2025) notes that the “correct” DLI is somewhat subjective.</p>
+      <table>
+        <thead><tr><th>Crop group</th><th>DLI (mol/m²/day)</th><th>Basis</th></tr></thead>
+        <tbody>
+          <tr><td>Lettuce &amp; leafy greens</td><td>12–17</td><td>Stallknecht 2025 (lettuce 12–17); Purdue HO-303-W gives 15–17 for lettuce. Higher DLI raises tipburn risk in sensitive cultivars.</td></tr>
+          <tr><td>Basil &amp; culinary herbs</td><td>15–25</td><td>Stallknecht 2025 (basil). Other herbs may need less.</td></tr>
+          <tr><td>Tomato &amp; fruiting crops</td><td>20–30</td><td>Stallknecht 2025 (tomato 20–30); HO-303-W: 20–30 or more. Peppers and cucumbers are usually grouped here.</td></tr>
+          <tr><td>Vegetable transplants / seedlings</td><td>10–12</td><td>Purdue HO-303-W: acceptable; more light gives faster growth.</td></tr>
+          <tr><td>Microgreens</td><td>6–18</td><td>Range tested by Gerovac et al. (2016) for Brassica microgreens. More light gave shorter, sturdier hypocotyls. This is a research range, not an established target.</td></tr>
+        </tbody>
+      </table>
+
+      <h3>Example</h3>
+      <p>Lettuce in a deep-water raft under white LED fixtures that give <strong>250 µmol/m²/s</strong> at canopy height for <strong>16 hours</strong> a day:</p>
+      <div class="formula">DLI = 250 × 16 × 3600 ÷ 1,000,000 = 14.4 mol/m²/day</div>
+      <p>That is <strong>within</strong> the 12–17 mol/m²/day lettuce range. To hit the range midpoint of 14.5 mol/m²/day in 16 hours, you would need 14.5 ÷ (16 × 0.0036) = <strong>251.7 µmol/m²/s</strong>. At 250 µmol/m²/s you would need 14.5 ÷ (250 × 0.0036) = <strong>16.1 hours</strong>. If you only had a lux meter, a 250 µmol/m²/s white-LED level would read about 250 ÷ 0.015 ≈ 16,700 lux.</p>
+      <p>For comparison, a clear day in a greenhouse with a peak of 1,000 µmol/m²/s and 12 hours of daylight gives about 0.637 × 1,000 × 12 × 0.0036 ≈ 27.5 mol/m²/day.</p>
+
+      <h3>Limitations and assumptions</h3>
+      <ul>
+        <li><strong>The sunny-day curve is an ideal.</strong> Clouds, glazing, shade cloth, structures and hanging baskets cut real greenhouse DLI, often by a large fraction. For natural light, a logging PAR sensor or the monthly DLI maps of Faust &amp; Logan (2018) are more reliable.</li>
+        <li><strong>One point is not the whole bench.</strong> PPFD falls off toward the edges of a fixture's footprint and changes with hanging height. Average several readings at canopy level.</li>
+        <li><strong>Conversion factors are approximate.</strong> Lux and W/m² conversions can be off by 10% or more for a particular lamp. Use the manufacturer's PPFD map or a quantum sensor where possible.</li>
+        <li><strong>DLI is not photoperiod.</strong> Short-day and long-day plants respond to the length of the night, not just total light, so flowering crops may need a specific photoperiod whatever the DLI.</li>
+        <li><strong>Crop ranges are guidelines.</strong> Above a crop's saturation level, extra light gives little benefit and costs electricity.</li>
+      </ul>
+
+      <h2>Sources</h2>
+      <ol class="sources">
+        <li>Faust, J. E. &amp; Logan, J. (2018). Daily light integral: A research review and high-resolution maps of the United States. <em>HortScience</em>, 53(9), 1250–1257. <a href="https://doi.org/10.21273/HORTSCI13144-18" rel="noopener" target="_blank">doi:10.21273/HORTSCI13144-18</a></li>
+        <li>Torres, A. P. &amp; Lopez, R. G. (2010). <em>Commercial Greenhouse Production: Measuring Daily Light Integral in a Greenhouse</em>. Purdue Extension HO-238-W. <a href="https://www.extension.purdue.edu/extmedia/ho/ho-238-w.pdf" rel="noopener" target="_blank">extension.purdue.edu</a></li>
+        <li>Thimijan, R. W. &amp; Heins, R. D. (1983). Photometric, radiometric, and quantum light units of measure: A review of procedures for interconversion. <em>HortScience</em>, 18(6), 818–822. <a href="https://doi.org/10.21273/HORTSCI.18.6.818" rel="noopener" target="_blank">doi:10.21273/HORTSCI.18.6.818</a></li>
+        <li>Apogee Instruments. “Conversion – PPFD to Lux.” <a href="https://www.apogeeinstruments.com/conversion-ppfd-to-lux/" rel="noopener" target="_blank">apogeeinstruments.com</a></li>
+        <li>Sharakshane, A. (2018). An easy estimate of the PFDD for a plant illuminated with white LEDs: 1000 lx = 15 µmol/s/m². <em>bioRxiv</em> preprint 289280. <a href="https://doi.org/10.1101/289280" rel="noopener" target="_blank">doi:10.1101/289280</a></li>
+        <li>Stallknecht, E. (2025). <em>Calculating and Using Daily Light Integral (DLI): An Introductory Guide</em>. Virginia Cooperative Extension, Virginia Tech, SPES-720NP. <a href="https://www.pubs.ext.vt.edu/SPES/spes-720/spes-720.html" rel="noopener" target="_blank">pubs.ext.vt.edu</a></li>
+        <li>Maynard, E., O'Donnell, M., Kong, N. N. &amp; Li, Y. (2019). <em>Seasonal Daily Light Integrals Across Indiana</em>. Purdue Extension HO-303-W. <a href="https://edustore.purdue.edu/ho-303-w.html" rel="noopener" target="_blank">edustore.purdue.edu</a></li>
+        <li>Gerovac, J. R., Craver, J. K., Boldt, J. K. &amp; Lopez, R. G. (2016). Light intensity and quality from sole-source light-emitting diodes impact growth, morphology, and nutrient content of <em>Brassica</em> microgreens. <em>HortScience</em>, 51(5), 497–503.</li>
+      </ol>
+    </article>
+  </main>
+
+  <footer class="site-footer">
+    <div class="wrap">Calculations are estimates. Check the sources above before relying on a result.</div>
+  </footer>
+
+  <script src="../assets/share.js"></script>
+  <script src="../assets/units.js"></script>
+  <script src="../assets/daily-light-integral.js"></script>
+</body>
+</html>

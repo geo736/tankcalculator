@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Hydrostatic Pressure Calculator</title>
+  <meta name="description" content="Find water pressure at any depth, the pressure on a tank floor, and the total force and center of pressure on a tank wall for aquaculture, aquaponics and hydroponics tanks.">
+  <link rel="stylesheet" href="../assets/style.css">
+  <style>
+    .viz .p-area { fill: var(--accent-soft); stroke: var(--accent); stroke-width: 1.5; stroke-linejoin: round; }
+    .viz .p-arrow { stroke: var(--accent); stroke-width: 1.5; fill: none; }
+    .viz .p-head { fill: var(--accent); }
+    .viz .p-text { fill: var(--accent-strong); font-size: 12px; font-weight: 600; font-family: var(--font); }
+    .viz .f-arrow { stroke: var(--warn-text); stroke-width: 3.5; fill: none; }
+    .viz .f-head { fill: var(--warn-text); }
+    .viz .f-text { fill: var(--warn-text); font-size: 12px; font-weight: 700; font-family: var(--font); }
+    .viz .pt-dot { fill: var(--surface); stroke: var(--text); stroke-width: 2; }
+    .viz .pt-line { stroke: var(--text); stroke-width: 1; stroke-dasharray: 2 3; }
+    .viz .pt-text { fill: var(--text); font-size: 12px; font-weight: 600; font-family: var(--font); }
+    .viz .tick { stroke: var(--text-muted); stroke-width: 1; }
+    .viz .floor-arrow { stroke: var(--water-deep); stroke-width: 1.5; fill: none; }
+    .viz .floor-head { fill: var(--water-deep); }
+    .result-main .sub { font-size: .9rem; color: var(--text-muted); margin-top: 2px; font-variant-numeric: tabular-nums; }
+  </style>
+</head>
+<body>
+  <header class="site-header">
+    <div class="wrap">
+      <a class="brand" href="../">
+        <span class="brand-mark" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3c3 4 6 7 6 11a6 6 0 0 1-12 0c0-4 3-7 6-11z"/></svg>
+        </span>
+        Tank Calculator
+      </a>
+      <nav><a href="../">All calculators</a></nav>
+    </div>
+  </header>
+
+  <main class="wrap">
+    <div class="crumbs"><a href="../">Home</a> / Hydrostatic Pressure</div>
+    <h1 class="page-title">Hydrostatic Pressure Calculator</h1>
+    <p class="page-lede">Find the water pressure at the bottom of a tank or at any depth, the load on the tank floor, and the total push of the water on a flat tank wall and where that push acts. Useful for checking walls and liners, valve and sensor ratings, aeration depth and gravity-fed plumbing.</p>
+
+    <div class="calc-layout">
+      <!-- Calculator -->
+      <section class="card" aria-labelledby="calc-heading">
+        <h2 id="calc-heading">Calculator</h2>
+
+        <div class="field">
+          <label for="water">Water type</label>
+          <select id="water">
+            <option value="fresh">Freshwater, 20 °C (998 kg/m³)</option>
+            <option value="salt">Seawater, 35 ‰, 20 °C (1025 kg/m³)</option>
+            <option value="custom">Custom density</option>
+          </select>
+        </div>
+
+        <div class="field" id="rho-field">
+          <label for="rho">Water density</label>
+          <div class="input-row"><input id="rho" type="number" inputmode="decimal" min="0" step="any"><select class="unit-select" data-unit-group="density" data-unit-for="rho" data-unit-default="kgm3" aria-label="Density unit"></select></div>
+          <div class="field-hint">Brackish water or brine; check with a hydrometer or refractometer.</div>
+        </div>
+
+        <div class="two-col">
+          <div class="field">
+            <label for="depth">Water depth</label>
+            <div class="input-row"><input id="depth" type="number" inputmode="decimal" min="0" step="any"><select class="unit-select" data-unit-group="length" data-unit-for="depth" data-unit-default="ft" aria-label="Water depth unit"></select></div>
+            <div class="field-hint">Surface to tank floor.</div>
+          </div>
+          <div class="field">
+            <label for="width">Wall width <span style="font-weight:400;color:var(--text-muted)">(optional)</span></label>
+            <div class="input-row"><input id="width" type="number" inputmode="decimal" min="0" step="any"><select class="unit-select" data-unit-group="length" data-unit-for="width" data-unit-default="ft" aria-label="Wall width unit"></select></div>
+            <div class="field-hint">Horizontal length of one flat wall.</div>
+          </div>
+          <div class="field">
+            <label for="point">Point depth <span style="font-weight:400;color:var(--text-muted)">(optional)</span></label>
+            <div class="input-row"><input id="point" type="number" inputmode="decimal" min="0" step="any"><select class="unit-select" data-unit-group="length" data-unit-for="point" data-unit-default="ft" aria-label="Point depth unit"></select></div>
+            <div class="field-hint">Below the surface: a valve, outlet, sensor or air diffuser.</div>
+          </div>
+        </div>
+
+        <hr class="divider">
+
+        <div class="notice" id="notice" hidden></div>
+
+        <div class="two-col">
+          <div class="field">
+            <label for="pout">Show pressure in</label>
+            <select id="pout" class="unit-select" data-unit-group="pressure" data-unit-default="psi"></select>
+          </div>
+          <div class="field">
+            <label for="fout">Show force in</label>
+            <select id="fout">
+              <option value="lbf">lbf</option>
+              <option value="N">N</option>
+              <option value="kN">kN</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="result-main" aria-live="polite">
+          <div class="label">Gauge pressure at the bottom</div>
+          <div class="value" id="r-bottom">–</div>
+          <div class="sub" id="r-bottom-alt"></div>
+        </div>
+
+        <ul class="result-list">
+          <li><span>Absolute pressure at the bottom</span><span class="v" id="r-abs">–</span></li>
+          <li><span id="r-point-label">Pressure at the point</span><span class="v" id="r-point">–</span></li>
+          <li><span>Floor pressure (uniform)</span><span class="v" id="r-floor">–</span></li>
+          <li><span>Average pressure on the wall</span><span class="v" id="r-avg">–</span></li>
+          <li><span>Wall force per unit width</span><span class="v" id="r-fper">–</span></li>
+          <li><span>Total force on the wall</span><span class="v" id="r-force">–</span></li>
+          <li><span>Center of pressure</span><span class="v" id="r-cp">–</span></li>
+        </ul>
+
+        <div class="share-bar">
+          <button class="btn btn-primary" type="button" id="btn-share">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="m8.6 13.5 6.8 4M15.4 6.5l-6.8 4"/></svg>
+            Share
+          </button>
+          <button class="btn" type="button" id="btn-link">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.5.5l3-3a5 5 0 0 0-7-7l-1.7 1.7"/><path d="M14 11a5 5 0 0 0-7.5-.5l-3 3a5 5 0 0 0 7 7l1.7-1.7"/></svg>
+            Copy link
+          </button>
+          <button class="btn" type="button" id="btn-copy">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h10a1 1 0 0 1 1 1v1"/></svg>
+            Copy results
+          </button>
+          <button class="btn" type="button" id="btn-reset">Reset</button>
+        </div>
+      </section>
+
+      <!-- Visualization -->
+      <section class="card viz-card" aria-labelledby="viz-heading">
+        <h2 id="viz-heading">Visualization</h2>
+        <svg class="viz" id="viz" viewBox="0 0 480 320" role="img" aria-label="Tank cross-section with the triangular pressure distribution on the wall and the resultant force"></svg>
+        <p class="viz-caption" id="viz-caption"></p>
+      </section>
+    </div>
+
+    <article class="article">
+      <h2>How the hydrostatic pressure calculator works</h2>
+      <p>Still water presses on everything it touches, and the push gets stronger the deeper you go because every layer of water carries the weight of the water above it. The pressure at a point depends only on the <strong>depth below the surface</strong> and the <strong>density of the water</strong>. It does not depend on the size or shape of the tank: a narrow standpipe and a large pond of the same depth have the same pressure at the bottom.</p>
+      <p>The calculator converts each input from its own unit to SI units, finds the pressure at the floor and at your chosen point, and then works out the force on one flat, vertical wall. On a wall the pressure is zero at the surface and grows in a straight line to its maximum at the floor, so the pressure diagram is a triangle (shown on the right of the drawing). The total force is the area of that triangle times the wall width, and it acts at the triangle's centroid, one third of the depth up from the floor.</p>
+
+      <h3>Why it matters in aquaculture, aquaponics and hydroponics</h3>
+      <ul>
+        <li><strong>Tank walls and liners.</strong> The force on a wall grows with the <em>square</em> of the depth. Doubling the depth from 2 ft to 4 ft quadruples the push on each wall. This is why deep tanks need thicker panels, ribs, cages (as on IBC totes) or ties across the top, and why bulges and leaks usually show up near the bottom.</li>
+        <li><strong>Round tanks.</strong> In a round tank with a flexible liner or a thin wall, the wall is held in tension. The ring (hoop) tension per unit height at depth z is T = p × r, where r is the tank radius, so it is largest at the bottom and grows with tank diameter.</li>
+        <li><strong>Valves, fittings and sensors.</strong> The static pressure at a bottom drain, valve or pressure-type level sensor is the value at its depth. Static head in culture tanks is small (about 0.43 psi per foot of fresh water), far below the rating of normal PVC fittings, but bulkhead seals, sight glasses and low-range pressure transducers must still suit it.</li>
+        <li><strong>Aeration.</strong> An air diffuser at depth only releases air when the blower supplies more than the water pressure at the diffuser, plus the losses in pipes and the diffuser itself (Timmons &amp; Ebeling, 2010). Enter the diffuser depth as the point depth to see that minimum.</li>
+        <li><strong>Gravity-fed flow.</strong> A head tank that feeds grow beds or a pipe outlet below the tank delivers water because of this pressure difference. The pressure at an outlet below the floor of a tank is found from its depth below the water surface, which is why the point depth may be larger than the water depth.</li>
+      </ul>
+
+      <h3>Formulas</h3>
+      <p><strong>Gauge pressure</strong> (pressure above the atmosphere) at depth z below the surface:</p>
+      <div class="formula">p = ρ × g × z</div>
+      <p>where ρ is the water density (kg/m³), g = 9.80665 m/s² is standard gravity and z is in meters, giving p in pascals (Pa = N/m²). The tank floor is at z = h, the water depth, and is loaded uniformly with p = ρ g h.</p>
+
+      <p><strong>Absolute pressure</strong> adds the air pressure pressing on the water surface. The calculator uses one standard atmosphere:</p>
+      <div class="formula">p<sub>abs</sub> = p + 101.325 kPa</div>
+
+      <p><strong>Force on a flat vertical wall</strong> of width w that spans the full water depth h:</p>
+      <div class="formula">Average pressure  p<sub>avg</sub> = ½ ρ g h
+Force per width   F/w = ½ ρ g h²
+Total force       F   = ½ ρ g h² w
+Center of pressure      h/3 above the floor (2h/3 below the surface)</div>
+
+      <h3>Unit conversions</h3>
+      <table>
+        <thead><tr><th>Unit</th><th>Equal to</th></tr></thead>
+        <tbody>
+          <tr><td>1 psi (lbf/in²)</td><td>6,894.757 Pa</td></tr>
+          <tr><td>1 bar</td><td>100 kPa (exact)</td></tr>
+          <tr><td>1 standard atmosphere</td><td>101.325 kPa (exact) = 14.696 psi</td></tr>
+          <tr><td>1 m H₂O (conventional)</td><td>9,806.65 Pa (exact)</td></tr>
+          <tr><td>1 ft H₂O (conventional)</td><td>2,989.067 Pa</td></tr>
+          <tr><td>1 lbf</td><td>4.448222 N</td></tr>
+          <tr><td>1 lb/ft² (psf)</td><td>47.88026 Pa</td></tr>
+        </tbody>
+      </table>
+      <p>The “conventional” water-column units assume water of exactly 1,000 kg/m³ under standard gravity. Real freshwater at 20 °C (998 kg/m³) is 0.2% lighter, so 1 m of it gives 0.998 m H₂O, not exactly 1. Seawater (1025 kg/m³) gives 2.5% more than its depth.</p>
+
+      <h3>Example</h3>
+      <p>A tank holds 4 ft (1.2192 m) of freshwater at 20 °C. One flat wall is 8 ft (2.4384 m) wide.</p>
+      <div class="formula">p   = 998 × 9.80665 × 1.2192 = 11,932 Pa
+    = 11.93 kPa = 1.73 psi
+p<sub>abs</sub> = 11.93 + 101.325 = 113.26 kPa = 16.43 psi
+F/w = ½ × 998 × 9.80665 × 1.2192² = 7,274 N/m (498 lbf/ft)
+F   = 7,274 × 2.4384 = 17,737 N ≈ 3,987 lbf
+Center of pressure = 4 ft ÷ 3 = 1.33 ft above the floor</div>
+      <p>The floor carries 11,932 Pa, which is 249.2 lb on every square foot (1,217 kg per m²). At a valve 2 ft below the surface the gauge pressure is half the bottom value, 0.865 psi.</p>
+
+      <h3>Assumptions and limits</h3>
+      <ul>
+        <li><strong>Still water.</strong> Results are static pressures. Pump surges, water hammer from fast-closing valves, sloshing, waves and earthquakes add load and are not included.</li>
+        <li><strong>Density.</strong> Water density changes slightly with temperature and salinity. Between 0 and 30 °C freshwater stays within about 0.3% of 998 kg/m³ (USGS), so the effect on pressure is small. Use the custom option for brackish water or strong nutrient brines.</li>
+        <li><strong>Wall shape.</strong> The force formula is for a flat, vertical, rectangular wall that runs from the surface to the floor with the water side open to air. Sloped walls, curved walls and walls with a ledge need the general plane-surface method in a fluid mechanics text.</li>
+        <li><strong>Atmospheric pressure.</strong> Absolute pressure uses the sea-level standard atmosphere. Air pressure is lower at altitude and changes with the weather; gauge pressure and wall force are not affected.</li>
+        <li><strong>Not a structural design.</strong> The force is the load from the water only. Choosing wall thickness, bracing and fasteners needs material strengths and safety factors; ask an engineer or the tank maker for large or tall tanks.</li>
+      </ul>
+
+      <h2>Sources</h2>
+      <ol class="sources">
+        <li>Thompson, A. &amp; Taylor, B. N. (2008). <em>Guide for the Use of the International System of Units (SI)</em>. NIST Special Publication 811. Gaithersburg, MD: National Institute of Standards and Technology. (Standard acceleration of free fall g<sub>n</sub> = 9.80665 m/s², standard atmosphere, psi, lbf and conventional water-column units.) <a href="https://www.nist.gov/pml/special-publication-811" rel="noopener" target="_blank">nist.gov</a></li>
+        <li>Newell, D. B. &amp; Tiesinga, E. (Eds.) (2019). <em>The International System of Units (SI)</em>. NIST Special Publication 330. Gaithersburg, MD: National Institute of Standards and Technology. (Includes the 3rd CGPM declaration of the standard value of g.) <a href="https://doi.org/10.6028/NIST.SP.330-2019" rel="noopener" target="_blank">doi.org</a></li>
+        <li>U.S. Geological Survey, Water Science School. “Water Density.” <a href="https://www.usgs.gov/special-topics/water-science-school/science/water-density" rel="noopener" target="_blank">usgs.gov</a></li>
+        <li>Millero, F. J. &amp; Poisson, A. (1981). International one-atmosphere equation of state of seawater. <em>Deep-Sea Research Part A</em>, 28(6), 625–629.</li>
+        <li>White, F. M. (2011). <em>Fluid Mechanics</em> (7th ed.). New York: McGraw-Hill. Chapter 2, Pressure Distribution in a Fluid (hydrostatic pressure and forces on plane surfaces).</li>
+        <li>Munson, B. R., Rothmayer, A. P., Okiishi, T. H. &amp; Huebsch, W. W. (2013). <em>Fundamentals of Fluid Mechanics</em> (7th ed.). Hoboken, NJ: Wiley. Chapter 2, Fluid Statics.</li>
+        <li>Timmons, M. B. &amp; Ebeling, J. M. (2010). <em>Recirculating Aquaculture</em> (2nd ed.). Ithaca, NY: Cayuga Aqua Ventures.</li>
+      </ol>
+    </article>
+  </main>
+
+  <footer class="site-footer">
+    <div class="wrap">Calculations are estimates. Check the sources above before relying on a result.</div>
+  </footer>
+
+  <script src="../assets/share.js"></script>
+  <script src="../assets/units.js"></script>
+  <script src="../assets/hydrostatic-pressure.js"></script>
+</body>
+</html>

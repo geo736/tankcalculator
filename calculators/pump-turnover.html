@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Pump &amp; Turnover Calculator</title>
+  <meta name="description" content="Size a water pump from system volume and turnovers per hour, or find the turnover a pump gives. Includes hydraulic power, electrical power and running cost for aquaponics, aquaculture and hydroponics.">
+  <link rel="stylesheet" href="../assets/style.css">
+  <style>
+    #mode-group { grid-template-columns: repeat(2, 1fr); }
+    #mode-group button { padding: 10px 6px; }
+    .viz .pipe { fill: none; stroke: var(--tank-stroke); stroke-width: 7; stroke-linecap: round; stroke-linejoin: round; }
+    .viz .pipe-inner { fill: none; stroke: var(--surface-2); stroke-width: 4; stroke-linecap: round; stroke-linejoin: round; }
+    .viz .flow-dash { fill: none; stroke: var(--water); stroke-width: 4; stroke-linecap: round; stroke-linejoin: round; stroke-dasharray: 6 9; }
+    .viz .flow-fall { fill: none; stroke: var(--water); stroke-width: 3; stroke-linecap: round; stroke-dasharray: 4 6; }
+    .viz .pump-body { fill: var(--accent); stroke: var(--tank-stroke); stroke-width: 1.5; }
+    .viz .bed { fill: var(--accent-soft); stroke: var(--tank-stroke); stroke-width: 1.5; }
+    .viz .clock-face { fill: var(--surface-2); stroke: var(--tank-stroke); stroke-width: 2; }
+    .viz .clock-tick { stroke: var(--text-muted); stroke-width: 1.2; }
+    .viz .wedge-a { fill: var(--water); fill-opacity: .85; stroke: var(--surface); stroke-width: 1; }
+    .viz .wedge-b { fill: var(--water-top); fill-opacity: .9; stroke: var(--surface); stroke-width: 1; }
+    .viz .clock-hand { stroke: var(--accent-strong); stroke-width: 2.5; stroke-linecap: round; }
+    .viz .big-text { fill: var(--text); font-size: 22px; font-weight: 700; font-family: var(--font); }
+    .viz .center-pill { fill: var(--surface); fill-opacity: .92; stroke: var(--border); }
+    .result-main .sub { font-size: .9rem; color: var(--text-muted); margin-top: 2px; }
+    .out-row { display: flex; align-items: center; gap: 8px; margin: 0 0 10px; font-size: .9rem; color: var(--text-muted); }
+    .out-row select { width: auto; padding: 6px 8px; }
+  </style>
+</head>
+<body>
+  <header class="site-header">
+    <div class="wrap">
+      <a class="brand" href="../">
+        <span class="brand-mark" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3c3 4 6 7 6 11a6 6 0 0 1-12 0c0-4 3-7 6-11z"/></svg>
+        </span>
+        Tank Calculator
+      </a>
+      <nav><a href="../">All calculators</a></nav>
+    </div>
+  </header>
+
+  <main class="wrap">
+    <div class="crumbs"><a href="../">Home</a> / Pump &amp; Turnover</div>
+    <h1 class="page-title">Pump &amp; Turnover Calculator</h1>
+    <p class="page-lede">Find the pump flow you need to turn over your system water a set number of times per hour, or the turnover a given pump delivers. Also estimates the pump's water power, electricity use and running cost at your head height.</p>
+
+    <div class="calc-layout">
+      <!-- Calculator -->
+      <section class="card" aria-labelledby="calc-heading">
+        <h2 id="calc-heading">Calculator</h2>
+
+        <div class="field">
+          <span class="label" id="mode-label">What do you want to find?</span>
+          <div class="segmented" role="group" aria-labelledby="mode-label" id="mode-group">
+            <button type="button" data-mode="size" aria-pressed="true">Pump flow needed</button>
+            <button type="button" data-mode="check" aria-pressed="false">Turnover of my pump</button>
+          </div>
+        </div>
+
+        <div class="field">
+          <label for="volume">Total system water volume</label>
+          <div class="input-row"><input id="volume" type="number" inputmode="decimal" min="0" step="any"><select class="unit-select" data-unit-group="volume" data-unit-for="volume" data-unit-default="L" aria-label="Volume unit"></select></div>
+          <div class="field-hint">Fish tanks + sump + grow beds/filters + pipes. Use the Tank Volume calculator for each tank.</div>
+        </div>
+
+        <div class="field" data-mode-for="size">
+          <label for="turnover">Desired turnovers per hour</label>
+          <div class="input-row"><input id="turnover" type="number" inputmode="decimal" min="0" step="any"><span class="unit">× per hour</span></div>
+          <div class="field-hint">Rule of thumb: about 1×/h for lightly stocked aquaponics, about 2×/h for densely stocked units (FAO). Intensive RAS tanks often run faster.</div>
+        </div>
+
+        <div class="field" data-mode-for="check">
+          <label for="pumpflow">Pump flow at your head</label>
+          <div class="input-row"><input id="pumpflow" type="number" inputmode="decimal" min="0" step="any"><select class="unit-select" data-unit-group="flow" data-unit-for="pumpflow" data-unit-default="Lph" aria-label="Pump flow unit"></select></div>
+          <div class="field-hint">Read this off the manufacturer's pump curve at your total head, not the "max flow" on the box.</div>
+        </div>
+
+        <div class="field">
+          <label for="head">Total head (lift)</label>
+          <div class="input-row"><input id="head" type="number" inputmode="decimal" min="0" step="any"><select class="unit-select" data-unit-group="length" data-unit-for="head" data-unit-default="m" aria-label="Head unit"></select></div>
+          <div class="field-hint">Height from the water surface the pump sits in to the highest outlet, plus friction losses in pipes and fittings.</div>
+        </div>
+
+        <div class="two-col">
+          <div class="field">
+            <label for="eff">Pump efficiency</label>
+            <div class="input-row"><input id="eff" type="number" inputmode="decimal" min="0" max="100" step="any"><span class="unit">%</span></div>
+            <div class="field-hint">Wire-to-water. Rough guess for small pumps: 15–35%.</div>
+          </div>
+          <div class="field">
+            <label for="watts">Pump power (optional)</label>
+            <div class="input-row"><input id="watts" type="number" inputmode="decimal" min="0" step="any" placeholder="from label"><select class="unit-select" data-unit-group="power" data-unit-for="watts" data-unit-default="W" aria-label="Pump power unit"></select></div>
+            <div class="field-hint">If known, used instead of the efficiency estimate.</div>
+          </div>
+          <div class="field">
+            <label for="hours">Run time</label>
+            <div class="input-row"><input id="hours" type="number" inputmode="decimal" min="0" max="24" step="any"><span class="unit">h/day</span></div>
+          </div>
+          <div class="field">
+            <label for="price">Electricity price</label>
+            <div class="input-row"><input id="price" type="number" inputmode="decimal" min="0" step="any"><span class="unit">per kWh</span></div>
+          </div>
+        </div>
+
+        <hr class="divider">
+
+        <div class="notice" id="notice" hidden></div>
+
+        <div class="out-row" id="out-row">
+          <label for="outflow">Show flow in</label>
+          <select class="unit-select" id="outflow" data-unit-group="flow" data-unit-default="Lph" aria-label="Output flow unit"></select>
+        </div>
+
+        <div class="result-main" aria-live="polite">
+          <div class="label" id="r-main-label">Required pump flow at your head</div>
+          <div class="value" id="r-main">–</div>
+          <div class="sub" id="r-main-sub"></div>
+        </div>
+
+        <ul class="result-list">
+          <li><span id="r-second-label">Turnover time</span><span class="v" id="r-second">–</span></li>
+          <li><span>Turnover guidance (rule of thumb)</span><span class="v" id="r-band">–</span></li>
+          <li><span>Flow, other units</span><span class="v" id="r-alt">–</span></li>
+          <li><span>Hydraulic (water) power</span><span class="v" id="r-hyd">–</span></li>
+          <li><span id="r-elec-label">Electrical power (estimated)</span><span class="v" id="r-elec">–</span></li>
+          <li><span>Energy use</span><span class="v" id="r-energy">–</span></li>
+          <li><span>Running cost</span><span class="v" id="r-cost">–</span></li>
+        </ul>
+
+        <div class="share-bar">
+          <button class="btn btn-primary" type="button" id="btn-share">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="m8.6 13.5 6.8 4M15.4 6.5l-6.8 4"/></svg>
+            Share
+          </button>
+          <button class="btn" type="button" id="btn-link">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.5.5l3-3a5 5 0 0 0-7-7l-1.7 1.7"/><path d="M14 11a5 5 0 0 0-7.5-.5l-3 3a5 5 0 0 0 7 7l1.7-1.7"/></svg>
+            Copy link
+          </button>
+          <button class="btn" type="button" id="btn-copy">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h10a1 1 0 0 1 1 1v1"/></svg>
+            Copy results
+          </button>
+          <button class="btn" type="button" id="btn-reset">Reset</button>
+        </div>
+      </section>
+
+      <!-- Visualization -->
+      <section class="card viz-card" aria-labelledby="viz-heading">
+        <h2 id="viz-heading">Visualization</h2>
+        <svg class="viz" id="viz" viewBox="0 0 480 320" role="img" aria-label="Diagram of the pump lifting water and a clock showing turnovers per hour"></svg>
+        <p class="viz-caption" id="viz-caption"></p>
+      </section>
+    </div>
+
+    <article class="article">
+      <h2>How the pump and turnover calculator works</h2>
+      <p><strong>Turnover</strong> is how many times the whole volume of water in the system passes through the pump (and so through the filters and grow beds) each hour. If a system holds 1,000 L and the pump moves 2,000 L every hour, the water turns over twice per hour, or once every 30 minutes.</p>
+      <p>In <em>Pump flow needed</em> mode the calculator multiplies your system volume by the turnovers per hour you want. In <em>Turnover of my pump</em> mode it does the reverse: it divides the pump's flow by the system volume. Both modes then work out the power needed to lift that flow to your total head, the electrical power the pump is likely to draw, and what it costs to run.</p>
+
+      <h3>Why turnover matters</h3>
+      <p>In aquaponics and recirculating aquaculture (RAS), the pump is what carries fish waste to the filters and nitrifying bacteria, brings treated water back to the fish, and delivers nutrients to the plants. Too little flow lets ammonia and solids build up in the fish tank; too much wastes electricity and can stress fish or wash solids past the filters. In hydroponics the same sum tells you how often the nutrient reservoir circulates through the channels or beds.</p>
+      <p>The pump usually runs 24 hours a day, so it is often the single biggest electricity user in a small system. Choosing a pump that is just big enough at your real head saves money every month.</p>
+
+      <h3>Turnover guidance (rules of thumb)</h3>
+      <p>There is no single correct turnover rate. It depends on stocking density, feeding rate, filter design and the plants. Published guidance is a starting point:</p>
+      <table>
+        <thead><tr><th>Turnovers per hour</th><th>Typical use</th></tr></thead>
+        <tbody>
+          <tr><td>below 1×</td><td>Slow. Below the common aquaponics minimum, but can be fine for lightly stocked systems or plant-only reservoirs. The UVI commercial aquaponic system ran its rearing tanks at an average retention time of 82 minutes (about 0.7× per hour) [3].</td></tr>
+          <tr><td>1–2×</td><td>Typical small aquaponics. About once per hour is widely used for light stocking; the FAO manual recommends cycling the water about twice per hour in densely stocked units, e.g. 2,000 L/h for 1,000 L of water [1].</td></tr>
+          <tr><td>2–6×</td><td>Above typical aquaponics guidance; more common in intensive RAS culture tanks [2].</td></tr>
+          <tr><td>above 6×</td><td>Very fast. Small intensive tanks can be exchanged as often as every 10 minutes [2], but check fish comfort, solids capture and pumping cost.</td></tr>
+        </tbody>
+      </table>
+      <p>These bands are rules of thumb, not hard limits. The result list shows which band your number falls in.</p>
+
+      <h3>Formulas</h3>
+      <p><strong>Flow and turnover</strong>, with V the total system volume and N the turnovers per hour:</p>
+      <div class="formula">Q = V × N              (e.g. L × 1/h = L/h)
+N = Q ÷ V
+Turnover time = 60 min ÷ N</div>
+
+      <p><strong>Hydraulic power</strong> is the rate at which the pump adds energy to the water. It is the standard pump power relation from fluid mechanics [4]:</p>
+      <div class="formula">P<sub>hyd</sub> = ρ × g × Q × H
+
+ρ = 998.2 kg/m³  (water at 20 °C)
+g = 9.80665 m/s² (standard gravity)
+Q = flow in m³/s,  H = total head in m</div>
+
+      <p><strong>Electrical power</strong>: real pumps lose energy in the motor, impeller and volute. The wire-to-water efficiency η is the fraction of electrical power that ends up as hydraulic power [4]:</p>
+      <div class="formula">P<sub>elec</sub> = P<sub>hyd</sub> ÷ η</div>
+      <p>If you enter the pump's power from its label or a plug-in meter, the calculator uses that number instead.</p>
+
+      <p><strong>Energy and cost</strong>, with t the hours of running per day:</p>
+      <div class="formula">Energy per day   = P<sub>elec</sub> (kW) × t
+Energy per month = Energy per day × 30.44   (365.25 ÷ 12)
+Cost             = Energy (kWh) × price per kWh</div>
+
+      <h3>Example</h3>
+      <p>The default inputs follow the FAO small-scale unit example: 1,000 L of water, 2 turnovers per hour and 1.5 m of head [1].</p>
+      <ul>
+        <li>Flow: Q = 1,000 L × 2 /h = <strong>2,000 L/h</strong> (0.000556 m³/s, about 528 US gph or 8.8 US gpm). Turnover time = 60 ÷ 2 = 30 min.</li>
+        <li>Hydraulic power: 998.2 × 9.80665 × 0.000556 × 1.5 = <strong>8.16 W</strong>.</li>
+        <li>At 25% efficiency the pump draws about 8.16 ÷ 0.25 = <strong>32.6 W</strong>.</li>
+        <li>Running 24 h a day: 32.6 W × 24 h = 0.783 kWh/day, or 23.8 kWh per month. At 0.15 per kWh that is about <strong>3.57 per month</strong>.</li>
+      </ul>
+
+      <h3>Pump curves: the flow on the box is not the flow you get</h3>
+      <p>Pump boxes usually show the <strong>maximum flow at zero head</strong>. Every metre of lift and every metre of pipe, elbow and valve reduces the flow. At the pump's "max head" the flow falls to zero. Always look up the manufacturer's <strong>pump curve</strong> (flow against head), find your total head on it, and check that the flow there is at least the required flow from this calculator. In <em>Turnover of my pump</em> mode, enter the flow read from the curve at your head.</p>
+
+      <h3>Things the calculator does not include</h3>
+      <ul>
+        <li><strong>Friction losses.</strong> The calculator uses the total head you enter. Long runs of narrow pipe and many fittings can add a lot of head; include an allowance for them.</li>
+        <li><strong>Efficiency.</strong> The 15–35% hint for small submersible pumps is a rough rule of thumb, and efficiency changes along the pump curve. A plug-in power meter gives the real number.</li>
+        <li><strong>Air-lifts, timers and siphons.</strong> Flood-and-drain beds on timers, bell siphons and air-lift pumps change how flow and energy relate. Set the run time to the hours the pump actually runs.</li>
+        <li><strong>Water density.</strong> Uses freshwater at 20 °C. Seawater (about 1,025 kg/m³) needs about 3% more power.</li>
+      </ul>
+
+      <h2>Sources</h2>
+      <ol class="sources">
+        <li>Somerville, C., Cohen, M., Pantanella, E., Stankus, A. &amp; Lovatelli, A. (2014). <em>Small-scale aquaponic food production: Integrated fish and plant farming</em>. FAO Fisheries and Aquaculture Technical Paper No. 589. Rome: FAO. <a href="https://www.fao.org/3/i4021e/i4021e.pdf" rel="noopener" target="_blank">fao.org</a></li>
+        <li>Timmons, M. B. &amp; Ebeling, J. M. (2010). <em>Recirculating Aquaculture</em> (2nd ed.). Ithaca, NY: Cayuga Aqua Ventures.</li>
+        <li>Rakocy, J. E., Masser, M. P. &amp; Losordo, T. M. (2006). <em>Recirculating Aquaculture Tank Production Systems: Aquaponics – Integrating Fish and Plant Culture</em>. Southern Regional Aquaculture Center, SRAC Publication No. 454.</li>
+        <li>Munson, B. R., Young, D. F., Okiishi, T. H. &amp; Huebsch, W. W. (2009). <em>Fundamentals of Fluid Mechanics</em> (6th ed.), chapters on the energy equation and turbomachines. Hoboken, NJ: Wiley.</li>
+        <li>Thompson, A. &amp; Taylor, B. N. (2008). <em>Guide for the Use of the International System of Units (SI)</em>. NIST Special Publication 811 (standard acceleration of gravity, 9.80665 m/s²). <a href="https://www.nist.gov/pml/special-publication-811" rel="noopener" target="_blank">nist.gov</a></li>
+        <li>U.S. Geological Survey, Water Science School. “Water Density.” <a href="https://www.usgs.gov/special-topics/water-science-school/science/water-density" rel="noopener" target="_blank">usgs.gov</a></li>
+      </ol>
+    </article>
+  </main>
+
+  <footer class="site-footer">
+    <div class="wrap">Calculations are estimates. Check the sources above before relying on a result.</div>
+  </footer>
+
+  <script src="../assets/share.js"></script>
+  <script src="../assets/units.js"></script>
+  <script src="../assets/pump-turnover.js"></script>
+</body>
+</html>

@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Grow Bed Ratio Calculator</title>
+  <meta name="description" content="Compare fish tank volume with media grow bed volume in aquaponics, check it against the common 1:1 to 1:2 rule of thumb, and size beds for your tank.">
+  <link rel="stylesheet" href="../assets/style.css">
+  <style>
+    .status { font-size: .9rem; font-weight: 600; margin-top: 4px; }
+    .status.ok { color: var(--accent-strong); }
+    .status.warn { color: var(--warn-text); }
+    .viz .bed { fill: var(--accent-soft); stroke: var(--tank-stroke); stroke-width: 2; }
+    .viz .media { fill: var(--tank-back); fill-opacity: .35; }
+    .viz .plant { stroke: var(--accent); stroke-width: 2; fill: none; stroke-linecap: round; }
+    .viz .zone-ok { fill: var(--accent); fill-opacity: .55; }
+    .viz .zone-mid { fill: var(--warn-text); fill-opacity: .3; }
+    .viz .zone-low { fill: var(--tank-back); fill-opacity: .45; }
+    .viz .marker { fill: var(--text); }
+    .viz .marker-text { fill: var(--text); font-size: 12px; font-weight: 700; font-family: var(--font); }
+    .viz .target-line { stroke: var(--text); stroke-width: 1.5; stroke-dasharray: 3 3; }
+    .viz .name-text { fill: var(--text); font-size: 12px; font-weight: 600; font-family: var(--font); }
+  </style>
+</head>
+<body>
+  <header class="site-header">
+    <div class="wrap">
+      <a class="brand" href="../">
+        <span class="brand-mark" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3c3 4 6 7 6 11a6 6 0 0 1-12 0c0-4 3-7 6-11z"/></svg>
+        </span>
+        Tank Calculator
+      </a>
+      <nav><a href="../">All calculators</a></nav>
+    </div>
+  </header>
+
+  <main class="wrap">
+    <div class="crumbs"><a href="../">Home</a> / Grow Bed Ratio</div>
+    <h1 class="page-title">Grow Bed Ratio Calculator</h1>
+    <p class="page-lede">Compare the volume of your fish tank with the volume of your media grow beds. See whether the ratio is inside the common 1:1 to 1:2 rule of thumb, how much bed you need for your tank, and how big a tank your beds can support.</p>
+
+    <div class="calc-layout">
+      <!-- Calculator -->
+      <section class="card" aria-labelledby="calc-heading">
+        <h2 id="calc-heading">Calculator</h2>
+
+        <div class="field">
+          <label for="tank">Fish tank volume</label>
+          <div class="input-row"><input id="tank" type="number" inputmode="decimal" min="0" step="any"><select class="unit-select" data-unit-group="volume" data-unit-for="tank" data-unit-default="L" aria-label="Fish tank volume unit"></select></div>
+          <div class="field-hint">Water volume of the fish tank or tanks (not the sump).</div>
+        </div>
+
+        <div class="field">
+          <span class="label" id="mode-label">Grow beds entered as</span>
+          <div class="segmented" role="group" aria-labelledby="mode-label" id="mode-group">
+            <button type="button" data-mode="dims" aria-pressed="true">
+              <svg viewBox="0 0 34 26" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M3 12h22v9H3zM3 12l6-5h22l-6 5M25 21l6-5V7"/></svg>
+              Bed dimensions
+            </button>
+            <button type="button" data-mode="vol" aria-pressed="false">
+              <svg viewBox="0 0 34 26" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M5 6h24v16H5z"/><path d="M10 14h14M17 10v8"/></svg>
+              Total volume
+            </button>
+          </div>
+        </div>
+
+        <div class="two-col">
+          <div class="field" data-for="dims">
+            <label for="beds">Number of grow beds</label>
+            <div class="input-row"><input id="beds" type="number" inputmode="numeric" min="1" step="1"><span class="unit">beds</span></div>
+          </div>
+          <div class="field" data-for="dims">
+            <label for="blen">Bed length</label>
+            <div class="input-row"><input id="blen" type="number" inputmode="decimal" min="0" step="any"><select class="unit-select" data-unit-group="length" data-unit-for="blen" data-unit-default="cm" aria-label="Bed length unit"></select></div>
+          </div>
+          <div class="field" data-for="dims">
+            <label for="bwid">Bed width</label>
+            <div class="input-row"><input id="bwid" type="number" inputmode="decimal" min="0" step="any"><select class="unit-select" data-unit-group="length" data-unit-for="bwid" data-unit-default="cm" aria-label="Bed width unit"></select></div>
+          </div>
+          <div class="field" data-for="vol">
+            <label for="bvol">Total grow bed volume</label>
+            <div class="input-row"><input id="bvol" type="number" inputmode="decimal" min="0" step="any"><select class="unit-select" data-unit-group="volume" data-unit-for="bvol" data-unit-default="L" aria-label="Grow bed volume unit"></select></div>
+          </div>
+          <div class="field">
+            <label for="bdep">Bed (media) depth</label>
+            <div class="input-row"><input id="bdep" type="number" inputmode="decimal" min="0" step="any"><select class="unit-select" data-unit-group="length" data-unit-for="bdep" data-unit-default="cm" aria-label="Bed depth unit"></select></div>
+            <div class="field-hint" id="depth-hint">FAO suggests about 30 cm (12 in) of media.</div>
+          </div>
+        </div>
+
+        <div class="field">
+          <label for="target">Target ratio (fish tank : grow bed)</label>
+          <select id="target">
+            <option value="1">1 : 1 (conservative)</option>
+            <option value="1.5">1 : 1.5</option>
+            <option value="2">1 : 2 (upper end, usually with a sump)</option>
+            <option value="custom">Custom…</option>
+          </select>
+        </div>
+        <div class="field" id="custom-field" hidden>
+          <label for="custom">Custom target: grow bed volume per 1 volume of fish tank</label>
+          <div class="input-row"><span class="unit">1 :</span><input id="custom" type="number" inputmode="decimal" min="0" step="any"></div>
+        </div>
+
+        <hr class="divider">
+
+        <div class="notice" id="notice" hidden></div>
+
+        <div class="two-col">
+          <div class="field">
+            <label for="outv">Show volumes in</label>
+            <select id="outv" class="unit-select" data-unit-group="volume" data-unit-default="L"></select>
+          </div>
+          <div class="field">
+            <label for="outa">Show areas in</label>
+            <select id="outa" class="unit-select" data-unit-group="area" data-unit-default="m2"></select>
+          </div>
+        </div>
+
+        <div class="result-main" aria-live="polite">
+          <div class="label">Fish tank : grow bed volume ratio</div>
+          <div class="value" id="r-ratio">–</div>
+          <div class="status" id="r-status"></div>
+        </div>
+
+        <ul class="result-list">
+          <li><span>Total grow bed volume</span><span class="v" id="r-bvol">–</span></li>
+          <li><span>Grow bed volume needed at target</span><span class="v" id="r-need">–</span></li>
+          <li><span>Difference from target</span><span class="v" id="r-diff">–</span></li>
+          <li><span>Fish tank these beds support at target</span><span class="v" id="r-support">–</span></li>
+          <li><span>Grow bed surface area</span><span class="v" id="r-area">–</span></li>
+          <li><span>Bed area needed at target (same depth)</span><span class="v" id="r-aneed">–</span></li>
+        </ul>
+
+        <div class="share-bar">
+          <button class="btn btn-primary" type="button" id="btn-share">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="m8.6 13.5 6.8 4M15.4 6.5l-6.8 4"/></svg>
+            Share
+          </button>
+          <button class="btn" type="button" id="btn-link">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.5.5l3-3a5 5 0 0 0-7-7l-1.7 1.7"/><path d="M14 11a5 5 0 0 0-7.5-.5l-3 3a5 5 0 0 0 7 7l1.7-1.7"/></svg>
+            Copy link
+          </button>
+          <button class="btn" type="button" id="btn-copy">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h10a1 1 0 0 1 1 1v1"/></svg>
+            Copy results
+          </button>
+          <button class="btn" type="button" id="btn-reset">Reset</button>
+        </div>
+      </section>
+
+      <!-- Visualization -->
+      <section class="card viz-card" aria-labelledby="viz-heading">
+        <h2 id="viz-heading">Visualization</h2>
+        <svg class="viz" id="viz" viewBox="0 0 480 320" role="img" aria-label="Fish tank and grow beds drawn with areas proportional to volume, and a bar showing the ratio against the recommended range"></svg>
+        <p class="viz-caption" id="viz-caption"></p>
+      </section>
+    </div>
+
+    <article class="article">
+      <h2>How the grow bed ratio calculator works</h2>
+      <p>In a media-bed aquaponic system, water from the fish tank flows through beds filled with gravel, expanded clay or another inert medium. The bed holds the plants, traps solid waste and is home to the nitrifying bacteria that turn fish ammonia into nitrate. A quick way to check whether the beds and the tank are in balance is to compare their volumes. The calculator finds the total grow bed volume (number of beds × length × width × depth, or the volume you enter), divides it by the fish tank volume, and shows the result as <strong>1 : R</strong>, meaning R litres of grow bed for every litre of fish tank.</p>
+      <p>It then compares the ratio with the target you choose, works out how much grow bed your tank needs at that target, how big a fish tank your beds could support, and the bed surface area involved.</p>
+
+      <h3>Why the ratio matters</h3>
+      <p>If the beds are too small for the tank, there is not enough media for biofiltration and solids capture, so the tank has to be stocked lightly. If the beds are much bigger than the tank, two problems appear: when the beds flood, the water they hold comes out of the fish tank, so the tank level can drop a long way unless the system has a sump; and the fish may not produce enough nutrients for all that growing space. Extension guides for small media-bed systems describe a 1:1 ratio for the simplest design (a fish tank, a pump and the beds) and up to about 1:2 (some guides say 1:3) when a sump tank is added, so that the fish tank level stays constant [1, 2].</p>
+
+      <h3>Rule of thumb, not a design method</h3>
+      <p>The volume ratio is a <strong>rule of thumb</strong>. It does not include how many fish are in the tank or how much they are fed, and that is what actually drives the nutrient supply and the waste load. The FAO aquaponics manual sizes a system with the <strong>feed rate ratio</strong>: grams of fish feed per day per square metre of growing area, for example 40–50 g/m²/day for leafy greens and 50–80 g/m²/day for fruiting vegetables in its small-scale design guidance [3]. Rakocy et al. give 60–100 g/m²/day for raft systems [4]. Use the separate <a href="../">Feed Rate to Grow Space</a> calculator for that more precise method, and use this page as a quick check of the physical layout.</p>
+
+      <h3>Formulas</h3>
+      <p><strong>Grow bed volume</strong> from dimensions (n beds of length L, width W, media depth D):</p>
+      <div class="formula">V<sub>bed</sub> = n × L × W × D
+A<sub>bed</sub> = n × L × W</div>
+      <p>If you enter the total bed volume directly, the area comes from the depth:</p>
+      <div class="formula">A<sub>bed</sub> = V<sub>bed</sub> ÷ D</div>
+      <p><strong>Ratio</strong>, written fish tank : grow bed:</p>
+      <div class="formula">R = V<sub>bed</sub> ÷ V<sub>tank</sub>      →  shown as 1 : R</div>
+      <p><strong>Sizing at a target ratio</strong> R<sub>t</sub>:</p>
+      <div class="formula">Bed volume needed     = V<sub>tank</sub> × R<sub>t</sub>
+Tank the beds support = V<sub>bed</sub> ÷ R<sub>t</sub>
+Bed area needed       = V<sub>tank</sub> × R<sub>t</sub> ÷ D</div>
+
+      <h3>Recommended range used on this page</h3>
+      <table>
+        <thead><tr><th>Ratio (tank : bed)</th><th>Meaning</th></tr></thead>
+        <tbody>
+          <tr><td>below 1 : 1</td><td>Beds small for the tank. Stock fish lightly or add bed or filter capacity.</td></tr>
+          <tr><td>1 : 1 to 1 : 2</td><td>Common rule-of-thumb range for media beds [1, 2]. 1 : 1 suits a simple tank-and-bed loop; above 1 : 1 a sump is usually added.</td></tr>
+          <tr><td>1 : 2 to 1 : 3</td><td>Possible with a sump [2], but check that the fish feed rate can supply that much growing area.</td></tr>
+          <tr><td>above 1 : 3</td><td>Beds very large for the tank. Nutrients are likely to run short unless the fish are stocked and fed heavily.</td></tr>
+        </tbody>
+      </table>
+
+      <h3>Example</h3>
+      <p>A 1,000 L fish tank feeds two media beds, each 200 cm × 100 cm and filled 30 cm deep. Each bed holds 2.0 × 1.0 × 0.30 = 0.60 m³, so the two beds total <strong>1,200 L</strong> and 4.0 m² of growing area. The ratio is 1,200 ÷ 1,000 = 1.2, shown as <strong>1 : 1.2</strong>, which is inside the 1 : 1 to 1 : 2 range. At a 1 : 1 target the tank needs 1,000 L of bed (3.33 m² at 30 cm deep), so the beds are 200 L larger than needed, and on their own they could support a 1,200 L fish tank.</p>
+      <p>For comparison, the FAO manual's small-scale media bed unit pairs 1,000 L of fish tank with 3 m² of growing space [3]. At 30 cm of media that is about 900 L of bed, close to 1 : 1.</p>
+
+      <h3>Limitations and assumptions</h3>
+      <ul>
+        <li><strong>Gross volume.</strong> The ratio uses the full bed volume including the media, as the rule of thumb does. The media takes up much of that space, so the water a bed holds when flooded is much less than its volume.</li>
+        <li><strong>Media beds only.</strong> The volume ratio is used for media (flood-and-drain or constant-flow) beds. Deep water culture and NFT systems are sized by area and feed rate instead.</li>
+        <li><strong>Fish load is not included.</strong> Two tanks of the same size with very different stocking densities need very different growing areas. Check the feed rate ratio before building.</li>
+        <li><strong>Depth.</strong> FAO recommends media beds about 30 cm deep so there is room for a dry surface layer, a root zone and a lower zone where solids collect [3]. Much shallower beds give less biofiltration per square metre.</li>
+      </ul>
+
+      <h2>Sources</h2>
+      <ol class="sources">
+        <li>Oklahoma State University Extension. <em>Aquaponics</em>. Fact Sheet HLA-6721. Stillwater, OK: Oklahoma Cooperative Extension Service. <a href="https://extension.okstate.edu/fact-sheets/aquaponics" rel="noopener" target="_blank">extension.okstate.edu</a></li>
+        <li>Hager, J., Bright, L. A., Dusci, J. &amp; Tidwell, J. (2021). <em>Aquaponics Production Manual: A Practical Handbook for Growers</em>. Frankfort, KY: Kentucky State University, School of Aquaculture and Aquatic Sciences. Section 2.4, Plant culture or hydroponic subsystem.</li>
+        <li>Somerville, C., Cohen, M., Pantanella, E., Stankus, A. &amp; Lovatelli, A. (2014). <em>Small-scale aquaponic food production: Integrated fish and plant farming</em>. FAO Fisheries and Aquaculture Technical Paper No. 589. Rome: FAO. <a href="https://www.fao.org/3/i4021e/i4021e.pdf" rel="noopener" target="_blank">fao.org</a></li>
+        <li>Rakocy, J. E., Masser, M. P. &amp; Losordo, T. M. (2006). <em>Recirculating Aquaculture Tank Production Systems: Aquaponics — Integrating Fish and Plant Culture</em>. SRAC Publication No. 454. Southern Regional Aquaculture Center.</li>
+      </ol>
+    </article>
+  </main>
+
+  <footer class="site-footer">
+    <div class="wrap">Calculations are estimates. Check the sources above before relying on a result.</div>
+  </footer>
+
+  <script src="../assets/share.js"></script>
+  <script src="../assets/units.js"></script>
+  <script src="../assets/grow-bed-ratio.js"></script>
+</body>
+</html>

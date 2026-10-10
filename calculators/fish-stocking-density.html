@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Fish Stocking Density Calculator</title>
+  <meta name="description" content="Work out fish biomass, stocking density in kg/m³ and lb/gal, and how many fish your tank can hold at a target density for aquaponics and recirculating aquaculture.">
+  <link rel="stylesheet" href="../assets/style.css">
+  <style>
+    .viz .fish-now { fill: var(--surface); stroke: var(--tank-stroke); stroke-width: 1.2; }
+    .viz .fish-room { fill: none; stroke: var(--water-top); stroke-width: 1.2; stroke-dasharray: 3 2; }
+    .viz .fish-over { fill: var(--warn-bg); stroke: var(--warn-text); stroke-width: 1.4; }
+    .viz .gauge-track { fill: var(--surface-2); stroke: var(--border); stroke-width: 1; }
+    .viz .gauge-ok { fill: var(--accent); fill-opacity: .28; }
+    .viz .gauge-rec { fill: var(--accent); fill-opacity: .55; }
+    .viz .gauge-over { fill: var(--warn-bg); stroke: none; }
+    .viz .gauge-over-key { fill: var(--warn-bg); stroke: var(--warn-text); stroke-width: 1; }
+    .viz .gauge-target { stroke: var(--accent-strong); stroke-width: 2.5; }
+    .viz .gauge-needle { fill: var(--text); stroke: var(--surface); stroke-width: 1; }
+    .viz .gauge-val { fill: var(--text); font-size: 13px; font-weight: 700; font-family: var(--font); }
+    .viz .warn-text { fill: var(--warn-text); font-size: 12px; font-weight: 600; font-family: var(--font); }
+    .viz .tank-water { fill: var(--water); fill-opacity: .35; }
+  </style>
+</head>
+<body>
+  <header class="site-header">
+    <div class="wrap">
+      <a class="brand" href="../">
+        <span class="brand-mark" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3c3 4 6 7 6 11a6 6 0 0 1-12 0c0-4 3-7 6-11z"/></svg>
+        </span>
+        Tank Calculator
+      </a>
+      <nav><a href="../">All calculators</a></nav>
+    </div>
+  </header>
+
+  <main class="wrap">
+    <div class="crumbs"><a href="../">Home</a> / Fish Stocking Density</div>
+    <h1 class="page-title">Fish Stocking Density Calculator</h1>
+    <p class="page-lede">Find the total weight of fish in a tank, its stocking density in kg/m³ (kg per 1,000 L) or lb/gal, and how many more fish of the same size the tank can take at a target density.</p>
+
+    <div class="calc-layout">
+      <!-- Calculator -->
+      <section class="card" aria-labelledby="calc-heading">
+        <h2 id="calc-heading">Calculator</h2>
+
+        <div class="field">
+          <label for="vol">Tank water volume</label>
+          <div class="input-row"><input id="vol" type="number" inputmode="decimal" min="0" step="any"><select class="unit-select" data-unit-group="volume" data-unit-for="vol" data-unit-default="L" aria-label="Water volume unit"></select></div>
+          <div class="field-hint">Water in the fish tank only. Leave out sumps, grow beds and filters.</div>
+        </div>
+
+        <div class="two-col">
+          <div class="field">
+            <label for="count">Number of fish</label>
+            <div class="input-row"><input id="count" type="number" inputmode="numeric" min="0" step="1"><span class="unit">fish</span></div>
+          </div>
+          <div class="field">
+            <label for="weight">Average fish weight</label>
+            <div class="input-row"><input id="weight" type="number" inputmode="decimal" min="0" step="any"><select class="unit-select" data-unit-group="mass" data-unit-for="weight" data-unit-default="g" aria-label="Fish weight unit"></select></div>
+          </div>
+        </div>
+
+        <div class="field">
+          <label for="preset">System / guideline</label>
+          <select id="preset">
+            <option value="fao">Aquaponics, beginner (FAO): 20 kg/m³</option>
+            <option value="air">Air aeration only: 30 kg/m³</option>
+            <option value="tilnew">Tilapia RAS, new grower: 50 kg/m³</option>
+            <option value="tilexp">Tilapia RAS, expert + O₂: 100 kg/m³</option>
+            <option value="custom">Custom target</option>
+          </select>
+          <div class="field-hint" id="preset-hint"></div>
+        </div>
+
+        <div class="field">
+          <label for="target">Target maximum density</label>
+          <div class="input-row"><input id="target" type="number" inputmode="decimal" min="0" step="any"><select class="unit-select" data-unit-group="density" data-unit-for="target" data-unit-default="kgm3" aria-label="Target density unit"></select></div>
+          <div class="field-hint">Edit to use your own limit. 1 kg/m³ = 1 kg per 1,000 L.</div>
+        </div>
+
+        <hr class="divider">
+
+        <div class="notice" id="notice" hidden></div>
+
+        <div class="two-col">
+          <div class="field">
+            <label for="dout">Show density in</label>
+            <select id="dout" class="unit-select" data-unit-group="density" data-unit-default="kgm3"></select>
+          </div>
+          <div class="field">
+            <label for="mout">Show weight in</label>
+            <select id="mout" class="unit-select" data-unit-group="mass" data-unit-default="kg"></select>
+          </div>
+        </div>
+
+        <div class="result-main" aria-live="polite">
+          <div class="label">Stocking density</div>
+          <div class="value" id="r-density">–</div>
+        </div>
+
+        <div class="fill-bar" aria-hidden="true"><span id="r-fillbar" style="width:0%"></span></div>
+
+        <ul class="result-list">
+          <li><span>Fish biomass</span><span class="v" id="r-biomass">–</span></li>
+          <li><span>Density, other units</span><span class="v" id="r-alt">–</span></li>
+          <li><span>Share of target</span><span class="v" id="r-pct">–</span></li>
+          <li><span>Max fish at target (this size)</span><span class="v" id="r-max">–</span></li>
+          <li><span id="r-head-label">Biomass headroom</span><span class="v" id="r-head">–</span></li>
+        </ul>
+
+        <div class="share-bar">
+          <button class="btn btn-primary" type="button" id="btn-share">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="m8.6 13.5 6.8 4M15.4 6.5l-6.8 4"/></svg>
+            Share
+          </button>
+          <button class="btn" type="button" id="btn-link">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.5.5l3-3a5 5 0 0 0-7-7l-1.7 1.7"/><path d="M14 11a5 5 0 0 0-7.5-.5l-3 3a5 5 0 0 0 7 7l1.7-1.7"/></svg>
+            Copy link
+          </button>
+          <button class="btn" type="button" id="btn-copy">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h10a1 1 0 0 1 1 1v1"/></svg>
+            Copy results
+          </button>
+          <button class="btn" type="button" id="btn-reset">Reset</button>
+        </div>
+      </section>
+
+      <!-- Visualization -->
+      <section class="card viz-card" aria-labelledby="viz-heading">
+        <h2 id="viz-heading">Visualization</h2>
+        <svg class="viz" id="viz" viewBox="0 0 480 320" role="img" aria-label="Tank with fish icons and a stocking density gauge"></svg>
+        <p class="viz-caption" id="viz-caption"></p>
+      </section>
+    </div>
+
+    <article class="article">
+      <h2>How the stocking density calculator works</h2>
+      <p>Stocking density is the weight of fish in a tank divided by the volume of water they live in. The calculator multiplies the number of fish by their average weight to get the <strong>biomass</strong>, then divides by the tank volume. Each input has its own unit; everything is converted to kilograms and liters before the math. The result is compared with a <strong>target maximum density</strong> to show how full the tank is, how many fish of that size it could hold, and how much more fish weight it can take before reaching the target.</p>
+      <p>Density is quoted per volume of fish-tank water. In metric units, kg/m³ and kg per 1,000 L are the same number, and grams per liter is the same number too.</p>
+
+      <h3>Why stocking density matters</h3>
+      <p>Every kilogram of fish uses oxygen and, through the feed it eats, adds ammonia, carbon dioxide and solid waste to the water. The more fish weight per liter, the faster water quality can crash if a pump, air blower or biofilter fails. In aquaponics the fish also have to match the plants: too few fish and the plants starve, too many and the biofilter and plants cannot keep up. Stocking density is the quick check growers use to stay inside what their aeration and filtration can handle.</p>
+
+      <h3>Formulas</h3>
+      <div class="formula">Biomass B (kg)          = N × w
+Density  D (kg/m³)      = B ÷ V(m³)  = B (kg) ÷ V (L) × 1000
+Share of target (%)     = D ÷ D_target × 100
+Max biomass (kg)        = D_target × V(m³)
+Max fish                = floor(Max biomass ÷ w)
+Headroom (kg)           = Max biomass − B</div>
+      <p>N is the number of fish, w the average weight of one fish in kg, V the water volume. Density in lb per US gallon is D ÷ 119.826 (1 lb/gal = 0.45359237 kg ÷ 3.785411784 L = 119.826 kg/m³).</p>
+
+      <h3>Target densities (rules of thumb)</h3>
+      <p>There is no single safe density. The figures below are published guidelines or examples, not limits that guarantee healthy fish. Safe density depends on <strong>aeration and oxygen supply, filtration (mechanical and biological), feeding rate, temperature, species and fish size</strong>, and on how quickly you can react to a failure.</p>
+      <table>
+        <thead><tr><th>Preset</th><th>Target</th><th>Basis</th></tr></thead>
+        <tbody>
+          <tr><td>Small-scale aquaponics, beginner</td><td>20 kg/m³</td><td>FAO recommends not exceeding 20 kg of fish per 1,000 L in small-scale aquaponics, with 10–20 kg per 1,000 L as the working range. Higher densities need extra aeration and mechanical filtration and are not recommended for beginners [1].</td></tr>
+          <tr><td>Tank system, air aeration only</td><td>30 kg/m³</td><td>Engineering guidance that aeration with atmospheric air can hold oxygen up at loadings of about 30 kg/m³; above that, pure oxygen is usually needed [3]. Other sources put this limit at 40–60 kg/m³, so treat it as approximate.</td></tr>
+          <tr><td>Tilapia RAS, new grower</td><td>50 kg/m³</td><td>Ebeling &amp; Timmons advise new growers to run at about half the expert density, e.g. a maximum of 50 kg/m³ for tilapia [2].</td></tr>
+          <tr><td>Tilapia RAS, expert with pure oxygen</td><td>100 kg/m³</td><td>Experienced tilapia growers with oxygen injection and full RAS treatment operate at 100–120 kg/m³ [2].</td></tr>
+        </tbody>
+      </table>
+      <p>For other species (trout, catfish, perch, carp and so on) enter your own target. Recommended maximums vary widely between species, life stages and sources, and research on rainbow trout shows that density alone is a poor measure of welfare; water quality, especially oxygen, matters more [4].</p>
+
+      <h3>Example</h3>
+      <p>A 1,000 L fish tank holds 40 tilapia averaging 400 g. Biomass is 40 × 0.4 kg = <strong>16 kg</strong>. Density is 16 kg ÷ 1 m³ = <strong>16 kg/m³</strong> (16 kg per 1,000 L, or 0.134 lb/US gal). Against the FAO beginner limit of 20 kg/m³ the tank is at <strong>80%</strong> of target. At 20 kg/m³ the tank can hold 20 kg, which is 20 ÷ 0.4 = <strong>50 fish</strong> of this size, leaving <strong>4 kg</strong> of headroom (10 more fish). As the fish grow, the same 40 fish reach the limit at 500 g each, so plan harvests or splits before then.</p>
+
+      <h3>Limitations and assumptions</h3>
+      <ul>
+        <li><strong>Fish grow.</strong> Density rises every day the fish eat. Check against the weight you expect at harvest, not only today's weight.</li>
+        <li><strong>Average weight.</strong> Weigh a sample of fish (in water, in a bucket on a scale) and divide by the count. Guesses are often far off.</li>
+        <li><strong>Tank water only.</strong> Use the volume of the fish tank. Water in sumps, grow beds and filters helps dilute waste but does not give the fish more space.</li>
+        <li><strong>Small fish.</strong> Fingerlings are usually kept at lower kg/m³ than market-size fish, even though they are more numerous.</li>
+        <li><strong>Feeding rate drives water quality.</strong> In aquaponics the FAO also sizes systems by daily feed per square meter of grow bed; density is a check on fish welfare, not on plant nutrient balance [1].</li>
+      </ul>
+
+      <h2>Sources</h2>
+      <ol class="sources">
+        <li>Somerville, C., Cohen, M., Pantanella, E., Stankus, A. &amp; Lovatelli, A. (2014). <em>Small-scale aquaponic food production: Integrated fish and plant farming</em>. FAO Fisheries and Aquaculture Technical Paper No. 589. Rome: FAO. <a href="https://www.fao.org/3/i4021e/i4021e.pdf" rel="noopener" target="_blank">fao.org</a></li>
+        <li>Ebeling, J. M. &amp; Timmons, M. B. (2012). Recirculating aquaculture systems. In J. H. Tidwell (Ed.), <em>Aquaculture Production Systems</em> (Chapter 11). Oxford: Wiley-Blackwell. <a href="https://doi.org/10.1002/9781118250105.ch11" rel="noopener" target="_blank">doi:10.1002/9781118250105.ch11</a> (largely based on Timmons, M. B. &amp; Ebeling, J. M. (2010). <em>Recirculating Aquaculture</em>, 2nd ed. Ithaca, NY: Cayuga Aqua Ventures.)</li>
+        <li>Ebeling, J. M. (2000). Engineering aspects of recirculating aquaculture systems. <em>Marine Technology Society Journal</em>, 34(1), 68–78.</li>
+        <li>Ellis, T., North, B., Scott, A. P., Bromage, N. R., Porter, M. &amp; Gadd, D. (2002). The relationships between stocking density and welfare in farmed rainbow trout. <em>Journal of Fish Biology</em>, 61(3), 493–531.</li>
+        <li>National Institute of Standards and Technology. <em>NIST Handbook 44</em>, Appendix C: General Tables of Units of Measurement (pound and gallon definitions). <a href="https://www.nist.gov/pml/owm/publications/nist-handbooks/handbook-44" rel="noopener" target="_blank">nist.gov</a></li>
+      </ol>
+    </article>
+  </main>
+
+  <footer class="site-footer">
+    <div class="wrap">Calculations are estimates. Check the sources above before relying on a result.</div>
+  </footer>
+
+  <script src="../assets/share.js"></script>
+  <script src="../assets/units.js"></script>
+  <script src="../assets/fish-stocking-density.js"></script>
+</body>
+</html>

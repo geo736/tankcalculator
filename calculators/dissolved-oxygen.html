@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dissolved Oxygen Calculator</title>
+  <meta name="description" content="Find oxygen solubility (100% saturation DO) from water temperature, salinity and air pressure or elevation, and check a measured DO reading against fish and plant guidance.">
+  <link rel="stylesheet" href="../assets/style.css">
+  <style>
+    .viz .grid-line { stroke: var(--border); stroke-width: 1; }
+    .viz .curve { fill: none; stroke: var(--water-deep); stroke-width: 2.5; stroke-linejoin: round; }
+    .viz .curve-ref { fill: none; stroke: var(--tank-back); stroke-width: 1.5; stroke-dasharray: 5 4; }
+    .viz .point { fill: var(--water); stroke: var(--surface); stroke-width: 2; }
+    .viz .axis-title { fill: var(--text-muted); font-size: 11px; font-family: var(--font); }
+    .viz .zone-low { fill: var(--warn-text); fill-opacity: .55; }
+    .viz .zone-mid { fill: var(--warn-text); fill-opacity: .22; }
+    .viz .zone-ok { fill: var(--accent); fill-opacity: .4; }
+    .viz .zone-super { fill: var(--water-top); fill-opacity: .45; }
+    .viz .gauge-frame { fill: none; stroke: var(--tank-stroke); stroke-width: 1.5; }
+    .viz .sat-line { stroke: var(--water-deep); stroke-width: 2; stroke-dasharray: 4 3; }
+    .viz .meas-line { stroke: var(--text); stroke-width: 3; }
+    .viz .meas-text { fill: var(--text); font-size: 12px; font-weight: 700; font-family: var(--font); }
+    .status-pill { display: inline-block; padding: 1px 8px; border-radius: 999px; font-size: .85rem; }
+    .status-low { background: var(--warn-bg); color: var(--warn-text); }
+    .status-mid { background: var(--warn-bg); color: var(--warn-text); }
+    .status-ok { background: var(--accent-soft); color: var(--accent-strong); }
+  </style>
+</head>
+<body>
+  <header class="site-header">
+    <div class="wrap">
+      <a class="brand" href="../">
+        <span class="brand-mark" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3c3 4 6 7 6 11a6 6 0 0 1-12 0c0-4 3-7 6-11z"/></svg>
+        </span>
+        Tank Calculator
+      </a>
+      <nav><a href="../">All calculators</a></nav>
+    </div>
+  </header>
+
+  <main class="wrap">
+    <div class="crumbs"><a href="../">Home</a> / Dissolved Oxygen</div>
+    <h1 class="page-title">Dissolved Oxygen Calculator</h1>
+    <p class="page-lede">Find the most oxygen your water can hold (100% saturation) at its temperature, salinity and air pressure, then check a meter reading: percent saturation, oxygen deficit and whether it is safe for your fish or plants.</p>
+
+    <div class="calc-layout">
+      <!-- Calculator -->
+      <section class="card" aria-labelledby="calc-heading">
+        <h2 id="calc-heading">Calculator</h2>
+
+        <div class="two-col">
+          <div class="field">
+            <label for="temp">Water temperature</label>
+            <div class="input-row"><input id="temp" type="number" inputmode="decimal" step="any"><select class="unit-select" data-unit-group="temperature" data-unit-for="temp" data-unit-default="C" aria-label="Temperature unit"></select></div>
+          </div>
+          <div class="field">
+            <label for="sal">Salinity</label>
+            <div class="input-row"><input id="sal" type="number" inputmode="decimal" min="0" step="any"><span class="unit">ppt</span></div>
+            <div class="field-hint">0 for fresh water, about 35 for seawater (ppt ≈ PSU).</div>
+          </div>
+        </div>
+
+        <div class="field">
+          <label for="pmode">Air pressure from</label>
+          <select id="pmode">
+            <option value="elev">Site elevation (standard atmosphere)</option>
+            <option value="baro">Barometer reading</option>
+          </select>
+        </div>
+
+        <div class="field" data-mode="elev">
+          <label for="elev">Elevation above sea level</label>
+          <div class="input-row"><input id="elev" type="number" inputmode="decimal" step="any"><select class="unit-select" data-unit-group="length" data-unit-for="elev" data-unit-default="m" aria-label="Elevation unit"></select></div>
+        </div>
+        <div class="field" data-mode="baro">
+          <label for="baro">Barometric pressure</label>
+          <div class="input-row"><input id="baro" type="number" inputmode="decimal" min="0" step="any"><select class="unit-select" data-unit-group="pressure" data-unit-for="baro" data-unit-default="mmHg" aria-label="Barometric pressure unit"></select></div>
+          <div class="field-hint">Use the actual (station) pressure at your site, not a weather report value corrected to sea level.</div>
+        </div>
+
+        <div class="two-col">
+          <div class="field">
+            <label for="meas">Measured DO <span style="font-weight:400;color:var(--text-muted)">(optional)</span></label>
+            <div class="input-row"><input id="meas" type="number" inputmode="decimal" min="0" step="any"><select class="unit-select" data-unit-group="concentration" data-unit-for="meas" data-unit-default="mgL" aria-label="Measured DO unit"></select></div>
+          </div>
+          <div class="field">
+            <label for="group">Check against</label>
+            <select id="group">
+              <option value="warm">Warm-water fish</option>
+              <option value="cold">Cold-water fish (trout)</option>
+              <option value="plant">Hydroponic plants</option>
+            </select>
+          </div>
+        </div>
+
+        <hr class="divider">
+
+        <div class="notice" id="notice" hidden></div>
+
+        <div class="field">
+          <label for="out">Show DO in</label>
+          <select id="out" class="unit-select" data-unit-group="concentration" data-unit-default="mgL"></select>
+        </div>
+
+        <div class="result-main" aria-live="polite">
+          <div class="label">Oxygen solubility (100% saturation)</div>
+          <div class="value" id="r-sat">–</div>
+        </div>
+
+        <ul class="result-list">
+          <li><span>Measured % saturation</span><span class="v" id="r-pct">–</span></li>
+          <li><span>Oxygen deficit (saturation − measured)</span><span class="v" id="r-def">–</span></li>
+          <li><span>Status</span><span class="v" id="r-status">–</span></li>
+          <li><span>Air pressure used</span><span class="v" id="r-press">–</span></li>
+          <li><span>Fresh water, sea level (temperature only)</span><span class="v" id="r-c0">–</span></li>
+          <li><span>Salinity factor × pressure factor</span><span class="v" id="r-fac">–</span></li>
+        </ul>
+
+        <div class="share-bar">
+          <button class="btn btn-primary" type="button" id="btn-share">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="m8.6 13.5 6.8 4M15.4 6.5l-6.8 4"/></svg>
+            Share
+          </button>
+          <button class="btn" type="button" id="btn-link">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.5.5l3-3a5 5 0 0 0-7-7l-1.7 1.7"/><path d="M14 11a5 5 0 0 0-7.5-.5l-3 3a5 5 0 0 0 7 7l1.7-1.7"/></svg>
+            Copy link
+          </button>
+          <button class="btn" type="button" id="btn-copy">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h10a1 1 0 0 1 1 1v1"/></svg>
+            Copy results
+          </button>
+          <button class="btn" type="button" id="btn-reset">Reset</button>
+        </div>
+      </section>
+
+      <!-- Visualization -->
+      <section class="card viz-card" aria-labelledby="viz-heading">
+        <h2 id="viz-heading">Visualization</h2>
+        <svg class="viz" id="viz" viewBox="0 0 480 320" role="img" aria-label="Oxygen solubility versus temperature, with a gauge for the measured dissolved oxygen"></svg>
+        <p class="viz-caption" id="viz-caption"></p>
+      </section>
+    </div>
+
+    <article class="article">
+      <h2>How the dissolved oxygen calculator works</h2>
+      <p>Water in contact with air takes up oxygen until it is <strong>saturated</strong>. The saturation concentration (the oxygen solubility) is the most dissolved oxygen (DO) the water holds at equilibrium with the atmosphere. It depends on three things:</p>
+      <ul>
+        <li><strong>Temperature.</strong> Warm water holds less oxygen. Fresh water at sea level holds 11.3 mg/L at 10 °C but only 7.6 mg/L at 30 °C.</li>
+        <li><strong>Salinity.</strong> Dissolved salts push oxygen out. Seawater (35 ppt) holds about 17–22% less than fresh water at the same temperature (more of a drop in cold water).</li>
+        <li><strong>Air pressure.</strong> Less air pressure means less oxygen pushing into the water. At high elevation the saturation value is lower in direct proportion to the pressure.</li>
+      </ul>
+      <p>The calculator uses the equations of Benson and Krause (1980, 1984), the same equations the U.S. Geological Survey adopted in 2011 for its DOTABLES program and National Field Manual, and that <em>Standard Methods</em> uses in its oxygen solubility table. If you enter a measured DO reading, it also works out the percent saturation and the oxygen deficit, and compares the reading with published guidance for fish and plants.</p>
+
+      <h3>Why dissolved oxygen matters</h3>
+      <p>Low oxygen kills more pond fish than any other water quality problem, and oxygen is usually the first factor that limits how many fish a recirculating aquaculture system (RAS) or aquaponic system can carry. Fish, the nitrifying bacteria in the biofilter and plant roots all use oxygen at the same time. Knowing the saturation value tells you two things: the best you can do with aeration alone (you cannot get above 100% with air), and how far below saturation your water is (the deficit), which drives how fast an aerator can add oxygen.</p>
+      <p>Warm water is a double problem: it holds less oxygen while fish and bacteria breathe faster. That is why summer nights, when algae stop producing oxygen, are the riskiest time in ponds (Boyd &amp; Tucker, 1998).</p>
+
+      <h3>Formulas</h3>
+      <p><strong>1. Fresh water at 1 atm</strong> (Benson &amp; Krause, 1984; USGS, 2011). T is temperature in kelvin (T = t + 273.15):</p>
+      <div class="formula">ln C₀ = −139.34411 + 1.575701×10⁵/T − 6.642308×10⁷/T²
+       + 1.243800×10¹⁰/T³ − 8.621949×10¹¹/T⁴     (C₀ in mg/L)</div>
+
+      <p><strong>2. Salinity correction</strong>, S in parts per thousand (practical salinity):</p>
+      <div class="formula">F<sub>s</sub> = exp[ −S × (0.017674 − 10.754/T + 2140.7/T²) ]</div>
+
+      <p><strong>3. Pressure correction</strong>, P = barometric pressure in atmospheres, t in °C:</p>
+      <div class="formula">ln P<sub>wv</sub> = 11.8571 − 3840.70/T − 216961/T²     (water vapor pressure, atm)
+θ     = 0.000975 − 1.426×10⁻⁵ t + 6.436×10⁻⁸ t²
+F<sub>p</sub>    = P × (1 − P<sub>wv</sub>/P)(1 − θP) / [ (1 − P<sub>wv</sub>)(1 − θ) ]</div>
+
+      <p><strong>4. Saturation, percent saturation and deficit:</strong></p>
+      <div class="formula">C<sub>sat</sub>  = C₀ × F<sub>s</sub> × F<sub>p</sub>
+% sat = 100 × DO<sub>measured</sub> / C<sub>sat</sub>
+Deficit = C<sub>sat</sub> − DO<sub>measured</sub></div>
+
+      <p><strong>Pressure from elevation</strong> (U.S. Standard Atmosphere, 1976), h in meters:</p>
+      <div class="formula">P = 101.325 kPa × (1 − 2.25577×10⁻⁵ × h)^5.25588</div>
+      <p>This gives the <em>average</em> pressure at that elevation. Weather moves real pressure up and down by a few percent, so a barometer reading at the site is more accurate. 1 atm = 760 mm Hg = 101.325 kPa = 1013.25 hPa.</p>
+
+      <h3>Example</h3>
+      <p>Fresh water (S = 0) at 25 °C at sea level (1 atm). T = 298.15 K, so ln C₀ = 2.1119 and C₀ = <strong>8.26 mg/L</strong>. F<sub>s</sub> = 1 and F<sub>p</sub> = 1, so the saturation concentration is 8.26 mg/L, matching the USGS and <em>Standard Methods</em> tables (8.26 mg/L at 25 °C, 9.09 mg/L at 20 °C).</p>
+      <p>A meter reads 6.5 mg/L. Percent saturation = 6.5 ÷ 8.26 × 100 = <strong>78.7%</strong>, and the oxygen deficit is 8.26 − 6.5 = <strong>1.76 mg/L</strong>. For warm-water fish this is above the 5 mg/L level usually given as desirable, so the status is OK.</p>
+      <p>The same water at 20 °C and 1,000 m elevation: the standard atmosphere gives 89.9 kPa (674 mm Hg, 0.887 atm), and saturation drops from 9.09 to about 8.04 mg/L.</p>
+
+      <h3>Guidance for measured DO</h3>
+      <p>These are guidelines, not hard limits. Tolerance varies by species, size, acclimation and how long the low oxygen lasts.</p>
+      <table>
+        <thead><tr><th>Group</th><th>Low (danger)</th><th>Marginal</th><th>OK</th></tr></thead>
+        <tbody>
+          <tr><td>Warm-water fish (tilapia, catfish, carp)</td><td>&lt; 3 mg/L</td><td>3–5 mg/L</td><td>≥ 5 mg/L</td></tr>
+          <tr><td>Cold-water fish (trout, salmon)</td><td>&lt; 4 mg/L</td><td>4–6.5 mg/L</td><td>≥ 6.5 mg/L</td></tr>
+          <tr><td>Hydroponic plants (root zone)</td><td>&lt; 3 mg/L</td><td>–</td><td>≥ 3 mg/L</td></tr>
+        </tbody>
+      </table>
+      <p>Where the numbers come from: Boyd's widely used table for warm-water pond fish describes 1.5–5 mg/L as survivable but stressful, with slow growth, and above 5 mg/L as desirable (Boyd &amp; Tucker, 1998). The U.S. EPA (1986) freshwater criteria give a 1-day minimum of 3.0 mg/L for warm-water and 4.0 mg/L for cold-water fish (other than early life stages) and a 30-day mean of 5.5 and 6.5 mg/L. The FAO aquaponics manual (Somerville et al., 2014, Table 3.1) lists 4–6 mg/L for warm-water fish, 6–8 mg/L for cold-water fish, more than 3 mg/L for plants and 4–8 mg/L for nitrifying bacteria. The cut-offs above combine these sources and should be treated as rules of thumb. Eggs and fry need more oxygen than the values shown, and in aquaponics it is common to aim for at least 5 mg/L so that the biofilter bacteria are not limited either.</p>
+
+      <h3>Limitations and assumptions</h3>
+      <ul>
+        <li><strong>Equilibrium with air.</strong> The result is the saturation value for water in contact with normal air. Pure-oxygen injection, strong algae photosynthesis or air entrained under pressure can push DO above 100%. Strong total gas supersaturation can cause gas bubble disease in fish.</li>
+        <li><strong>Validity range.</strong> The equations were fitted for 0–40 °C and salinity 0–40. The calculator does not compute outside these ranges.</li>
+        <li><strong>Salinity units.</strong> Salinity is entered as practical salinity (PSU), which is numerically almost the same as parts per thousand (g/kg) for natural waters.</li>
+        <li><strong>Water vapor.</strong> The vapor pressure term uses the fresh-water equation for every salinity, as in the USGS method. Salt lowers the vapor pressure slightly; the effect on the result is very small.</li>
+        <li><strong>Units.</strong> mg/L is used throughout. In fresh water, 1 mg/L ≈ 1 ppm.</li>
+        <li><strong>Meter accuracy.</strong> Percent saturation is only as good as the DO reading. Calibrate the meter as its manual describes, and measure at dawn to see the daily low.</li>
+      </ul>
+
+      <h2>Sources</h2>
+      <ol class="sources">
+        <li>U.S. Geological Survey (2011). <em>Change to solubility equations for oxygen in water</em>. Office of Water Quality Technical Memorandum 2011.03, July 13, 2011. <a href="https://water.usgs.gov/admin/memo/QW/qw11.03.pdf" rel="noopener" target="_blank">water.usgs.gov</a></li>
+        <li>U.S. Geological Survey. <em>DOTABLES: Dissolved oxygen solubility tables</em> (software and documentation). <a href="https://water.usgs.gov/software/DOTABLES/" rel="noopener" target="_blank">water.usgs.gov</a></li>
+        <li>Benson, B. B. &amp; Krause, D., Jr. (1980). The concentration and isotopic fractionation of gases dissolved in freshwater in equilibrium with the atmosphere. 1. Oxygen. <em>Limnology and Oceanography</em>, 25(4), 662–671.</li>
+        <li>Benson, B. B. &amp; Krause, D., Jr. (1984). The concentration and isotopic fractionation of oxygen dissolved in freshwater and seawater in equilibrium with the atmosphere. <em>Limnology and Oceanography</em>, 29(3), 620–632.</li>
+        <li>National Oceanic and Atmospheric Administration, National Aeronautics and Space Administration &amp; U.S. Air Force (1976). <em>U.S. Standard Atmosphere, 1976</em>. Washington, DC: U.S. Government Printing Office.</li>
+        <li>Boyd, C. E. &amp; Tucker, C. S. (1998). <em>Pond Aquaculture Water Quality Management</em>. Boston: Kluwer Academic Publishers.</li>
+        <li>U.S. Environmental Protection Agency (1986). <em>Ambient Water Quality Criteria for Dissolved Oxygen</em>. EPA 440/5-86-003. Washington, DC: Office of Water.</li>
+        <li>Somerville, C., Cohen, M., Pantanella, E., Stankus, A. &amp; Lovatelli, A. (2014). <em>Small-scale aquaponic food production: Integrated fish and plant farming</em>. FAO Fisheries and Aquaculture Technical Paper No. 589. Rome: FAO. <a href="https://www.fao.org/3/i4021e/i4021e.pdf" rel="noopener" target="_blank">fao.org</a></li>
+        <li>Hargreaves, J. A. &amp; Tucker, C. S. (2002). <em>Measuring Dissolved Oxygen Concentration in Aquaculture</em>. Southern Regional Aquaculture Center (SRAC) Publication No. 4601.</li>
+      </ol>
+    </article>
+  </main>
+
+  <footer class="site-footer">
+    <div class="wrap">Calculations are estimates. Check the sources above before relying on a result.</div>
+  </footer>
+
+  <script src="../assets/share.js"></script>
+  <script src="../assets/units.js"></script>
+  <script src="../assets/dissolved-oxygen.js"></script>
+</body>
+</html>

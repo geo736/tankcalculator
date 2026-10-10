@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Fish Feeding Rate Calculator</title>
+  <meta name="description" content="Work out how much feed your fish need per day, per feeding, per week and per month from fish weight and a percent-of-body-weight feeding rate, and estimate growth from the feed conversion ratio.">
+  <link rel="stylesheet" href="../assets/style.css">
+  <style>
+    .segmented.two { grid-template-columns: repeat(2, 1fr); }
+    .guide-hint.out { color: var(--warn-text); }
+    .viz .band { fill: var(--accent-soft); stroke: var(--accent); stroke-width: 1; }
+    .viz .band-text { fill: var(--accent-strong); font-size: 11px; font-family: var(--font); }
+    .viz .ref-line { stroke: var(--text-muted); stroke-width: 1.2; stroke-dasharray: 5 4; fill: none; }
+    .viz .grid { stroke: var(--border); stroke-width: 1; }
+    .viz .axis { stroke: var(--tank-stroke); stroke-width: 1.2; fill: none; }
+    .viz .feed { fill: var(--c-aquaculture); }
+    .viz .feed-empty { fill: var(--surface-2); stroke: var(--border); }
+    .viz .feed-text { fill: #fff; font-size: 12px; font-weight: 600; font-family: var(--font); }
+    .viz .title-text { fill: var(--text); font-size: 13px; font-weight: 600; font-family: var(--font); }
+    .viz .you { fill: var(--c-aquaculture); stroke: var(--surface); stroke-width: 2; }
+    .viz .you-line { stroke: var(--c-aquaculture); stroke-width: 1.5; stroke-dasharray: 3 3; }
+    .viz .you-text { fill: var(--c-aquaculture); font-size: 12px; font-weight: 700; font-family: var(--font); }
+  </style>
+</head>
+<body>
+  <header class="site-header">
+    <div class="wrap">
+      <a class="brand" href="../">
+        <span class="brand-mark" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3c3 4 6 7 6 11a6 6 0 0 1-12 0c0-4 3-7 6-11z"/></svg>
+        </span>
+        Tank Calculator
+      </a>
+      <nav><a href="../">All calculators</a></nav>
+    </div>
+  </header>
+
+  <main class="wrap">
+    <div class="crumbs"><a href="../">Home</a> / Feeding Rate</div>
+    <h1 class="page-title">Fish Feeding Rate Calculator</h1>
+    <p class="page-lede">Work out how much to feed your fish each day and at each feeding, how much feed you will use per week and per month, and how much weight the fish should gain from it.</p>
+
+    <div class="calc-layout">
+      <!-- Calculator -->
+      <section class="card" aria-labelledby="calc-heading">
+        <h2 id="calc-heading">Calculator</h2>
+
+        <div class="field">
+          <span class="label" id="mode-label">Enter fish as</span>
+          <div class="segmented two" role="group" aria-labelledby="mode-label" id="mode-group">
+            <button type="button" data-mode="count" aria-pressed="true">
+              <svg viewBox="0 0 34 26" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8c3-3 7-3 10 0-3 3-7 3-10 0zM13 8l3-2.5v5zM18 18c3-3 7-3 10 0-3 3-7 3-10 0zM28 18l3-2.5v5zM4 18c2.2-2.2 5-2.2 7 0-2 2.2-4.8 2.2-7 0z"/></svg>
+              Number × weight
+            </button>
+            <button type="button" data-mode="biomass" aria-pressed="false">
+              <svg viewBox="0 0 34 26" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M6 23h22l-3-14H9zM13 9a4 4 0 0 1 8 0"/></svg>
+              Total biomass
+            </button>
+          </div>
+        </div>
+
+        <div class="two-col">
+          <div class="field" data-for="count">
+            <label for="count">Number of fish</label>
+            <div class="input-row"><input id="count" type="number" inputmode="numeric" min="0" step="1"><span class="unit">fish</span></div>
+          </div>
+          <div class="field" data-for="biomass">
+            <label for="biomass">Total fish biomass</label>
+            <div class="input-row"><input id="biomass" type="number" inputmode="decimal" min="0" step="any"><select class="unit-select" data-unit-group="mass" data-unit-for="biomass" data-unit-default="kg" aria-label="Biomass unit"></select></div>
+          </div>
+          <div class="field">
+            <label for="weight">Average fish weight</label>
+            <div class="input-row"><input id="weight" type="number" inputmode="decimal" min="0" step="any"><select class="unit-select" data-unit-group="mass" data-unit-for="weight" data-unit-default="g" aria-label="Average fish weight unit"></select></div>
+            <div class="field-hint" id="weight-hint">Weigh a sample of fish and divide by the number weighed.</div>
+          </div>
+        </div>
+
+        <div class="field">
+          <label for="preset">Feeding rate guide by fish size</label>
+          <select id="preset">
+            <option value="custom">Custom rate</option>
+            <option value="0">Fry, under 1 g: 30–10% (use 20%)</option>
+            <option value="1">Fry, 1–5 g: 10–6% (use 8%)</option>
+            <option value="2">Fingerlings, 5–20 g: 6–4% (use 5%)</option>
+            <option value="3">Juveniles, 20–100 g: 4–3% (use 3.5%)</option>
+            <option value="4">Grow-out, over 100 g: 3–1.5% (use 2.25%)</option>
+          </select>
+          <div class="field-hint">Tilapia at 28 °C (Riche &amp; Garling, 2003). General guidance only: it varies by species, temperature and feed.</div>
+        </div>
+
+        <div class="two-col">
+          <div class="field">
+            <label for="rate">Feeding rate</label>
+            <div class="input-row"><input id="rate" type="number" inputmode="decimal" min="0" step="any"><span class="unit">% BW/day</span></div>
+          </div>
+          <div class="field">
+            <label for="feeds">Feedings per day</label>
+            <div class="input-row"><input id="feeds" type="number" inputmode="numeric" min="1" step="1"><span class="unit">/day</span></div>
+          </div>
+        </div>
+        <div class="field-hint guide-hint" id="guide-hint"></div>
+
+        <div class="field" style="margin-top:14px">
+          <label for="fcr">Feed conversion ratio (FCR), optional</label>
+          <div class="input-row"><input id="fcr" type="number" inputmode="decimal" min="0" step="any"><span class="unit">kg feed / kg gain</span></div>
+          <div class="field-hint">Used to estimate growth. Leave empty to skip.</div>
+        </div>
+
+        <hr class="divider">
+
+        <div class="notice" id="notice" hidden></div>
+
+        <div class="field">
+          <label for="out">Show feed in</label>
+          <select id="out">
+            <option value="auto-m">g / kg (automatic)</option>
+            <option value="auto-us">oz / lb (automatic)</option>
+            <option value="g">grams</option>
+            <option value="kg">kilograms</option>
+            <option value="oz">ounces</option>
+            <option value="lb">pounds</option>
+          </select>
+        </div>
+
+        <div class="result-main" aria-live="polite">
+          <div class="label">Daily feed</div>
+          <div class="value" id="r-daily">–</div>
+        </div>
+
+        <ul class="result-list">
+          <li><span>Feed per feeding</span><span class="v" id="r-per">–</span></li>
+          <li><span>Feed per week (7 days)</span><span class="v" id="r-week">–</span></li>
+          <li><span>Feed per month (30 days)</span><span class="v" id="r-month">–</span></li>
+          <li><span>Total fish biomass</span><span class="v" id="r-biomass">–</span></li>
+          <li><span>Expected biomass gain per day</span><span class="v" id="r-gainday">–</span></li>
+          <li><span>Expected biomass gain per 30 days</span><span class="v" id="r-gainmonth">–</span></li>
+          <li><span>Average fish weight after 30 days</span><span class="v" id="r-after">–</span></li>
+          <li><span>Leafy-green area this feed can support</span><span class="v" id="r-area">–</span></li>
+        </ul>
+
+        <div class="share-bar">
+          <button class="btn btn-primary" type="button" id="btn-share">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="m8.6 13.5 6.8 4M15.4 6.5l-6.8 4"/></svg>
+            Share
+          </button>
+          <button class="btn" type="button" id="btn-link">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.5.5l3-3a5 5 0 0 0-7-7l-1.7 1.7"/><path d="M14 11a5 5 0 0 0-7.5-.5l-3 3a5 5 0 0 0 7 7l1.7-1.7"/></svg>
+            Copy link
+          </button>
+          <button class="btn" type="button" id="btn-copy">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h10a1 1 0 0 1 1 1v1"/></svg>
+            Copy results
+          </button>
+          <button class="btn" type="button" id="btn-reset">Reset</button>
+        </div>
+      </section>
+
+      <!-- Visualization -->
+      <section class="card viz-card" aria-labelledby="viz-heading">
+        <h2 id="viz-heading">Visualization</h2>
+        <svg class="viz" id="viz" viewBox="0 0 480 400" role="img" aria-label="Daily feed split into feedings, and a chart of feeding rate against fish size with your fish marked"></svg>
+        <p class="viz-caption" id="viz-caption"></p>
+      </section>
+    </div>
+
+    <article class="article">
+      <h2>How the feeding rate calculator works</h2>
+      <p>Fish farmers usually set the daily ration as a <strong>percentage of the fish's body weight</strong> (% BW per day). The calculator first finds the total weight of fish in the tank, the <strong>biomass</strong>, either from the number of fish times their average weight or from a biomass you enter directly. It multiplies the biomass by the feeding rate to get the daily feed, then divides that by the number of feedings. Weekly and monthly totals assume the same daily ration every day.</p>
+      <p>If you enter a <strong>feed conversion ratio</strong> (FCR), the calculator also estimates growth. FCR is the weight of feed given divided by the weight the fish gain, so an FCR of 1.5 means 1.5 kg of feed produces 1 kg of fish.</p>
+
+      <h3>Why feeding rate matters</h3>
+      <p>Feed is usually the largest running cost in fish farming, and it is also the input that drives the whole system. In aquaponics the fish feed is the nutrient source for the plants, so the daily ration sets how much growing area the system can support. In recirculating aquaculture (RAS) the daily feed sets how much ammonia the biofilter must remove, how much oxygen the fish use and how much solid waste the filters must catch (Timmons &amp; Ebeling, 2010). Underfeeding slows growth; overfeeding wastes money and leaves uneaten feed that rots and pollutes the water.</p>
+
+      <h3>Formulas</h3>
+      <div class="formula">Biomass B          = number of fish × average weight
+Daily feed F       = B × rate (%) ÷ 100
+Feed per feeding   = F ÷ feedings per day
+Weekly feed        = F × 7
+Monthly feed       = F × 30</div>
+      <p>With a feed conversion ratio:</p>
+      <div class="formula">Biomass gain per day      = F ÷ FCR
+Gain per 30 days          = 30 × F ÷ FCR
+Weight per fish, 30 days  = average weight + (30 × F ÷ FCR) ÷ number of fish</div>
+      <p>Aquaponic system balance (FAO feed rate ratio for leafy greens, 40–50 g feed per m² of growing area per day):</p>
+      <div class="formula">Growing area = F (g/day) ÷ 50   to   F (g/day) ÷ 40   m²</div>
+
+      <h3>Feeding rate by fish size (general guidance)</h3>
+      <p>Small fish eat a much larger share of their body weight than large fish. The table below is the size-based daily feeding guide for tilapia in recirculating systems at 28 °C (82 °F), from Riche &amp; Garling (2003), who adapted it from the National Research Council (1993). The FAO tilapia feeding table for intensive farming gives matching ranges for fish from 1 g to 100 g and splits the over-100 g class into 3–2% and 2–1.5%. Within each class, use the higher rate for fish at the small end and the lower rate as they approach the next class.</p>
+      <table>
+        <thead><tr><th>Fish weight</th><th>Feeding rate (% body weight per day)</th></tr></thead>
+        <tbody>
+          <tr><td>0–1 g (fry)</td><td>30–10%</td></tr>
+          <tr><td>1–5 g</td><td>10–6%</td></tr>
+          <tr><td>5–20 g (fingerlings)</td><td>6–4%</td></tr>
+          <tr><td>20–100 g (juveniles)</td><td>4–3%</td></tr>
+          <tr><td>Over 100 g (grow-out)</td><td>3–1.5%</td></tr>
+        </tbody>
+      </table>
+      <p>The FAO aquaponics manual (Somerville et al., 2014) gives a simpler rule of thumb for the common aquaponic species: fish larger than about 50 g eat <strong>1–2% of their body weight per day</strong> during grow-out, and newly stocked juveniles of about 50 g can be fed about 3% per day. The chart shows this 1–2% band as a dashed outline.</p>
+      <p>These figures are a <strong>starting point, not a fixed rule</strong>. Appetite falls sharply in water cooler than the species' preferred range, and it also changes with feed energy and protein, water quality, oxygen and stress. Cold-water species such as trout and warm-water species such as catfish have their own feeding charts, which feed manufacturers usually print on the bag. Watch the fish: a common practice is to feed only what they clear in a few minutes and remove uneaten feed.</p>
+
+      <h3>Feedings per day</h3>
+      <p>Fry and fingerlings grow fast and have small stomachs, so they do best with many small meals; Riche &amp; Garling (2003) recommend feeding fingerlings at least four times a day. Larger fish are usually fed two or three times a day. Splitting the ration does not change the daily total, but smaller meals are eaten more completely and spread the ammonia and oxygen load more evenly through the day.</p>
+
+      <h3>Feed conversion ratio</h3>
+      <p>FCR depends on species, size, feed quality, temperature and how carefully the fish are fed. Well-fed tilapia on a good commercial pellet commonly convert at roughly 1.2–2 kg of feed per kg of gain, and 1.5 is a common planning figure. Treat this as a rule of thumb and replace it with your own measurement: weigh the fish at the start and end of a period and divide the feed used by the weight gained.</p>
+
+      <h3>Example</h3>
+      <p>A tank holds 100 tilapia averaging 250 g, so the biomass is 100 × 250 g = <strong>25 kg</strong>. These fish are in the grow-out class (3–1.5%), so feed them 2% of body weight per day: 25 kg × 0.02 = <strong>0.5 kg (500 g) of feed per day</strong>. Split into 3 feedings, each meal is 500 ÷ 3 ≈ <strong>166.7 g</strong>. That is 3.5 kg per week and 15 kg per 30 days.</p>
+      <p>With an FCR of 1.5 the fish should gain 500 ÷ 1.5 ≈ <strong>333 g of biomass per day</strong>, or 10 kg over 30 days. Shared between 100 fish that is 100 g each, so the average fish would grow from 250 g to about <strong>350 g</strong> in a month, if the ration stays the same and no fish are lost. In an aquaponic system, 500 g of feed per day can support about 500 ÷ 50 = 10 m² to 500 ÷ 40 = 12.5 m² of leafy greens.</p>
+
+      <h3>Things the calculator does not include</h3>
+      <ul>
+        <li><strong>Growth during the period.</strong> Fish get heavier every day, so a fixed ration becomes a smaller percentage of body weight. Re-weigh a sample every one to two weeks and recalculate. The 30-day weight estimate uses a constant daily ration.</li>
+        <li><strong>Mortality.</strong> Count losses and remove them from the fish number.</li>
+        <li><strong>Temperature.</strong> The size table is for tilapia at 28 °C. Feed less in cooler water and follow a species-specific chart for other fish.</li>
+        <li><strong>Plant balance.</strong> The leafy-green area uses the FAO ratio for a 32% protein feed. Fruiting crops need more feed per m² (FAO gives 50–80 g/m²/day).</li>
+      </ul>
+
+      <h2>Sources</h2>
+      <ol class="sources">
+        <li>Riche, M. &amp; Garling, D. (2003). <em>Feeding Tilapia in Intensive Recirculating Systems</em>. North Central Regional Aquaculture Center, Fact Sheet Series #114. <a href="https://www.ncrac.org/files/inline-files/ncrac114.pdf" rel="noopener" target="_blank">ncrac.org</a></li>
+        <li>National Research Council (1993). <em>Nutrient Requirements of Fish</em>. Washington, DC: National Academy Press.</li>
+        <li>FAO Aquaculture Feed and Fertilizer Resources Information System (AFFRIS). Nile tilapia, Table 28: Feeding table for tilapia using formulated feed under intensive farming system. Rome: FAO. <a href="https://www.fao.org/fileadmin/user_upload/affris/docs/tilapiaT28.pdf" rel="noopener" target="_blank">fao.org</a></li>
+        <li>Somerville, C., Cohen, M., Pantanella, E., Stankus, A. &amp; Lovatelli, A. (2014). <em>Small-scale aquaponic food production: Integrated fish and plant farming</em>. FAO Fisheries and Aquaculture Technical Paper No. 589. Rome: FAO. Chapter 8 (component calculations and ratios; management practices for fish). <a href="https://www.fao.org/3/i4021e/i4021e.pdf" rel="noopener" target="_blank">fao.org</a></li>
+        <li>Timmons, M. B. &amp; Ebeling, J. M. (2010). <em>Recirculating Aquaculture</em> (2nd ed.). Ithaca, NY: Cayuga Aqua Ventures.</li>
+      </ol>
+    </article>
+  </main>
+
+  <footer class="site-footer">
+    <div class="wrap">Calculations are estimates. Check the sources above before relying on a result.</div>
+  </footer>
+
+  <script src="../assets/share.js"></script>
+  <script src="../assets/units.js"></script>
+  <script src="../assets/feeding-rate.js"></script>
+</body>
+</html>
