@@ -23,6 +23,9 @@
     .result-main .sub { font-size: .9rem; color: var(--text-muted); margin-top: 2px; }
     .out-units { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
     .out-units label { font-size: .8rem; }
+    .input-row input { min-width: 4.5em; }
+    @media (max-width: 480px) { .two-col { grid-template-columns: minmax(0, 1fr); } }
+    .input-row .unit-select { flex: 0 1 auto; min-width: 0; }
   </style>
 </head>
 <body>
@@ -87,10 +90,10 @@
         <div class="field">
           <label for="media">Biofilter media</label>
           <select id="media">
-            <option value="k1">Moving-bed carrier, K1 type (500 m²/m³)</option>
-            <option value="bioballs">Plastic bio-balls, trickling (≈ 250 m²/m³)</option>
-            <option value="lava">Volcanic gravel / lava rock (≈ 300 m²/m³)</option>
-            <option value="clay">Expanded clay pebbles (≈ 250 m²/m³)</option>
+            <option value="k1">K1-type moving bed (500 m²/m³)</option>
+            <option value="bioballs">Bio-balls (≈ 250 m²/m³)</option>
+            <option value="lava">Lava rock / volcanic gravel (300 m²/m³)</option>
+            <option value="clay">Expanded clay (≈ 250 m²/m³)</option>
             <option value="sand">Sand, 1 mm grains (≈ 3,600 m²/m³)</option>
             <option value="custom">Custom</option>
           </select>

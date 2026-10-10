@@ -7,9 +7,9 @@
     CalcUnits.GROUPS.arealrate = {
       base: 'gm2d',
       units: [
-        { id: 'gm2d', label: 'g/m²/day', factor: 1 },
-        { id: 'mgm2d', label: 'mg/m²/day', factor: 0.001 },
-        { id: 'gft2d', label: 'g/ft²/day', factor: 1 / 0.09290304 }
+        { id: 'gm2d', label: 'g/m²·d', factor: 1 },
+        { id: 'mgm2d', label: 'mg/m²·d', factor: 0.001 },
+        { id: 'gft2d', label: 'g/ft²·d', factor: 1 / 0.09290304 }
       ]
     };
   }

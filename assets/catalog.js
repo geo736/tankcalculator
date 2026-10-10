@@ -28,7 +28,7 @@ window.CALCULATORS = [
     icon: '<path d="M3 9h18l-2 11H5z"/><circle cx="9" cy="14" r="1.5"/><circle cx="14" cy="15" r="1.5"/>' },
   { slug: 'iron-addition', name: 'Iron Addition', blurb: 'Chelated iron dose and pH', cat: 'aquaponics', tags: ['aquaponics', 'hydroponics'], status: 'live',
     icon: '<path d="M7 3h10l-1 6H8z"/><path d="M12 13v4"/><circle cx="12" cy="19" r="2"/>' },
-  { slug: 'biological-surface-area', name: 'Biofilter Surface Area', cat: 'aquaculture', tags: ['aquaculture', 'aquaponics'], status: 'soon',
+  { slug: 'biological-surface-area', name: 'Biofilter Surface Area', blurb: 'Size biofilter media from feed', cat: 'aquaculture', tags: ['aquaculture', 'aquaponics'], status: 'live',
     icon: '<circle cx="12" cy="12" r="8"/><path d="M12 4v16M4 12h16M6.3 6.3l11.4 11.4M17.7 6.3 6.3 17.7"/>' },
   { slug: 'fish-hauling', name: 'Fish Hauling', cat: 'aquaculture', tags: ['aquaculture', 'aquaponics'], status: 'soon',
     icon: '<path d="M2 7h12v9H2zM14 10h4l3 3v3h-7"/><circle cx="6" cy="18" r="1.6"/><circle cx="17" cy="18" r="1.6"/>' },
