@@ -232,11 +232,11 @@
     $('r-amount').textContent = amountText(r);
     const perL = (liquid ? r.mL : r.gProduct) / r.volL;
     const unitShort = liquid ? 'mL' : 'g';
-    $('r-per100').textContent = fmt(perL * 100) + ' ' + unitShort + ' per 100 L';
-    $('r-pergal').textContent = fmt(perL * ML_PER_USGAL / 1000) + ' ' + unitShort + ' per US gal';
+    $('r-per100').textContent = fmt(perL * 100) + ' ' + unitShort;
+    $('r-pergal').textContent = fmt(perL * ML_PER_USGAL / 1000) + ' ' + unitShort;
     $('r-floz').textContent = liquid
-      ? fmt(perL * ML_PER_USGAL / ML_PER_FLOZ) + ' fl oz per 1,000 US gal'
-      : fmt(perL * ML_PER_USGAL / 28.349523125) + ' oz per 1,000 US gal';
+      ? fmt(perL * ML_PER_USGAL / ML_PER_FLOZ) + ' US fl oz'
+      : fmt(perL * ML_PER_USGAL / 28.349523125) + ' oz';
     $('r-h').textContent = fmt(r.acidEq * 1000, 2) + ' mmol/L · ' + fmt(r.molH) + ' mol total';
     const neutral = Math.min(r.acidEq, r.alkEq);
     const freeAcid = r.acidEq - neutral;
