@@ -267,7 +267,7 @@
     }
 
     // --- Right: 60-minute turnover clock ---
-    const cx = 368, cy = 150, R = 80;
+    const cx = 384, cy = 150, R = 78;
     el('circle', { class: 'clock-face', cx: cx, cy: cy, r: R });
     const N = r.ok ? r.N : 0;
     if (N > 0 && N < 1) {

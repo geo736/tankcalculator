@@ -12,7 +12,7 @@ window.CALCULATORS = [
     icon: '<circle cx="7" cy="16" r="2"/><circle cx="13" cy="18" r="1.5"/><circle cx="16" cy="12" r="2"/><path d="M10 4h8l-2 5h-4z"/>' },
   { slug: 'grow-bed-ratio', name: 'Grow Bed Ratio', blurb: 'Fish tank to grow bed', cat: 'aquaponics', tags: ['aquaponics'], status: 'live',
     icon: '<path d="M3 5h7v14H3z"/><path d="M14 13h7v6h-7z"/><path d="M17.5 13V9m0 1.5-2-1.5m2 0 2-1.5"/>' },
-  { slug: 'pump-turnover', name: 'Pump & Turnover', cat: 'aquaponics', tags: ['aquaponics', 'aquaculture', 'hydroponics'], status: 'soon',
+  { slug: 'pump-turnover', name: 'Pump & Turnover', blurb: 'Size pumps by turnover', cat: 'aquaponics', tags: ['aquaponics', 'aquaculture', 'hydroponics'], status: 'live',
     icon: '<path d="M21 12a9 9 0 1 1-3-6.7"/><path d="M21 4v5h-5"/>' },
   { slug: 'nutrient-ec', name: 'Nutrient EC', cat: 'hydroponics', tags: ['hydroponics', 'aquaponics'], status: 'soon',
     icon: '<path d="M13 3 6 13h5l-1 8 7-10h-5z"/>' },
