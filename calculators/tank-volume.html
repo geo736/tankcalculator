@@ -52,57 +52,46 @@
           </div>
         </div>
 
-        <div class="two-col">
-          <div class="field">
-            <label for="unit">Dimensions in</label>
-            <select id="unit">
-              <option value="in">inches (in)</option>
-              <option value="ft">feet (ft)</option>
-              <option value="cm">centimeters (cm)</option>
-              <option value="m">meters (m)</option>
-            </select>
-          </div>
-          <div class="field">
-            <label for="water">Water type</label>
-            <select id="water">
-              <option value="fresh">Freshwater</option>
-              <option value="salt">Saltwater</option>
-            </select>
-          </div>
+        <div class="field">
+          <label for="water">Water type</label>
+          <select id="water">
+            <option value="fresh">Freshwater</option>
+            <option value="salt">Saltwater</option>
+          </select>
         </div>
 
         <div class="two-col">
           <div class="field" data-for="rect">
             <label for="length">Length</label>
-            <div class="input-row"><input id="length" type="number" inputmode="decimal" min="0" step="any"><span class="unit" data-unit></span></div>
+            <div class="input-row"><input id="length" type="number" inputmode="decimal" min="0" step="any"><select class="unit-select" data-unit-group="length" data-unit-for="length" data-unit-default="in" aria-label="Length unit"></select></div>
           </div>
           <div class="field" data-for="rect">
             <label for="width">Width</label>
-            <div class="input-row"><input id="width" type="number" inputmode="decimal" min="0" step="any"><span class="unit" data-unit></span></div>
+            <div class="input-row"><input id="width" type="number" inputmode="decimal" min="0" step="any"><select class="unit-select" data-unit-group="length" data-unit-for="width" data-unit-default="in" aria-label="Width unit"></select></div>
           </div>
           <div class="field" data-for="cyl cone hcyl">
             <label for="diameter">Diameter</label>
-            <div class="input-row"><input id="diameter" type="number" inputmode="decimal" min="0" step="any"><span class="unit" data-unit></span></div>
+            <div class="input-row"><input id="diameter" type="number" inputmode="decimal" min="0" step="any"><select class="unit-select" data-unit-group="length" data-unit-for="diameter" data-unit-default="in" aria-label="Diameter unit"></select></div>
           </div>
           <div class="field" data-for="hcyl">
             <label for="hlength">Length</label>
-            <div class="input-row"><input id="hlength" type="number" inputmode="decimal" min="0" step="any"><span class="unit" data-unit></span></div>
+            <div class="input-row"><input id="hlength" type="number" inputmode="decimal" min="0" step="any"><select class="unit-select" data-unit-group="length" data-unit-for="hlength" data-unit-default="in" aria-label="Length unit"></select></div>
           </div>
           <div class="field" data-for="rect cyl">
             <label for="height">Height</label>
-            <div class="input-row"><input id="height" type="number" inputmode="decimal" min="0" step="any"><span class="unit" data-unit></span></div>
+            <div class="input-row"><input id="height" type="number" inputmode="decimal" min="0" step="any"><select class="unit-select" data-unit-group="length" data-unit-for="height" data-unit-default="in" aria-label="Height unit"></select></div>
           </div>
           <div class="field" data-for="cone">
             <label for="wall">Straight wall height</label>
-            <div class="input-row"><input id="wall" type="number" inputmode="decimal" min="0" step="any"><span class="unit" data-unit></span></div>
+            <div class="input-row"><input id="wall" type="number" inputmode="decimal" min="0" step="any"><select class="unit-select" data-unit-group="length" data-unit-for="wall" data-unit-default="in" aria-label="Straight wall height unit"></select></div>
           </div>
           <div class="field" data-for="cone">
             <label for="coneh">Cone height</label>
-            <div class="input-row"><input id="coneh" type="number" inputmode="decimal" min="0" step="any"><span class="unit" data-unit></span></div>
+            <div class="input-row"><input id="coneh" type="number" inputmode="decimal" min="0" step="any"><select class="unit-select" data-unit-group="length" data-unit-for="coneh" data-unit-default="in" aria-label="Cone height unit"></select></div>
           </div>
           <div class="field">
             <label for="depth">Water depth</label>
-            <div class="input-row"><input id="depth" type="number" inputmode="decimal" min="0" step="any"><span class="unit" data-unit></span></div>
+            <div class="input-row"><input id="depth" type="number" inputmode="decimal" min="0" step="any"><select class="unit-select" data-unit-group="length" data-unit-for="depth" data-unit-default="in" aria-label="Water depth unit"></select></div>
             <div class="field-hint" id="depth-hint">Measured from the bottom of the tank.</div>
           </div>
         </div>
@@ -163,7 +152,7 @@
 
     <article class="article">
       <h2>How the tank volume calculator works</h2>
-      <p>The calculator finds two volumes: the <strong>total capacity</strong> of the tank when it is full to the top, and the <strong>water volume</strong> at the depth you enter. Both come from standard geometry. The result is converted to your chosen unit, and the water weight is found by multiplying the volume by the density of the water.</p>
+      <p>The calculator finds two volumes: the <strong>total capacity</strong> of the tank when it is full to the top, and the <strong>water volume</strong> at the depth you enter. Both come from standard geometry. Each measurement can be entered in its own unit (for example the diameter in inches and the height in centimeters). Everything is converted to meters before the calculation, and the result is converted to your chosen unit, and the water weight is found by multiplying the volume by the density of the water.</p>
 
       <h3>Why tank volume matters</h3>
       <p>Almost every other calculation in a fish or plant system starts from the water volume. In aquaponics and recirculating aquaculture (RAS) you need it to:</p>
@@ -238,6 +227,7 @@ Capacity      = π r² L</div>
   </footer>
 
   <script src="../assets/share.js"></script>
+  <script src="../assets/units.js"></script>
   <script src="../assets/tank-volume.js"></script>
 </body>
 </html>

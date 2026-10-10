@@ -2,25 +2,20 @@
 (function () {
   'use strict';
 
-  const TO_M = { in: 0.0254, ft: 0.3048, cm: 0.01, m: 1 };
   const L_PER = { L: 1, gal: 3.785411784, impgal: 4.54609, ft3: 28.316846592, m3: 1000 };
   const OUT_LABEL = { L: 'L', gal: 'US gal', impgal: 'imp gal', ft3: 'ft³', m3: 'm³' };
   const DENSITY = { fresh: 0.998, salt: 1.025 }; // kg/L at 20 °C
   const KG_PER_LB = 0.45359237;
 
-  const DEFAULTS = {
-    in: { length: 48, width: 24, height: 24, diameter: 36, hlength: 48, wall: 36, coneh: 12, depth: 20 },
-    ft: { length: 4, width: 2, height: 2, diameter: 3, hlength: 4, wall: 3, coneh: 1, depth: 1.7 },
-    cm: { length: 120, width: 60, height: 60, diameter: 90, hlength: 120, wall: 90, coneh: 30, depth: 50 },
-    m: { length: 1.2, width: 0.6, height: 0.6, diameter: 0.9, hlength: 1.2, wall: 0.9, coneh: 0.3, depth: 0.5 }
-  };
+  // Default tank in inches (a 48 × 24 × 24 in aquarium and similar-sized tanks).
+  const DEFAULTS = { length: 48, width: 24, height: 24, diameter: 36, hlength: 48, wall: 36, coneh: 12, depth: 20 };
+  const DEFAULT_UNIT = 'in';
 
   const DIM_FIELDS = ['length', 'width', 'height', 'diameter', 'hlength', 'wall', 'coneh', 'depth'];
 
   const $ = function (id) { return document.getElementById(id); };
   const inputs = {};
   DIM_FIELDS.forEach(function (f) { inputs[f] = $(f); });
-  const unitSel = $('unit');
   const waterSel = $('water');
   const outSel = $('out');
   const shapeButtons = document.querySelectorAll('#shape-group button');
@@ -36,29 +31,39 @@
     return n.toLocaleString(undefined, { maximumFractionDigits: digits, minimumFractionDigits: 0 });
   }
 
+  // Field value in meters, using that field's own unit.
   function num(field) {
+    return CalcUnits.base(field);
+  }
+
+  // Field value as typed, with its unit, e.g. "36 in".
+  function typed(field) {
     const v = parseFloat(inputs[field].value);
-    return isFinite(v) && v > 0 ? v : 0;
+    return (isFinite(v) ? v : 0) + ' ' + CalcUnits.unitLabel(field);
+  }
+
+  // A length in meters, shown in the unit chosen for `field`.
+  function inUnitOf(field, meters) {
+    return fmt(CalcUnits.fromBase(field, meters)) + ' ' + CalcUnits.unitLabel(field);
   }
 
   // ---------- Geometry (all in meters, returns m³) ----------
   function compute() {
-    const k = TO_M[unitSel.value];
-    const d = num('depth') * k;
+    const d = num('depth');
     let cap = 0, water = 0, fullHeight = 0;
 
     if (shape === 'rect') {
-      const L = num('length') * k, W = num('width') * k, H = num('height') * k;
+      const L = num('length'), W = num('width'), H = num('height');
       fullHeight = H;
       cap = L * W * H;
       water = L * W * Math.min(d, H);
     } else if (shape === 'cyl') {
-      const r = num('diameter') * k / 2, H = num('height') * k;
+      const r = num('diameter') / 2, H = num('height');
       fullHeight = H;
       cap = Math.PI * r * r * H;
       water = Math.PI * r * r * Math.min(d, H);
     } else if (shape === 'cone') {
-      const r = num('diameter') * k / 2, Hw = num('wall') * k, hc = num('coneh') * k;
+      const r = num('diameter') / 2, Hw = num('wall'), hc = num('coneh');
       fullHeight = Hw + hc;
       const coneVol = Math.PI * r * r * hc / 3;
       cap = coneVol + Math.PI * r * r * Hw;
@@ -70,13 +75,13 @@
         water = coneVol + Math.PI * r * r * (dd - hc);
       }
     } else if (shape === 'hcyl') {
-      const r = num('diameter') * k / 2, L = num('hlength') * k;
+      const r = num('diameter') / 2, L = num('hlength');
       fullHeight = 2 * r;
       cap = Math.PI * r * r * L;
       water = segmentArea(r, Math.min(d, 2 * r)) * L;
     }
 
-    return { capM3: cap, waterM3: water, overfill: d > fullHeight + 1e-9 && fullHeight > 0, fullHeight: fullHeight / k };
+    return { capM3: cap, waterM3: water, overfill: d > fullHeight + 1e-9 && fullHeight > 0, fullHeight: fullHeight };
   }
 
   function segmentArea(r, d) {
@@ -97,23 +102,21 @@
       : 'Measured from the bottom of the tank.';
   }
 
-  function updateUnitLabels() {
-    document.querySelectorAll('[data-unit]').forEach(function (el) { el.textContent = unitSel.value; });
-  }
-
   function getState() {
-    const st = { shape: shape, unit: unitSel.value, water: waterSel.value, out: outSel.value };
+    const st = { shape: shape, water: waterSel.value, out: outSel.value };
     const visible = DIM_FIELDS.filter(function (f) {
       const wrap = inputs[f].closest('.field');
       return !wrap.hidden;
     });
-    visible.forEach(function (f) { st[f] = inputs[f].value; });
+    visible.forEach(function (f) {
+      st[f] = inputs[f].value;
+      st[f + '_u'] = CalcUnits.unit(f);
+    });
     return st;
   }
 
-  function applyDefaults(unit) {
-    const d = DEFAULTS[unit];
-    DIM_FIELDS.forEach(function (f) { inputs[f].value = d[f]; });
+  function applyDefaults() {
+    DIM_FIELDS.forEach(function (f) { CalcUnits.set(f, DEFAULTS[f], DEFAULT_UNIT); });
   }
 
   // ---------- Render ----------
@@ -131,7 +134,7 @@
       notice.textContent = 'Enter every tank dimension to see the result.';
       notice.hidden = false;
     } else if (r.overfill) {
-      notice.textContent = 'Water depth is more than the tank height (' + fmt(r.fullHeight) + ' ' + unitSel.value + '). Showing a full tank.';
+      notice.textContent = 'Water depth is more than the tank height (' + inUnitOf('depth', r.fullHeight) + '). Showing a full tank.';
       notice.hidden = false;
     } else {
       notice.hidden = true;
@@ -173,14 +176,15 @@
     el('text', { x: x, y: y, 'text-anchor': anchor || 'middle', class: cls || 'dim-text' }, text);
   }
 
-  function dimLabel(v) {
-    return fmt(v) + ' ' + unitSel.value;
+  function dimLabel(field) {
+    return fmt(parseFloat(inputs[field].value)) + ' ' + CalcUnits.unitLabel(field);
   }
 
-  function depthMarker(xLine, yTop, yWater, yBottom, depthVal) {
+  // depthM is the drawn (possibly clamped) depth in meters.
+  function depthMarker(xLine, yTop, yWater, yBottom, depthM) {
     el('line', { x1: xLine, y1: yWater, x2: xLine + 14, y2: yWater, class: 'depth-line' });
     el('line', { x1: xLine + 7, y1: yWater, x2: xLine + 7, y2: yBottom, class: 'depth-line' });
-    label(xLine + 18, (yWater + yBottom) / 2 + 4, 'd ' + dimLabel(depthVal), 'start', 'depth-text');
+    label(xLine + 18, (yWater + yBottom) / 2 + 4, 'd ' + inUnitOf('depth', depthM), 'start', 'depth-text');
   }
 
   function drawViz() {
@@ -230,10 +234,10 @@
 
     // dimensions
     el('path', { class: 'dim', d: 'M' + x0 + ',' + (yb + 12) + ' L' + (x0 + Ls) + ',' + (yb + 12) });
-    label(x0 + Ls / 2, yb + 28, 'L ' + dimLabel(L));
+    label(x0 + Ls / 2, yb + 28, 'L ' + dimLabel('length'));
     el('path', { class: 'dim', d: 'M' + (x0 - 12) + ',' + yb + ' L' + (x0 - 12) + ',' + (yb - Hs) });
-    label(x0 - 16, yb - Hs / 2 + 4, 'H ' + dimLabel(H), 'end');
-    label(x0 + oxs / 2 - 4, yb - Hs - oys / 2 - 6, 'W ' + dimLabel(W), 'end');
+    label(x0 - 16, yb - Hs / 2 + 4, 'H ' + dimLabel('height'), 'end');
+    label(x0 + oxs / 2 - 4, yb - Hs - oys / 2 - 6, 'W ' + dimLabel('width'), 'end');
     if (d > 0) depthMarker(x0 + Ls + oxs + 6, yb - Hs, yw - oys, yb - oys, Math.min(depth, H));
   }
 
@@ -300,12 +304,12 @@
 
     // dimensions
     el('path', { class: 'dim', d: 'M' + left + ',' + yTop + ' L' + right + ',' + yTop });
-    label(cx, yTop - ry - 6, 'D ' + dimLabel(D));
+    label(cx, yTop - ry - 6, 'D ' + dimLabel('diameter'));
     el('path', { class: 'dim', d: 'M' + (left - 12) + ',' + yTop + ' L' + (left - 12) + ',' + yWallBottom });
-    label(left - 16, (yTop + yWallBottom) / 2 + 4, (cone ? 'wall ' : 'H ') + dimLabel(Hw), 'end');
+    label(left - 16, (yTop + yWallBottom) / 2 + 4, (cone ? 'wall ' + dimLabel('wall') : 'H ' + dimLabel('height')), 'end');
     if (cone && hc > 0) {
       el('path', { class: 'dim', d: 'M' + (left - 12) + ',' + yWallBottom + ' L' + (left - 12) + ',' + yBottom });
-      label(left - 16, (yWallBottom + yBottom) / 2 + 4, 'cone ' + dimLabel(hc), 'end');
+      label(left - 16, (yWallBottom + yBottom) / 2 + 4, 'cone ' + dimLabel('coneh'), 'end');
     }
     if (dd > 0) depthMarker(right + 8, yTop, yw, yBottom, dd);
   }
@@ -348,9 +352,9 @@
     el('ellipse', { class: 'tank-line', cx: x1, cy: cy, rx: ex, ry: r });
 
     el('path', { class: 'dim', d: 'M' + x0 + ',' + (yBottom + 12) + ' L' + x1 + ',' + (yBottom + 12) });
-    label((x0 + x1) / 2, yBottom + 28, 'L ' + dimLabel(L));
+    label((x0 + x1) / 2, yBottom + 28, 'L ' + dimLabel('hlength'));
     el('path', { class: 'dim', d: 'M' + (x0 - ex - 10) + ',' + yTop + ' L' + (x0 - ex - 10) + ',' + yBottom });
-    label(x0 - ex - 14, cy + 4, 'D ' + dimLabel(D), 'end');
+    label(x0 - ex - 14, cy + 4, 'D ' + dimLabel('diameter'), 'end');
     if (dd > 0) depthMarker(x1 + ex + 6, yTop, yw, yBottom, dd);
   }
 
@@ -360,17 +364,16 @@
     const out = outSel.value;
     const waterL = r.waterM3 * 1000, capL = r.capM3 * 1000;
     const shapeName = { rect: 'Rectangular', cyl: 'Round', cone: 'Cone-bottom', hcyl: 'Horizontal cylinder' }[shape];
-    const u = unitSel.value;
     const dims = {
-      rect: 'L ' + num('length') + ' × W ' + num('width') + ' × H ' + num('height') + ' ' + u,
-      cyl: 'D ' + num('diameter') + ' × H ' + num('height') + ' ' + u,
-      cone: 'D ' + num('diameter') + ', wall ' + num('wall') + ', cone ' + num('coneh') + ' ' + u,
-      hcyl: 'D ' + num('diameter') + ' × L ' + num('hlength') + ' ' + u
+      rect: 'L ' + typed('length') + ' × W ' + typed('width') + ' × H ' + typed('height'),
+      cyl: 'D ' + typed('diameter') + ' × H ' + typed('height'),
+      cone: 'D ' + typed('diameter') + ', wall ' + typed('wall') + ', cone ' + typed('coneh'),
+      hcyl: 'D ' + typed('diameter') + ' × L ' + typed('hlength')
     }[shape];
     const kg = waterL * DENSITY[waterSel.value];
     return [
       'Tank Volume Calculator',
-      shapeName + ' tank: ' + dims + ', water depth ' + num('depth') + ' ' + u,
+      shapeName + ' tank: ' + dims + ', water depth ' + typed('depth'),
       'Water volume: ' + fmt(waterL / L_PER[out]) + ' ' + OUT_LABEL[out] + ' (' + fmt(waterL) + ' L)',
       'Total capacity: ' + fmt(capL / L_PER[out]) + ' ' + OUT_LABEL[out],
       'Fill level: ' + fmt(capL ? waterL / capL * 100 : 0, 1) + '%',
@@ -387,18 +390,7 @@
   DIM_FIELDS.forEach(function (f) { inputs[f].addEventListener('input', render); });
   [waterSel, outSel].forEach(function (s) { s.addEventListener('change', render); });
 
-  unitSel.addEventListener('change', function () {
-    // Convert existing values so the tank stays the same size in the new unit.
-    const from = unitSel.dataset.prev || 'in';
-    const factor = TO_M[from] / TO_M[unitSel.value];
-    DIM_FIELDS.forEach(function (f) {
-      const v = parseFloat(inputs[f].value);
-      if (isFinite(v)) inputs[f].value = +(v * factor).toPrecision(4);
-    });
-    unitSel.dataset.prev = unitSel.value;
-    updateUnitLabels();
-    render();
-  });
+  CalcUnits.init(render);
 
   $('btn-link').addEventListener('click', function () {
     CalcShare.copy(CalcShare.buildUrl(getState()), 'Link copied');
@@ -410,29 +402,26 @@
     CalcShare.share({ title: 'Tank Volume Calculator', text: resultsText(), url: CalcShare.buildUrl(getState()) });
   });
   $('btn-reset').addEventListener('click', function () {
-    unitSel.value = 'in';
-    unitSel.dataset.prev = 'in';
     waterSel.value = 'fresh';
     outSel.value = 'gal';
-    applyDefaults('in');
+    applyDefaults();
     setShape('rect');
-    updateUnitLabels();
     render();
   });
 
   // ---------- Init from URL ----------
   (function init() {
     const p = CalcShare.readParams();
-    if (p.unit && TO_M[p.unit]) unitSel.value = p.unit;
     if (p.water && DENSITY[p.water]) waterSel.value = p.water;
     if (p.out && L_PER[p.out]) outSel.value = p.out;
-    applyDefaults(unitSel.value);
+    applyDefaults();
     DIM_FIELDS.forEach(function (f) {
-      if (p[f] !== undefined && isFinite(parseFloat(p[f]))) inputs[f].value = p[f];
+      // Older links used one `unit` for every dimension; per-field `<field>_u` wins.
+      const u = p[f + '_u'] || p.unit;
+      if (p[f] !== undefined && isFinite(parseFloat(p[f]))) CalcUnits.set(f, p[f], u);
+      else if (u) CalcUnits.set(f, inputs[f].value, u);
     });
-    unitSel.dataset.prev = unitSel.value;
     setShape(['rect', 'cyl', 'cone', 'hcyl'].indexOf(p.shape) !== -1 ? p.shape : 'rect');
-    updateUnitLabels();
     render();
   })();
 })();
