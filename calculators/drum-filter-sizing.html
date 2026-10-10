@@ -15,6 +15,7 @@
     .viz .bar-bad { fill: var(--warn-text); }
     .viz .spray { stroke: var(--water-deep); stroke-width: 1.5; stroke-dasharray: 2 3; }
     .viz .trough { fill: none; stroke: var(--tank-stroke); stroke-width: 2; }
+    @media (max-width: 520px) { .two-col.dfs-inputs { grid-template-columns: minmax(0, 1fr); } }
     .viz .accent-text { fill: var(--accent); font-size: 12px; font-weight: 600; font-family: var(--font); }
   </style>
 </head>
@@ -41,7 +42,7 @@
       <section class="card" aria-labelledby="calc-heading">
         <h2 id="calc-heading">Calculator</h2>
 
-        <div class="two-col">
+        <div class="two-col dfs-inputs">
           <div class="field">
             <label for="flow">Flow to the filter</label>
             <div class="input-row"><input id="flow" type="number" inputmode="decimal" min="0" step="any"><select class="unit-select" data-unit-group="flow" data-unit-for="flow" data-unit-default="m3ph" aria-label="Flow unit"></select></div>

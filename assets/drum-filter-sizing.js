@@ -161,7 +161,7 @@
     $('r-tss').textContent = r.feed > 0 ? massTxt(r.tss) + '/day' : '–';
     $('r-tssarea').textContent = r.feed > 0 && drumOk ? fmt(r.tssPerArea) + ' kg/m²/day' : '–';
     $('r-conc').textContent = r.feed > 0 && r.Qm3h > 0 ? fmt(r.concMgL) + ' mg/L' : '–';
-    $('r-bw').textContent = r.bwDay > 0 ? vol(r.bwDay) + '/day' : (r.bwL > 0 || r.n > 0 ? '0' : '–');
+    $('r-bw').textContent = r.bwDay > 0 ? vol(r.bwDay) + '/day' : (r.bwL > 0 || r.n > 0 ? vol(0) + '/day' : '–');
     let bwTxt = '–';
     if (r.bwDay > 0 && r.Qm3h > 0) {
       bwTxt = fmt(r.bwPct, 2) + '%';
@@ -195,16 +195,16 @@
 
   function drawViz(r, ready, drumOk) {
     while (svg.firstChild) svg.removeChild(svg.firstChild);
-    const cx = 150, cy = 122, R = 84;
-    const hx0 = 34, hx1 = 266, hy0 = 22, hy1 = 222;   // filter housing
+    const cx = 150, cy = 114, R = 80;
+    const hx0 = 34, hx1 = 266, hy0 = 18, hy1 = 210;   // filter housing
     const s = drumOk ? Math.min(Math.max(r.s, 0), 1) : 0.65;
     const yw = cy + R - 2 * R * s;                       // inside water level
-    const drop = 12;                                     // outlet level shown lower (schematic)
+    const drop = 14;                                     // outlet level shown lower (schematic)
     const yo = Math.min(yw + drop, hy1 - 4);
 
     // housing and outside (filtered) water
     el('rect', { class: 'tank-glass', x: hx0, y: hy0, width: hx1 - hx0, height: hy1 - hy0 });
-    el('rect', { class: 'water', x: hx0, y: yo, width: hx1 - hx0, height: hy1 - yo, 'fill-opacity': 0.45 });
+    el('rect', { class: 'water', x: hx0, y: yo, width: hx1 - hx0, height: hy1 - yo, style: 'fill-opacity:.4' });
     el('line', { class: 'water-top', x1: hx0, y1: yo, x2: hx1, y2: yo });
 
     // drum interior and inside (unfiltered) water
@@ -235,7 +235,7 @@
     // diameter dimension
     el('path', { class: 'dim', d: 'M' + (cx - R) + ',' + (hy1 + 10) + ' L' + (cx + R) + ',' + (hy1 + 10) +
       ' M' + (cx - R) + ',' + (hy1 + 5) + ' v10 M' + (cx + R) + ',' + (hy1 + 5) + ' v10' });
-    label(cx, hy1 + 24, drumOk ? 'D ' + typed('diameter') + ' · L ' + typed('length') : 'D –');
+    label(cx, hy1 + 28, drumOk ? 'D ' + typed('diameter') + ' · L ' + typed('length') : 'D –');
 
     // level leaders and right-hand labels
     const lx = 276;
@@ -250,7 +250,7 @@
     label(lx + 4, 190, 'thick arc = filtering screen', 'start');
 
     // area bars
-    const bx = 20, bw = 440, by = 262;
+    const bx = 20, bw = 440, by = 264;
     if (ready && drumOk) {
       const max = Math.max(r.Areq, r.Asub) * 1.08;
       const wReq = bw * r.Areq / max, wAv = bw * r.Asub / max;
@@ -258,7 +258,7 @@
       el('rect', { class: r.ok ? 'bar-ok' : 'bar-bad', x: bx, y: by + 26, width: wAv, height: 14, rx: 3 });
       el('line', { class: 'depth-line', x1: bx + wReq, y1: by - 4, x2: bx + wReq, y2: by + 44 });
       label(bx, by - 5, 'Required ' + area(r.Areq), 'start');
-      label(bx, by + 54, 'Available (submerged) ' + area(r.Asub), 'start', r.ok ? 'accent-text' : 'dim-text');
+      label(bx, by + 52, 'Available (submerged) ' + area(r.Asub), 'start', r.ok ? 'accent-text' : 'dim-text');
     } else {
       label(240, by + 20, 'Enter flow, loading and drum size to compare areas');
     }

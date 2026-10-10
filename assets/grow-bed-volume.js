@@ -17,8 +17,6 @@
     tomato: { name: 'Tomato', spacing: 50, min: 3, max: 5, range: '40–60 cm, 3–5 plants per m²' }
   };
 
-  const NFT_MIN_HOLE_SPACING = 0.21; // m, FAO TP 589
-
   const FIELDS = {
     'm-length': 120, 'm-width': 100, 'm-depth': 30, 'm-beds': 1, 'm-por': 40,
     'd-length': 240, 'd-width': 120, 'd-water': 30, 'd-raft': 4, 'd-beds': 1,
@@ -120,7 +118,6 @@
       r.sites = r.perRow * n;
       if (pitch > 0 && pitch < w) r.warn.push('Channel spacing is less than the channel width; the channels would overlap.');
       if (!(pitch > 0)) r.warn.push('Enter the channel spacing to get the planting area and density.');
-      if (s > 0 && s < NFT_MIN_HOLE_SPACING - 1e-9) r.warn.push('FAO suggests at least 21 cm between NFT plant hole centres.');
       r.dims = { n: n, Lc: Lc, w: w, H: H, h: h, pitch: pitch, round: round };
     }
 
@@ -309,14 +306,13 @@
     if (type === 'media') drawMedia(r);
     else if (type === 'dwc') drawDwc(r);
     else drawNft(r);
-    if (exaggerated) label(VW - 8, VH - 6, 'depth exaggerated', 'end');
   }
 
   // Shared box layout: horizontal scale from length, vertical may be exaggerated.
   function layout(lenM, depthM, box) {
     const sx = Math.min(box.w / lenM, box.h / depthM);
     let sy = sx;
-    const minH = Math.min(box.h, 70);
+    const minH = Math.min(box.h, 75);
     if (depthM * sy < minH) { sy = minH / depthM; exaggerated = true; }
     const w = lenM * sx, h = depthM * sy;
     return { sx: sx, sy: sy, x0: box.x + (box.w - w) / 2, w: w, h: h };
@@ -324,7 +320,7 @@
 
   function drawMedia(r) {
     const D = r.dims;
-    const box = { x: 70, y: 80, w: 310, h: 190 };
+    const box = { x: 70, y: 70, w: 310, h: 180 };
     const g = layout(D.L, D.D, box);
     const yTop = box.y + (box.h - g.h) / 2 + 10, yb = yTop + g.h;
     const x0 = g.x0, x1 = x0 + g.w;
@@ -349,6 +345,7 @@
 
     el('path', { class: 'dim', d: 'M' + x0 + ',' + (yb + 12) + ' L' + x1 + ',' + (yb + 12) });
     label((x0 + x1) / 2, yb + 28, 'L ' + dimLabel('m-length'));
+    if (exaggerated) label(VW - 8, yb + 46, 'depth exaggerated', 'end');
     el('path', { class: 'dim', d: 'M' + (x0 - 12) + ',' + yTop + ' L' + (x0 - 12) + ',' + yb });
     label(x0 - 16, (yTop + yb) / 2 + 4, 'D ' + dimLabel('m-depth'), 'end');
     label(x1 + 10, (yTop + yb) / 2 - 4, 'flooded', 'start', 'depth-text');
@@ -359,7 +356,7 @@
   function drawDwc(r) {
     const D = r.dims;
     const wallH = D.d + Math.max(D.t, 0) + Math.max(D.d * 0.12, 0.02);
-    const box = { x: 70, y: 80, w: 310, h: 190 };
+    const box = { x: 70, y: 70, w: 310, h: 180 };
     const g = layout(D.L, wallH, box);
     const yTop = box.y + (box.h - g.h) / 2 + 10, yb = yTop + g.h;
     const x0 = g.x0, x1 = x0 + g.w;
@@ -377,6 +374,7 @@
 
     el('path', { class: 'dim', d: 'M' + x0 + ',' + (yb + 12) + ' L' + x1 + ',' + (yb + 12) });
     label((x0 + x1) / 2, yb + 28, 'L ' + dimLabel('d-length'));
+    if (exaggerated) label(VW - 8, yb + 46, 'depth exaggerated', 'end');
     if (tPx > 0) label(x0 - 8, raftTop + tPx / 2 + 4, 'raft ' + dimLabel('d-raft'), 'end');
     el('line', { x1: x1 + 6, y1: yw, x2: x1 + 20, y2: yw, class: 'depth-line' });
     el('line', { x1: x1 + 13, y1: yw, x2: x1 + 13, y2: yb, class: 'depth-line' });
@@ -400,10 +398,11 @@
     el('rect', { class: 'bed-wall', x: x0, y: yCh, width: lenPx, height: chH });
     el('path', { class: 'dim', d: 'M' + x0 + ',' + (yCh + chH + 10) + ' L' + (x0 + lenPx) + ',' + (yCh + chH + 10) });
     label(x0 + lenPx / 2, yCh + chH + 25, 'L ' + dimLabel('n-length'));
+    if (exaggerated) label(x0 + lenPx, yCh + chH + 25, 'height exaggerated', 'end');
 
     // Bottom panel: end view of the channels (to scale) with the film.
-    const top = 160, panelH = 105;
-    const shown = Math.min(D.n, 8);
+    const top = 175, panelH = 110;
+    const shown = Math.min(D.n, 4);
     const pitch = D.pitch > 0 ? Math.max(D.pitch, D.w) : D.w * 1.5;
     const totalW = (shown - 1) * pitch + D.w;
     const s = Math.min(380 / totalW, panelH / D.H);

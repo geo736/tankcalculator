@@ -7,12 +7,13 @@
   <meta name="description" content="Estimate how long backup batteries will run air pumps, aerators, water pumps and other critical aquaculture, aquaponics and hydroponics loads during a power outage.">
   <link rel="stylesheet" href="../assets/style.css">
   <style>
-    .load-list { display: grid; gap: 10px; margin-bottom: 10px; }
+    .load-list { display: grid; grid-template-columns: minmax(0, 1fr); gap: 10px; margin-bottom: 10px; }
     .load-row {
       border: 1px solid var(--border);
       border-radius: 12px;
       background: var(--surface-2);
       padding: 10px;
+      min-width: 0;
     }
     .load-head { display: flex; gap: 8px; align-items: center; margin-bottom: 8px; }
     .load-head .swatch { width: 12px; height: 12px; border-radius: 3px; flex: none; }

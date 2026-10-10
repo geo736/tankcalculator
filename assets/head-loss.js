@@ -347,7 +347,7 @@
 
     // Valve symbols on the riser (only if present)
     if (good) {
-      let vy = py - 26;
+      let vy = y0 - 18;
       if (count('ncheck') > 0) {
         el('path', { class: 'hl-valve', d: 'M' + (riserX - 7) + ',' + (vy - 7) + ' L' + (riserX + 7) + ',' + (vy - 7) + ' L' + (riserX - 7) + ',' + (vy + 7) + ' L' + (riserX + 7) + ',' + (vy + 7) + 'Z' });
         el('text', { x: riserX - 11, y: vy + 4, 'text-anchor': 'end', class: 'dim-text' }, 'check');
@@ -361,8 +361,9 @@
     }
 
     // Pipe label
-    const pipeLabel = good ? 'L ' + typed('len') + ', ID ' + typed('diam') : 'pipe';
-    el('text', { x: 196, y: tBot + 16, 'text-anchor': 'middle', class: 'dim-text' }, pipeLabel);
+    const dl = function (id) { return fmt(parseFloat($(id).value)) + ' ' + CalcUnits.unitLabel(id); };
+    const pipeLabel = good ? 'L ' + dl('len') + ', ID ' + dl('diam') : 'pipe';
+    el('text', { x: 152, y: tBot + 16, 'text-anchor': 'start', class: 'dim-text' }, pipeLabel);
 
     // Stacked TDH bar
     const bx = 318, bw = 34;
