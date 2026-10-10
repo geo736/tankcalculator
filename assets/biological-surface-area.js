@@ -286,7 +286,7 @@
     }
 
     // ----- Right: vessel with media -----
-    const vx = 300, vw = 150, vTop = 60, vBot = 270;
+    const vx = 290, vw = 136, vTop = 60, vBot = 270;
     const vh = vBot - vTop;
     label(vx + vw / 2, 24, 'Filter vessel', 'middle', 'head-text');
 

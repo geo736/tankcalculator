@@ -211,10 +211,12 @@
 
       <h3>Formulas</h3>
       <p>With F = daily feed (g/day), A = grow area (m²), R<sub>low</sub> and R<sub>high</sub> = the ends of the ratio range (g/m²/day):</p>
-      <div class="formula">Area needed:   A<sub>min</sub> = F ÷ R<sub>high</sub>     A<sub>max</sub> = F ÷ R<sub>low</sub>
-Design point:  A<sub>design</sub> = F ÷ ((R<sub>low</sub> + R<sub>high</sub>) ÷ 2)
-Feed supported: F<sub>min</sub> = A × R<sub>low</sub>     F<sub>max</sub> = A × R<sub>high</sub>
-Actual ratio:  R = F ÷ A</div>
+      <div class="formula">A<sub>min</sub> = F ÷ R<sub>high</sub>
+A<sub>max</sub> = F ÷ R<sub>low</sub>
+A<sub>design</sub> = F ÷ R<sub>mid</sub>,  R<sub>mid</sub> = (R<sub>low</sub> + R<sub>high</sub>) ÷ 2
+F<sub>min</sub> = A × R<sub>low</sub>
+F<sub>max</sub> = A × R<sub>high</sub>
+R<sub>actual</sub> = F ÷ A</div>
       <p>Fish biomass from a feeding rate p (% of body weight per day):</p>
       <div class="formula">Biomass (kg) = F (kg/day) ÷ (p ÷ 100)</div>
       <p>The design point uses the middle of the ratio range, the same approach as the SRAC worked example, which picks 80 g/m²/day from the 60–100 range [2]. The status line compares your actual ratio R with the range: above R<sub>high</sub> means too little grow area (or too much feed), below R<sub>low</sub> means too much grow area (or too little feed).</p>

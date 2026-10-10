@@ -259,7 +259,7 @@
         const y = yOf(pctLim);
         el('line', { x1: CH.l, y1: y, x2: CH.r, y2: y, class: 'limit' });
         const pointLeft = r.pH < (PH_MIN + PH_MAX) / 2;
-        el('text', { x: pointLeft ? CH.r - 4 : CH.l + 4, y: y + 14, 'text-anchor': pointLeft ? 'end' : 'start', class: 'limit-text' }, '0.02 mg/L NH₃ at this TAN');
+        el('text', { x: pointLeft ? CH.r - 4 : CH.l + 4, y: pointLeft ? y + 14 : y - 5, 'text-anchor': pointLeft ? 'end' : 'start', class: 'limit-text' }, '0.02 mg/L NH₃ at this TAN');
       }
     }
 
