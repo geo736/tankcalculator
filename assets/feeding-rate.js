@@ -239,7 +239,7 @@
     [0.5, 1, 2, 5, 10, 20, 40].forEach(function (p) {
       const y = sy(p);
       el('line', { class: 'grid', x1: C.l, y1: y, x2: C.r, y2: y });
-      el('text', { x: C.l - 6, y: y + 4, 'text-anchor': 'end', class: 'dim-text' }, fmt(p) + '%');
+      if (p > YMIN) el('text', { x: C.l - 6, y: y + 4, 'text-anchor': 'end', class: 'dim-text' }, fmt(p) + '%');
     });
     [0.1, 1, 10, 100, 1000].forEach(function (g) {
       const x = sx(g);

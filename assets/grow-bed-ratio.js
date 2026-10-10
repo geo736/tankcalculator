@@ -30,9 +30,9 @@
     const digits = maxFrac !== undefined ? maxFrac : abs >= 1000 ? 0 : abs >= 100 ? 1 : abs >= 1 ? 2 : 3;
     return n.toLocaleString(undefined, { maximumFractionDigits: digits, minimumFractionDigits: 0 });
   }
-  function vol(L) { return fmt(CalcUnits.convert('volume', L, 'L', outV.value)) + ' ' + CalcUnits.label('volume', outV.value); }
-  function area(m2) { return fmt(CalcUnits.convert('area', m2, 'm2', outA.value)) + ' ' + CalcUnits.label('area', outA.value); }
-  function ratioText(r) { return '1 : ' + fmt(r, r >= 10 ? 1 : 2); }
+  function vol(L) { return fmt(CalcUnits.convert('volume', L, 'L', outV.value)) + '\u00a0' + CalcUnits.label('volume', outV.value); }
+  function area(m2) { return fmt(CalcUnits.convert('area', m2, 'm2', outA.value)) + '\u00a0' + CalcUnits.label('area', outA.value); }
+  function ratioText(r) { return '1\u00a0:\u00a0' + fmt(r, r >= 10 ? 1 : 2); }
   function typed(id) {
     const v = parseFloat($(id).value);
     return (isFinite(v) ? v : 0) + (CalcUnits.unitLabel(id) ? ' ' + CalcUnits.unitLabel(id) : '');

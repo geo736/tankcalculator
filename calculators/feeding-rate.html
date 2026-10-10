@@ -8,6 +8,7 @@
   <link rel="stylesheet" href="../assets/style.css">
   <style>
     .segmented.two { grid-template-columns: repeat(2, 1fr); }
+    @media (max-width: 480px) { .two-col.stack-sm { grid-template-columns: minmax(0, 1fr); gap: 0; } }
     .guide-hint.out { color: var(--warn-text); }
     .viz .band { fill: var(--accent-soft); stroke: var(--accent); stroke-width: 1; }
     .viz .band-text { fill: var(--accent-strong); font-size: 11px; font-family: var(--font); }
@@ -60,7 +61,7 @@
           </div>
         </div>
 
-        <div class="two-col">
+        <div class="two-col stack-sm">
           <div class="field" data-for="count">
             <label for="count">Number of fish</label>
             <div class="input-row"><input id="count" type="number" inputmode="numeric" min="0" step="1"><span class="unit">fish</span></div>
@@ -91,8 +92,8 @@
 
         <div class="two-col">
           <div class="field">
-            <label for="rate">Feeding rate</label>
-            <div class="input-row"><input id="rate" type="number" inputmode="decimal" min="0" step="any"><span class="unit">% BW/day</span></div>
+            <label for="rate">Feeding rate (body weight)</label>
+            <div class="input-row"><input id="rate" type="number" inputmode="decimal" min="0" step="any"><span class="unit">%/day</span></div>
           </div>
           <div class="field">
             <label for="feeds">Feedings per day</label>
