@@ -38,6 +38,8 @@
     .add-opt { display: flex; gap: 8px; }
     .add-opt select { flex: 1; min-width: 0; }
     .add-opt .btn { flex: none; }
+    .table-scroll { overflow-x: auto; }
+    .article .table-scroll table { font-size: .88rem; }
     .btn:disabled { opacity: .5; cursor: default; }
     .result-main .value { font-size: 1.5rem; }
     .result-main .sub { font-size: .9rem; color: var(--text-muted); margin-top: 4px; }
@@ -45,7 +47,7 @@
     .cmp-wrap { overflow-x: auto; margin: 12px 0 4px; border: 1px solid var(--border); border-radius: 10px; }
     .cmp { border-collapse: collapse; width: 100%; font-size: .82rem; font-variant-numeric: tabular-nums; }
     .cmp th, .cmp td { padding: 6px 8px; border-bottom: 1px solid var(--border); text-align: right; white-space: nowrap; }
-    .cmp thead th { background: var(--surface-2); font-weight: 600; }
+    .cmp thead th { background: var(--surface-2); font-weight: 600; white-space: normal; vertical-align: bottom; min-width: 86px; max-width: 130px; line-height: 1.3; }
     .cmp th[scope="row"], .cmp thead th:first-child { text-align: left; font-weight: 500; color: var(--text-muted); white-space: normal; min-width: 96px; position: sticky; left: 0; background: var(--surface); }
     .cmp thead th:first-child { background: var(--surface-2); }
     .cmp tbody tr:last-child th, .cmp tbody tr:last-child td { border-bottom: 0; }
@@ -102,8 +104,8 @@
           <div class="field">
             <label for="method">Different lives</label>
             <select id="method">
-              <option value="eav">Replace like-for-like; rank by annual value</option>
-              <option value="npv">No replacement; rank by NPV over period</option>
+              <option value="eav">Replace; rank by annual value</option>
+              <option value="npv">No replacement; rank by NPV</option>
             </select>
           </div>
         </div>
@@ -154,7 +156,7 @@
       <!-- Visualization -->
       <section class="card viz-card" aria-labelledby="viz-heading">
         <h2 id="viz-heading">Visualization</h2>
-        <svg class="viz" id="viz" viewBox="0 0 480 440" role="img" aria-label="Cumulative discounted cash flow of each option by year, and a bar chart of net present value"></svg>
+        <svg class="viz" id="viz" viewBox="0 0 480 450" role="img" aria-label="Cumulative discounted cash flow of each option by year, and a bar chart of net present value"></svg>
         <p class="viz-caption" id="viz-caption"></p>
       </section>
     </div>
@@ -211,14 +213,14 @@ ROI     = (total benefits − total costs) ÷ total costs</div>
 
       <h3>Worked example (the default inputs)</h3>
       <p>Discount rate 6%, period 10 years (the longest life), three options:</p>
-      <table>
+      <div class="table-scroll"><table>
         <thead><tr><th>Option</th><th>Upfront</th><th>Yearly costs</th><th>Yearly benefits</th><th>Life</th><th>Salvage</th></tr></thead>
         <tbody>
           <tr><td>Do nothing</td><td>$0</td><td>$0</td><td>$0</td><td>10 yr</td><td>$0</td></tr>
           <tr><td>Switch HPS to LED</td><td>$6,000</td><td>$100</td><td>$1,800, +3%/yr</td><td>10 yr</td><td>$0</td></tr>
           <tr><td>Second grow bed</td><td>$2,500</td><td>$400</td><td>$1,300</td><td>5 yr</td><td>$200</td></tr>
         </tbody>
-      </table>
+      </table></div>
       <p><strong>LED lights.</strong> The yearly costs are worth $100 × 7.3601 = $736 today (7.3601 is the sum of 1/1.06^t for t = 1–10), so PV of costs = $6,000 + $736 = $6,736. The savings start at $1,800 and grow 3% a year; discounting each year and adding gives PV of benefits = $14,974. NPV = $14,974 − $6,736 = <strong>$8,238</strong>. CRF for 10 years at 6% is 0.13587, so EAV = $8,238 × 0.13587 = <strong>$1,119 per year</strong>. BCR = 14,974 ÷ 6,736 = 2.22. Cash flow is $1,700 in year 1, $1,754 in year 2, $1,810 in year 3, so after 3 years $5,264 of the $6,000 has come back; year 4 brings $1,867, giving a simple payback of 3 + 736 ÷ 1,867 = 3.4 years (discounted: 3.9 years). IRR is 28.3%, and ROI is ($20,635 − $7,000) ÷ $7,000 = 195%. NPV would still be zero with first-year savings of only $810.</p>
       <p><strong>Second grow bed.</strong> One 5-year life: −$2,500 + $900 × 4.2124 + $200 ÷ 1.06^5 = $1,441, and CRF(6%, 5 yr) = 0.23740, so EAV = <strong>$342 per year</strong>. Over the 10-year period the bed is bought twice (year 0 and year 5), so NPV = $1,441 × (1 + 1/1.06^5) = <strong>$2,517</strong>, BCR 1.34, payback 2,500 ÷ 900 = 2.8 years, IRR 24.7%.</p>
       <p><strong>Do nothing</strong> scores zero on every measure. The calculator ranks LED first ($1,119/yr), the grow bed second ($342/yr) and doing nothing third. The grow bed pays back sooner, but the LED switch earns far more over its life.</p>

@@ -91,7 +91,8 @@
   };
 
   const MAX_ROWS = 10;
-  const COLORS = ['var(--water)', 'var(--accent)', 'var(--c-hydroponics)', '#c7792b', '#8a63c9', 'var(--c-aquaculture)', '#c4537a', '#3aa7a0', '#9c8a2e', '#6c7fa8'];
+  // No plain water blue first: drain-back layers sit on top of the blue running water in the sump.
+  const COLORS = ['var(--accent)', '#c7792b', '#8a63c9', 'var(--c-hydroponics)', '#c4537a', '#3aa7a0', '#9c8a2e', '#6c7fa8', 'var(--c-aquaculture)', '#b0563a'];
   const SUMP_LEN = ['slen', 'swid', 'sdia', 'sdepth', 'srun', 'smin'];
 
   const $ = function (id) { return document.getElementById(id); };
@@ -489,7 +490,7 @@
   function drawIcon(s, x, y, w, h) {
     const c = s.color;
     if (s.t === 'pipe') {
-      el('path', { d: 'M' + (x + 6) + ',' + (y + 6) + ' H' + (x + w - 10) + ' V' + (y + h), class: 'tank-line', 'stroke-width': 7, stroke: c, style: 'stroke:' + c, 'stroke-linecap': 'round', 'stroke-linejoin': 'round' });
+      el('path', { d: 'M' + (x + 6) + ',' + (y + 6) + ' H' + (x + w - 10) + ' V' + (y + h), fill: 'none', style: 'stroke:' + c + ';stroke-width:7', 'stroke-linecap': 'round', 'stroke-linejoin': 'round' });
       return;
     }
     if (s.t === 'nft') {

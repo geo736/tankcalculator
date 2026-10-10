@@ -86,7 +86,7 @@
   }
 
   function yrs(y) {
-    if (y === null) return 'no investment';
+    if (y === null) return 'none';
     if (!isFinite(y)) return 'not within period';
     return fmt(y, 1) + ' yr';
   }
@@ -423,7 +423,7 @@
   function renderTable(m) {
     const o = m.opts;
     const head = '<tr><th scope="col">Metric</th>' + o.map(function (x) {
-      return '<th scope="col"><span class="rank-dot" style="background:var(--cb' + (x.slot + 1) + ')"></span>' + esc(short(x.name, 22)) + '</th>';
+      return '<th scope="col"><span class="rank-dot" style="background:var(--cb' + (x.slot + 1) + ')"></span>' + esc(short(x.name, 28)) + '</th>';
     }).join('') + '</tr>';
     const row = function (label, f, title) {
       return '<tr><th scope="row"' + (title ? ' title="' + esc(title) + '"' : '') + '>' + label + '</th>' +
@@ -452,9 +452,18 @@
 
   // ---------- SVG drawing ----------
   const NS = 'http://www.w3.org/2000/svg';
-  const VW = 480, VH = 440;
+  // The viewBox narrows on phones so labels stay readable (the SVG scales to the card width).
+  let VW = 480, VH = 450, NAME = 22;
   const LINE = { l: 56, r: 64, t: 46, b: 270 };   // cumulative chart box (b = y of bottom)
-  const BAR = { l: 150, r: 74, t: 318, b: 428 }; // NPV bars box
+  const BAR = { l: 150, r: 74, t: 336, b: 440 };  // NPV bars box
+
+  function layout() {
+    const w = svg.getBoundingClientRect().width || 480;
+    VW = w < 440 ? 360 : 480;
+    BAR.l = VW < 480 ? 116 : 150;
+    NAME = VW < 480 ? 16 : 22;
+    svg.setAttribute('viewBox', '0 0 ' + VW + ' ' + VH);
+  }
 
   function el(name, attrs, text, parent) {
     const e = document.createElementNS(NS, name);
@@ -475,16 +484,17 @@
 
   function drawViz(m) {
     while (svg.firstChild) svg.removeChild(svg.firstChild);
+    layout();
     const T = m.T;
     const x0 = LINE.l, x1 = VW - LINE.r, yTop = LINE.t, yBot = LINE.b;
 
     // Legend (identity never by colour alone: dash pattern + name)
-    const per = m.opts.length <= 2 ? 2 : 2;
+    const colW = (VW - 8) / 2;
     m.opts.forEach(function (o, i) {
-      const col = i % per, rowi = Math.floor(i / per);
-      const lx = 8 + col * 236, ly = 12 + rowi * 16;
+      const col = i % 2, rowi = Math.floor(i / 2);
+      const lx = 8 + col * colW, ly = 12 + rowi * 16;
       el('line', { x1: lx, y1: ly, x2: lx + 22, y2: ly, class: 'cb-line', style: 'stroke:var(--cb' + (o.slot + 1) + ')', 'stroke-dasharray': DASH[o.slot] });
-      el('text', { x: lx + 28, y: ly + 4, class: 'dim-text' }, short(o.name, 30));
+      el('text', { x: lx + 28, y: ly + 4, class: 'dim-text' }, short(o.name, VW < 480 ? 24 : 30));
     });
 
     // y scale over all cumulative discounted values
@@ -546,7 +556,7 @@
     m.opts.forEach(function (o, i) {
       const cy = BAR.t + slotH * (i + 0.5);
       const a = BX(Math.min(0, o.res.npv)), b = BX(Math.max(0, o.res.npv));
-      el('text', { x: bx0 - 8, y: cy + 4, 'text-anchor': 'end', class: 'dim-text' }, short(o.name, 22));
+      el('text', { x: bx0 - 8, y: cy + 4, 'text-anchor': 'end', class: 'dim-text' }, short(o.name, NAME));
       const w = Math.max(b - a, 1);
       const bar = el('rect', { x: a, y: cy - barH / 2, width: w, height: barH, rx: 3, class: 'cb-bar', style: 'fill:var(--cb' + (o.slot + 1) + ')' });
       tip(bar, o.name + ': NPV ' + money(o.res.npv, true) + ', ' + money(o.eav, true) + ' per year');
@@ -606,6 +616,12 @@
   ['cur', 'method'].forEach(function (f) { $(f).addEventListener('change', render); });
 
   CalcUnits.init(render);
+
+  let lastW = 0;
+  window.addEventListener('resize', function () {
+    const w = svg.getBoundingClientRect().width;
+    if (Math.abs(w - lastW) > 1) { lastW = w; render(); }
+  });
 
   CURRENCIES.forEach(function (c) {
     const o = document.createElement('option');
