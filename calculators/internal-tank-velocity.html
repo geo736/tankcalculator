@@ -7,6 +7,7 @@
   <meta name="description" content="Estimate the rotational water velocity in a circular fish tank from the inlet jets, check self-cleaning and fish swimming speed in body lengths per second, and size inlet ports for a target velocity.">
   <link rel="stylesheet" href="../assets/style.css">
   <style>
+    @media (max-width: 480px) { .two-col.stack-sm { grid-template-columns: minmax(0, 1fr); gap: 0; } }
     .opt { font-weight: 400; color: var(--text-muted); }
     .result-main .sub { font-size: .9rem; color: var(--text-muted); margin-top: 2px; }
     .pill { display: inline-block; padding: 1px 8px; border-radius: 999px; font-size: .85rem; font-weight: 600; }
@@ -56,7 +57,7 @@
       <section class="card" aria-labelledby="calc-heading">
         <h2 id="calc-heading">Calculator</h2>
 
-        <div class="two-col">
+        <div class="two-col stack-sm">
           <div class="field">
             <label for="diameter">Tank diameter</label>
             <div class="input-row"><input id="diameter" type="number" inputmode="decimal" min="0" step="any"><select class="unit-select" data-unit-group="length" data-unit-for="diameter" data-unit-default="m" aria-label="Tank diameter unit"></select></div>

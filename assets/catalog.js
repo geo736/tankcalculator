@@ -52,7 +52,7 @@ window.CALCULATORS = [
     icon: '<path d="M3 6h7v12h11"/><path d="M17 15l4 3-4 3"/>' },
   { slug: 'hvac', name: 'Greenhouse HVAC', cat: 'hydroponics', tags: ['hydroponics', 'aquaponics', 'aquaculture'], status: 'soon',
     icon: '<path d="M3 11 12 4l9 7v9H3z"/><path d="M9 20v-5h6v5"/>' },
-  { slug: 'internal-tank-velocity', name: 'Internal Tank Velocity', cat: 'aquaculture', tags: ['aquaculture', 'aquaponics'], status: 'soon',
+  { slug: 'internal-tank-velocity', name: 'Internal Tank Velocity', blurb: 'Jet-driven rotation, self-cleaning', cat: 'aquaculture', tags: ['aquaculture', 'aquaponics'], status: 'live',
     icon: '<circle cx="12" cy="12" r="8"/><path d="M12 7a5 5 0 1 1-5 5"/><path d="M7 9v3h3"/>' },
   { slug: 'discharge', name: 'Discharge', cat: 'aquaculture', tags: ['aquaculture', 'aquaponics', 'hydroponics'], status: 'soon',
     icon: '<path d="M4 4h10v10H4z"/><path d="M14 11h3c2 0 3 2 3 4v5"/>' },

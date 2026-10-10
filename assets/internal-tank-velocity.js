@@ -95,7 +95,7 @@
   function cleanStatus(r) {
     if (!isFinite(r.vLow)) return null;
     if (r.vLow >= CLEAN_HIGH) return { ok: true, text: 'Yes, above 30 cm/s' };
-    if (r.vLow >= CLEAN_LOW) return { ok: true, text: 'Likely, in the 15–30 cm/s band' + (r.vHigh >= CLEAN_HIGH ? ' or above' : '') };
+    if (r.vLow >= CLEAN_LOW) return { ok: true, text: 'Likely, ' + (r.vHigh >= CLEAN_HIGH ? 'in or above' : 'in') + ' the band' };
     if (r.vHigh >= CLEAN_LOW) return { ok: false, text: 'Borderline, near 15 cm/s' };
     return { ok: false, text: 'Unlikely, below 15 cm/s' };
   }
@@ -205,7 +205,7 @@
   function fish(x, y, len) { fishIn(svg, x, y, len); }
 
   function fishIn(parent, x, y, len) {
-    const b = len * 0.78, h = len * 0.17, t = len * 0.22;
+    const b = len * 0.78, h = len * 0.12, t = len * 0.22;
     const bx = x - b;
     el('path', { class: 'fish', d:
       'M' + p(x, y) + ' Q' + p(x - b * 0.45, y - h * 2) + ' ' + p(bx, y) +
