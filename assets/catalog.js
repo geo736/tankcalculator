@@ -56,7 +56,7 @@ window.CALCULATORS = [
     icon: '<circle cx="12" cy="12" r="8"/><path d="M12 7a5 5 0 1 1-5 5"/><path d="M7 9v3h3"/>' },
   { slug: 'discharge', name: 'Discharge', cat: 'aquaculture', tags: ['aquaculture', 'aquaponics', 'hydroponics'], status: 'soon',
     icon: '<path d="M4 4h10v10H4z"/><path d="M14 11h3c2 0 3 2 3 4v5"/>' },
-  { slug: 'battery-life', name: 'Battery Life Estimator', cat: 'aquaculture', tags: ['aquaculture', 'aquaponics', 'hydroponics'], status: 'soon',
+  { slug: 'battery-life', name: 'Battery Life Estimator', blurb: 'Backup runtime for pumps', cat: 'aquaculture', tags: ['aquaculture', 'aquaponics', 'hydroponics'], status: 'live',
     icon: '<rect x="3" y="7" width="16" height="10" rx="2"/><path d="M21 11v2"/><path d="M7 10v4M10 10v4"/>' },
   { slug: 'uv-sterilizer-sizing', name: 'UV Filtration Sizing', cat: 'aquaculture', tags: ['aquaculture', 'aquaponics', 'hydroponics'], status: 'soon',
     icon: '<rect x="3" y="9" width="18" height="6" rx="3"/><path d="M8 5v2M12 4v3M16 5v2M8 17v2M12 17v3M16 17v2"/>' },
