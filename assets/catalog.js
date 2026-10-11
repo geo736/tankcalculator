@@ -86,6 +86,6 @@ window.GUIDES = [
     icon: '<circle cx="7" cy="14" r="4"/><path d="M11 14h4l2-4h4M17 10v8"/><path d="M5 6h4M7 4v4"/>' },
   { slug: 'lighting-design', name: 'Design a grow light system', blurb: 'From crop light needs to PPFD, fixture count and layout, power and running cost.', cat: 'hydroponics', tags: ['hydroponics', 'aquaponics'], uses: ['lighting', 'design', 'power', 'money'], status: 'live',
     icon: '<path d="M4 5h16"/><path d="M7 5l-2 5h14l-2-5"/><path d="M8 14l-1 2M12 14v3M16 14l1 2"/><path d="M5 21h14"/>' },
-  { slug: 'hydroponic-design', name: 'Design a hydroponic system', blurb: 'From crop and system type to plant spacing, solution volume, nutrients, oxygen, pumps, lighting and backup.', cat: 'hydroponics', tags: ['hydroponics'], uses: ['design', 'plants', 'water', 'plumbing', 'lighting', 'power'], status: 'soon',
+  { slug: 'hydroponic-design', name: 'Design a hydroponic system', blurb: 'From crop and system type to plant spacing, solution volume, nutrients, oxygen, pumps, lighting and backup.', cat: 'hydroponics', tags: ['hydroponics'], uses: ['design', 'plants', 'water', 'plumbing', 'lighting', 'power'], status: 'live',
     icon: '<path d="M3 15h18v4H3z"/><path d="M7 15v-3M12 15v-4M17 15v-3"/><path d="M7 12c-2 0-3-2-3-3 2 0 3 1 3 3zM12 11c0-2 1-4 3-4 0 2-1 4-3 4zM17 12c2 0 3-2 3-3-2 0-3 1-3 3z"/>' }
 ];

@@ -300,3 +300,7 @@
   .guide-sheet-cols { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
   a { color: inherit; }
 }
+
+/* ---------- Long values must wrap on phones ---------- */
+.guide .result-list li > span.v { max-width: 65%; overflow-wrap: anywhere; }
+.guide .viz-caption, .guide .notice { overflow-wrap: anywhere; }

@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Design a Hydroponic System – Guided Design</title>
+  <meta name="description" content="Step-by-step guided design of a hydroponic system: crop and system type (DWC, NFT, media beds, drip), plants and grow area, solution volume, nutrient strength, pH and iron, root-zone oxygen, pump and pipes, lighting, UV, backup power and reservoir drain-back, ending in a shareable design sheet.">
+  <link rel="stylesheet" href="../assets/style.css">
+  <link rel="stylesheet" href="../assets/guide.css">
+  <style>
+    .article .table-wrap { overflow-x: auto; }
+  </style>
+</head>
+<body>
+  <header class="site-header">
+    <div class="wrap">
+      <a class="brand" href="../">
+        <span class="brand-mark" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3c3 4 6 7 6 11a6 6 0 0 1-12 0c0-4 3-7 6-11z"/></svg>
+        </span>
+        Tank Calculator
+      </a>
+      <nav><a href="../">All calculators</a></nav>
+    </div>
+  </header>
+
+  <main class="wrap">
+    <div class="crumbs"><a href="../">Home</a> / Guides / Design a hydroponic system</div>
+    <h1 class="page-title">Design a hydroponic system</h1>
+    <p class="page-lede">A guided, step-by-step design of a recirculating hydroponic system: deep water culture rafts, NFT channels, flood-and-drain media beds or drip to slabs and Dutch buckets. Start from the crop and the number of plants and work through the layout, the solution volume, the nutrient recipe, pH and iron, root-zone oxygen, the pump and pipes, lighting, UV, backup power and the reservoir. Each step suggests values from the steps before it, and every value stays editable.</p>
+
+    <div id="guide">
+      <noscript><p class="notice">This guide needs JavaScript. The <a href="../calculators/grow-bed-volume.html">Grow Bed Volume</a>, <a href="../calculators/nutrient-ec.html">Nutrient EC</a>, <a href="../calculators/ph-adjustment.html">pH Adjustment</a> and <a href="../calculators/pump-turnover.html">Pump &amp; Turnover</a> calculators cover the main steps.</p></noscript>
+    </div>
+
+    <article class="article">
+      <h2>How this guide works</h2>
+      <p>A hydroponic design runs from the plant to the pump. The crop sets the spacing, the nutrient strength and the light it needs. The number of plants and the spacing set the size of the rafts, channels, beds or buckets, and those set how much solution the system holds. The solution volume sets how much fertilizer, acid and iron each batch takes. The system type sets the flow the pump must deliver, and whether the roots need air. The last steps size the UV, the backup batteries and the reservoir.</p>
+      <ul>
+        <li><strong>Suggestions carry forward.</strong> Inputs show a suggested value worked out from earlier steps. Change any value and the later steps follow. A <em>Use suggested</em> button brings the suggestion back.</li>
+        <li><strong>Every input has its own unit picker</strong>, as on the calculators, so you can mix metres and feet, litres and gallons.</li>
+        <li><strong>Same formulas as the calculators.</strong> Layout and water volumes come from <a href="../calculators/grow-bed-volume.html">Grow Bed Volume</a> and <a href="../calculators/growing-media-fill.html">Growing Media Fill</a>; EC from <a href="../calculators/nutrient-ec.html">Nutrient EC</a>; acid and iron from <a href="../calculators/ph-adjustment.html">pH Adjustment</a> and <a href="../calculators/iron-addition.html">Iron Addition</a>; oxygen from <a href="../calculators/dissolved-oxygen.html">Dissolved Oxygen</a>; flow, pipes and head from <a href="../calculators/pump-turnover.html">Pump &amp; Turnover</a>, <a href="../calculators/water-velocity.html">Pipe Water Velocity</a> and <a href="../calculators/head-loss.html">Head Loss</a>; lighting from <a href="../calculators/daily-light-integral.html">Daily Light Integral</a> and <a href="../calculators/light-fixture-layout.html">Light Fixture Layout</a>; then <a href="../calculators/uv-sterilizer-sizing.html">UV Filtration Sizing</a>, <a href="../calculators/battery-life.html">Battery Life</a>, <a href="../calculators/sump-drainback.html">Sump Drain-Back</a> and <a href="../calculators/tank-volume.html">Tank Volume</a>. Each step’s <em>Open the full calculator</em> button opens that calculator pre-filled with your numbers.</li>
+        <li><strong>Rules of thumb and example values are labelled.</strong> Crop spacing, EC and light ranges are rules of thumb. Some inputs (NFT flow per channel, flood times, emitter flow, aeration intensity, pipe length and lift) have no published rule on this site, so the guide fills in an <em>example value</em> and says so. Replace them with your own figures.</li>
+        <li><strong>Save and share.</strong> The page address always holds your inputs and the step you are on. The last step is a design sheet you can copy, share or print.</li>
+      </ul>
+
+      <h3>Formulas</h3>
+      <div class="formula">Plant sites (rafts, beds) = ⌊L ÷ s⌋ × ⌊W ÷ s⌋ × n        NFT: ⌊channel length ÷ s⌋ × channels
+DWC water        = L × W × water depth × canals
+NFT film water   = floor width × film depth × length × channels
+Media bed water  = L × W × depth × pore space × beds
+Total solution   = grow-unit water + reservoir
+EC estimate      = 0.90 × Σ λ°ᵢ × cᵢ  (Hoagland No. 2 × strength)
+Acid             = alkalinity removed (carbonate system) ÷ protons per acid molecule
+Iron product     = (target − current Fe) × volume ÷ Fe fraction
+O₂ saturation    = Benson &amp; Krause (1984) × pressure correction for elevation
+Pump flow        DWC: turnover × volume · NFT: channels × flow · beds: bed water ÷ fill time · drip: emitters × flow
+Head             = lift + f (L/D) v²/2g + ΣK v²/2g
+Pump power       = ρ g Q H ÷ efficiency
+PPFD             = DLI × 10⁶ ÷ (hours × 3600);  fixtures = ⌈PPFD × area ÷ (PPF × CU × MF)⌉
+UV-C watts       = dose × flow ÷ (water gap × water factor × end-of-life output)
+Drain-back       = channel film + water over outlets + bed water + supply line</div>
+
+      <h3>Example (the default walkthrough)</h3>
+      <p>Lettuce in deep water culture, 720 plant sites at the FAO-default 20 cm spacing. Two 1.2 m wide canals take ⌊1.2 ÷ 0.2⌋ = 6 plants per row, so 720 plants need 120 rows, 60 per canal: canals 12 m long, 28.8 m² of rafts at 25 plants per m² (top of the FAO 20–25 range). With 30 cm of water the canals hold 12 × 1.2 × 0.30 × 2 = 8,640 L; the example sump of 10% adds 864 L, for 9,504 L of solution (13.2 L per plant, about 9.5 t).</p>
+      <p>Full-strength Hoagland No. 2 estimates 0.90 × 2.558 = 2.302 mS/cm, so the lettuce target of 1.5 mS/cm (middle of 1.2–1.8) is 65.16% strength. One 9,504 L batch takes 3.76 kg potassium nitrate, 5.85 kg calcium nitrate tetrahydrate, 712 g ammonium dihydrogen phosphate and 3.05 kg magnesium sulfate heptahydrate (37.2, 24.8, 6.19 and 12.4 L of 1 M stocks). Source water with 150 mg/L alkalinity as CaCO₃ at pH 7.8 needs 2.36 meq/L of acid to reach pH 5.8 at 20 °C: 1.5 L of 67% nitric acid per batch (15.8 mL per 100 L), adding 33 mg/L nitrate-N and leaving 32 mg/L alkalinity. Raising iron from the recipe’s 0.65 mg/L to 2 mg/L takes 116.5 g of 11% Fe-DTPA, stable at pH 5.8.</p>
+      <p>At 20 °C and sea level the solution holds at most 9.09 mg/L oxygen, well above the 3 mg/L plant minimum. Aerating the canals at the example 0.07 L of air per litre per minute needs 605 L/min: six 120 L/min linear pumps, 660 W, 15.84 kWh a day. One turnover per hour is 9,504 L/h (2.64 L/s); at the 4 ft/s target a 2″ pipe would run at 4.001 ft/s, so the guide picks 2½″ Schedule 40 (0.855 m/s). Over 10 m with four elbows, a tee and a ball valve, friction adds 0.123 m and fittings 0.152 m (ΣK = 4.07) to the 1 m lift: 1.27 m of head, 32.9 W of hydraulic power, 132 W at 25% efficiency, 3.16 kWh a day and 173.12 a year at 0.15 per kWh.</p>
+      <p>Indoors, a lettuce DLI of 14.5 mol/m²/day over 16 h needs 251.7 µmol/m²/s. Over the 12 × 2.4 m of canals the illustrative 1700 µmol/s, 680 W LED fixture at 80% utilization and 90% maintenance needs ⌈5.92⌉ = 6 fixtures in a 1 × 6 row (255 µmol/m²/s), 4,080 W, 65.28 kWh a day and 23,827 kWh a year. UV on the full flow at the 30 mJ/cm² design dose, 80% UVT, a 2 cm water gap and 80% lamp output at end of life needs 61.4 W of UV-C. Keeping the air pumps and a 10 W controller running for 12 h through an 85% inverter (788 W) takes sixteen 12 V 100 Ah AGM batteries at 50% depth of discharge (12 h 11 min). When the pump stops, 576 L drains from 2 cm over the canal outlets and 30.9 L from the supply line: 606.9 L. The suggested 1.75 × 1.0 m reservoir run 0.5 m deep holds 875 L and, 0.95 m deep, has 787.5 L free, more than the 758.6 L needed with a 25% margin.</p>
+
+      <h3>Limitations</h3>
+      <ul>
+        <li><strong>Example values are not rules.</strong> Where no published figure was available on this site (flow per NFT channel, slope, flood and drip timing, aeration intensity, pipe length and lift, substrate per bucket), the guide uses an example value. Use your supplier’s figures.</li>
+        <li><strong>The EC estimate is the recipe only.</strong> The ions in your source water and those added by the acid are not included. Divalent ions make the simple ion sum less certain. Mix the solution and measure it.</li>
+        <li><strong>Salt masses assume common hydrates</strong> (calcium nitrate tetrahydrate, magnesium sulfate heptahydrate). Commercial fertilizer grades differ; follow the label. Micronutrients other than iron are not sized.</li>
+        <li><strong>Aeration</strong> is sized from an intensity tested in small containers (Baiyin et al., 2021). Measure dissolved oxygen in the canals and adjust.</li>
+        <li><strong>Pump power is estimated</strong> from an assumed efficiency. Read the duty point and power from the pump curve.</li>
+        <li><strong>Lighting is a first pass.</strong> The fixture count is the average-light lumen method. Use the Design a grow light system guide and the fixture’s photometric data for the final layout.</li>
+        <li><strong>UV doses</strong> on this site come from fish-farm and drinking-water references; there is no plant-pathogen dose. UV also breaks down iron chelates.</li>
+      </ul>
+
+      <h2>Sources</h2>
+      <ol class="sources" id="guide-sources"></ol>
+    </article>
+  </main>
+
+  <footer class="site-footer">
+    <div class="wrap">Calculations are estimates. Check the sources above before relying on a result.</div>
+  </footer>
+
+  <script src="../assets/share.js"></script>
+  <script src="../assets/units.js"></script>
+  <script src="../assets/guide.js"></script>
+  <script src="../assets/guide-hydroponic-design.js"></script>
+</body>
+</html>
