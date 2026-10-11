@@ -75,4 +75,15 @@ window.CALCULATORS = [
     icon: '<ellipse cx="7" cy="12" rx="3" ry="7"/><path d="M7 5h10M7 19h10"/><ellipse cx="17" cy="12" rx="3" ry="7"/>' },
   { slug: 'cost-benefit', name: 'Cost Benefit Analysis', blurb: 'Compare farm decisions: NPV, payback', cat: 'aquaponics', tags: ['aquaponics', 'aquaculture', 'hydroponics'], uses: ['money'], status: 'live',
     icon: '<path d="M12 4v16M8 20h8"/><path d="M4 8h16"/><path d="M4 8l-2 6a3 2 0 0 0 4 0zM20 8l-2 6a3 2 0 0 0 4 0z"/>' },
+  { slug: 'light-fixture-layout', name: 'Light Fixture Layout', blurb: 'How many grow lights, and where', cat: 'hydroponics', tags: ['hydroponics', 'aquaponics'], uses: ['lighting', 'design', 'power', 'money'], status: 'soon',
+    icon: '<rect x="3" y="3" width="18" height="18" rx="2"/><path d="M7 8h4M13 8h4M7 16h4M13 16h4"/>' },
+];
+
+// Guided walkthroughs: step-by-step designs that chain several calculators.
+// status: 'live' links to guides/<slug>.html; 'soon' shows a disabled card.
+window.GUIDES = [
+  { slug: 'ras-design', name: 'Engineer a recirculating aquaculture system', blurb: 'From production goal to tanks, feed, oxygen, biofilter, solids, flow, pumps and backup power.', cat: 'aquaculture', tags: ['aquaculture'], uses: ['design', 'plumbing', 'filtration', 'water', 'fish', 'power'], status: 'soon',
+    icon: '<circle cx="7" cy="14" r="4"/><path d="M11 14h4l2-4h4M17 10v8"/><path d="M5 6h4M7 4v4"/>' },
+  { slug: 'lighting-design', name: 'Design a grow light system', blurb: 'From crop light needs to PPFD, fixture count and layout, power and running cost.', cat: 'hydroponics', tags: ['hydroponics', 'aquaponics'], uses: ['lighting', 'design', 'power', 'money'], status: 'soon',
+    icon: '<path d="M4 5h16"/><path d="M7 5l-2 5h14l-2-5"/><path d="M8 14l-1 2M12 14v3M16 14l1 2"/><path d="M5 21h14"/>' }
 ];

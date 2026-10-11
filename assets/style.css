@@ -266,6 +266,52 @@ a:hover { color: var(--accent-strong); }
   border-color: var(--text);
 }
 
+.section-title {
+  font-size: 1.15rem;
+  margin: 8px 0 6px;
+}
+
+.section-lede {
+  color: var(--text-muted);
+  margin: 0 0 14px;
+  max-width: 60ch;
+  font-size: .95rem;
+}
+
+.guides { margin-bottom: 28px; }
+
+.guide-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 320px), 1fr));
+  gap: 16px;
+}
+
+.guide-card {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 16px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-left: 4px solid var(--accent);
+  border-radius: 20px;
+  color: var(--text);
+  text-decoration: none;
+  box-shadow: var(--shadow);
+  transition: transform .15s ease, border-color .15s ease;
+}
+
+a.guide-card:hover { transform: translateY(-3px); border-color: var(--accent); color: var(--text); }
+.guide-card[aria-disabled="true"] { opacity: .6; box-shadow: none; cursor: default; }
+.guide-card .app-icon { flex: none; width: 56px; height: 56px; border-radius: 16px; }
+.guide-card .app-icon svg { width: 30px; height: 30px; }
+.guide-card[data-cat="aquaculture"] .app-icon { background: var(--c-aquaculture); }
+.guide-card[data-cat="aquaponics"] .app-icon { background: var(--c-aquaponics); }
+.guide-card[data-cat="hydroponics"] .app-icon { background: var(--c-hydroponics); }
+.guide-text { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
+.guide-kicker { font-size: .72rem; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; color: var(--accent-strong); }
+.guide-blurb { font-size: .85rem; color: var(--text-muted); line-height: 1.4; }
+
 .app-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));

@@ -6,6 +6,7 @@ Aquaponics, aquaculture and hydroponics calculators as a static website. No buil
 
 - `index.html` – home page with an app-style grid of calculators, search and filters
 - `assets/catalog.js` – the list of calculators on the home page (set `status: 'live'` when one is finished). `tags` drive the system filter (aquaponics, aquaculture, hydroponics) and `uses` drive the "I'm working on" task filter, whose options are listed in `CALC_USES`
+- `window.GUIDES` in `assets/catalog.js` – step-by-step guided designs shown in the "Guided design" section of the home page (`guides/<slug>.html`)
 - `calculators/` – one HTML page per calculator
 - `assets/style.css` – shared styles (light and dark mode)
 - `assets/share.js` – shared helpers: inputs stored in the URL, copy link, copy results, native share

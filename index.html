@@ -16,6 +16,7 @@
         </span>
         Tank Calculator
       </a>
+      <nav><a href="#guides">Guided design</a></nav>
     </div>
   </header>
 
@@ -43,7 +44,14 @@
       </div>
     </div>
 
-    <section class="app-grid" id="app-grid" aria-label="Calculators"></section>
+    <section class="guides" id="guides" aria-labelledby="guides-heading">
+      <h2 class="section-title" id="guides-heading">Guided design</h2>
+      <p class="section-lede">Not sure where to start? A guide walks you through a whole design one step at a time and carries your answers from step to step.</p>
+      <div class="guide-grid" id="guide-grid"></div>
+    </section>
+
+    <h2 class="section-title" id="calc-heading">Calculators</h2>
+    <section class="app-grid" id="app-grid" aria-labelledby="calc-heading"></section>
     <p class="empty" id="empty" hidden>No calculators match these filters.</p>
   </main>
 
@@ -96,20 +104,51 @@
         grid.appendChild(tile);
       });
 
+      // Guided walkthroughs, filtered by the same chips and search.
+      var guideGrid = document.getElementById('guide-grid');
+      (window.GUIDES || []).forEach(function (g) {
+        var live = g.status === 'live';
+        var card = document.createElement(live ? 'a' : 'div');
+        card.className = 'guide-card';
+        card.setAttribute('data-cat', g.cat);
+        if (live) card.href = 'guides/' + g.slug + '.html';
+        else card.setAttribute('aria-disabled', 'true');
+        card.innerHTML =
+          '<span class="app-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">' + g.icon + '</svg></span>' +
+          '<span class="guide-text"><span class="guide-kicker">' + (live ? 'Step-by-step guide' : 'Guide · coming soon') + '</span>' +
+          '<span class="app-name"></span><span class="guide-blurb"></span></span>';
+        card.querySelector('.app-name').textContent = g.name;
+        card.querySelector('.guide-blurb').textContent = g.blurb;
+        card._item = g;
+        guideGrid.appendChild(card);
+      });
+
+      function matches(c, q) {
+        var uses = c.uses || [];
+        var text = c.name + ' ' + (c.blurb || '') + ' ' + c.tags.join(' ') + ' ' + uses.map(function (u) { return USE_LABEL[u]; }).join(' ');
+        return (filter === 'all' || c.tags.indexOf(filter) !== -1) &&
+          (use === 'all' || uses.indexOf(use) !== -1) &&
+          (!q || text.toLowerCase().indexOf(q) !== -1);
+      }
+
       function apply() {
         var q = search.value.trim().toLowerCase();
         var shown = 0;
         Array.prototype.forEach.call(grid.children, function (t) {
           var c = t._item;
-          var uses = c.uses || [];
-          var text = c.name + ' ' + (c.blurb || '') + ' ' + c.tags.join(' ') + ' ' + uses.map(function (u) { return USE_LABEL[u]; }).join(' ');
-          var ok = (filter === 'all' || c.tags.indexOf(filter) !== -1) &&
-            (use === 'all' || uses.indexOf(use) !== -1) &&
-            (!q || text.toLowerCase().indexOf(q) !== -1);
+          var ok = matches(c, q);
           t.hidden = !ok;
           if (ok) shown++;
         });
-        document.getElementById('empty').hidden = shown > 0;
+        var guidesShown = 0;
+        Array.prototype.forEach.call(guideGrid.children, function (g) {
+          var ok = matches(g._item, q);
+          g.hidden = !ok;
+          if (ok) guidesShown++;
+        });
+        document.getElementById('guides').hidden = guidesShown === 0;
+        document.getElementById('calc-heading').hidden = shown === 0;
+        document.getElementById('empty').hidden = shown + guidesShown > 0;
       }
 
       chips.forEach(function (chip) {
