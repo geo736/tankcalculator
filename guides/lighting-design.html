@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Design a Grow Light System – Guided Design</title>
+  <meta name="description" content="Step-by-step guided design of grow lighting for hydroponics and aquaponics: crop daily light integral, greenhouse supplemental light, photoperiod and PPFD, grow area, fixture choice, fixture count and layout, power, heat load and running cost, ending in a shareable design sheet.">
+  <link rel="stylesheet" href="../assets/style.css">
+  <link rel="stylesheet" href="../assets/guide.css">
+  <style>
+    .viz .room { fill: none; stroke: var(--tank-stroke); stroke-width: 2; }
+    .viz .fixture { fill: var(--surface); fill-opacity: .55; stroke: var(--text); stroke-width: 1.5; stroke-dasharray: 5 3; }
+    .viz .fixture-dot { fill: var(--text); }
+    .article .table-wrap { overflow-x: auto; }
+  </style>
+</head>
+<body>
+  <header class="site-header">
+    <div class="wrap">
+      <a class="brand" href="../">
+        <span class="brand-mark" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3c3 4 6 7 6 11a6 6 0 0 1-12 0c0-4 3-7 6-11z"/></svg>
+        </span>
+        Tank Calculator
+      </a>
+      <nav><a href="../">All calculators</a></nav>
+    </div>
+  </header>
+
+  <main class="wrap">
+    <div class="crumbs"><a href="../">Home</a> / Guides / Design a grow light system</div>
+    <h1 class="page-title">Design a grow light system</h1>
+    <p class="page-lede">A guided, step-by-step design of grow lighting for an indoor farm, grow room or greenhouse. Start from the crop’s daily light needs and work through the photoperiod and light intensity, the grow area, the fixture, the fixture count and layout, and finally the power, heat and running cost. Each step suggests values from the steps before it, and every value stays editable.</p>
+
+    <div id="guide">
+      <noscript><p class="notice">This guide needs JavaScript. The <a href="../calculators/daily-light-integral.html">Daily Light Integral</a>, <a href="../calculators/light-conversions.html">Light Conversions</a> and <a href="../calculators/light-fixture-layout.html">Light Fixture Layout</a> calculators cover each step.</p></noscript>
+    </div>
+
+    <article class="article">
+      <h2>How this guide works</h2>
+      <p>Lighting design runs from the plant to the electricity meter. The crop sets the <strong>daily light integral</strong> (DLI) it needs. In a greenhouse, the daylight that gets through the glazing covers part of it and the lights add the rest. The hours the lights are on turn that DLI into a light intensity at the canopy (<strong>PPFD</strong>). The grow area and the fixture’s photon output then give the number of fixtures, their grid and spacing, and from there the power, the heat the cooling has to remove and the running cost.</p>
+      <ul>
+        <li><strong>Suggestions carry forward.</strong> Inputs show a suggested value worked out from earlier steps. Change any value and the later steps follow. A <em>Use suggested</em> button brings the suggestion back.</li>
+        <li><strong>Every input has its own unit picker</strong>, as on the calculators, so you can mix metres and feet, watts and BTU/h.</li>
+        <li><strong>Same formulas as the calculators.</strong> The crop ranges and DLI formula come from the <a href="../calculators/daily-light-integral.html">Daily Light Integral calculator</a>, the lux factors from <a href="../calculators/light-conversions.html">Light Conversions</a>, and the fixture count, grid choice, spacing rules and power figures from the <a href="../calculators/light-fixture-layout.html">Light Fixture Layout calculator</a>. Each step’s <em>Open the full calculator</em> button opens that calculator pre-filled with your numbers.</li>
+        <li><strong>Rules of thumb are labelled.</strong> Crop DLI ranges, utilization and maintenance factors, the spacing-to-height bands and the fixture presets are typical or illustrative values, not measured limits. Replace them with your own data whenever you have it.</li>
+        <li><strong>Save and share.</strong> The page address always holds your inputs and the step you are on, so you can bookmark it, share it or come back later. The last step is a design sheet you can copy, share or print.</li>
+      </ul>
+
+      <h3>Formulas</h3>
+      <div class="formula">Supplemental DLI (greenhouse) = target DLI − outdoor DLI × transmission
+PPFD needed     = DLI × 1,000,000 ÷ (hours × 3600)
+Lux equivalent  = PPFD ÷ f<sub>lux</sub>   (f<sub>lux</sub> depends on the light source)
+Fixtures N      = ⌈ PPFD × area ÷ (PPF × utilization × maintenance) ⌉
+PPFD achieved   = rows × columns × PPF × utilization × maintenance ÷ area
+Efficacy        = PPF ÷ input power   (µmol/J)
+Energy per day  = fixtures × input power × hours ÷ 1000   (kWh)
+Heat load       = electrical input   (1 W = 3.412 BTU/h; 12,000 BTU/h = 1 ton of cooling)</div>
+
+      <h3>Example (the default walkthrough)</h3>
+      <p>Lettuce indoors, target 14.5 mol/m²/day (middle of the 12–17 rule-of-thumb range), lights on 16 h: PPFD = 14.5 ÷ (16 × 0.0036) = 251.7 µmol/m²/s, about 16,800 lux under white LEDs. A 7 × 4 m room (28 m²) with plants covering the floor, the illustrative 1700 µmol/s, 680 W LED fixture, utilization 80% and maintenance 90%: N = ⌈ 251.7 × 28 ÷ (1700 × 0.80 × 0.90) ⌉ = ⌈ 5.76 ⌉ = 6 fixtures in a 2 × 3 grid, spaced 2.33 m along the length and 2 m across. Hung 1.6 m above the canopy, spacing ÷ height is 1.46, inside the 1.5 rule of thumb. The six fixtures give 262.3 µmol/m²/s, a DLI of 15.1 mol/m²/day, still within the lettuce range. They draw 4,080 W (145.7 W/m², 13.5 W/ft²), use 65.28 kWh a day, 1,987 kWh a month and 23,827 kWh a year (3,574.08 a year at 0.15 per kWh), and release 13,922 BTU/h, about 1.16 tons of cooling, while on. Laid out the same way, the illustrative 1000 W HPS needs 5.44, so 6 fixtures (also a 2 × 3 grid), drawing 6.36 kW and costing 5,571.36 a year, 1,997.28 more.</p>
+
+      <h3>Limitations</h3>
+      <ul>
+        <li><strong>Average light only.</strong> The lumen method gives the average PPFD over the area. Edges and corners get less. Open the Light Fixture Layout calculator for an approximate light map, and use the fixture maker’s photometric data or a quantum sensor for the final layout.</li>
+        <li><strong>Greenhouse daylight changes by the day and the month.</strong> The guide sizes the lights for one outdoor DLI. Use the darkest month you grow in, and control the lights to a daily target in brighter weather.</li>
+        <li><strong>Heat is the lights’ share only.</strong> People, pumps, dehumidifiers and (in a greenhouse) the sun add more. The latent load from plant transpiration is not included. Size cooling and dehumidification with an HVAC designer.</li>
+        <li><strong>Running cost is lighting electricity only:</strong> no cooling energy, demand charges or fixture replacement.</li>
+      </ul>
+
+      <h2>Sources</h2>
+      <ol class="sources" id="guide-sources"></ol>
+    </article>
+  </main>
+
+  <footer class="site-footer">
+    <div class="wrap">Calculations are estimates. Check the sources above before relying on a result.</div>
+  </footer>
+
+  <script src="../assets/share.js"></script>
+  <script src="../assets/units.js"></script>
+  <script src="../assets/guide.js"></script>
+  <script src="../assets/guide-lighting-design.js"></script>
+</body>
+</html>
