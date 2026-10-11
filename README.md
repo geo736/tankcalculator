@@ -70,3 +70,4 @@ Every input that has a unit gets its **own** unit dropdown – never one shared 
 - [x] UV Filtration Sizing – `calculators/uv-sterilizer-sizing.html`
 - [x] Drum Filter Sizing – `calculators/drum-filter-sizing.html`
 - [x] Cost Benefit Analysis
+- [x] Light Fixture Layout – `calculators/light-fixture-layout.html`

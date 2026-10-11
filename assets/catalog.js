@@ -75,8 +75,8 @@ window.CALCULATORS = [
     icon: '<ellipse cx="7" cy="12" rx="3" ry="7"/><path d="M7 5h10M7 19h10"/><ellipse cx="17" cy="12" rx="3" ry="7"/>' },
   { slug: 'cost-benefit', name: 'Cost Benefit Analysis', blurb: 'Compare farm decisions: NPV, payback', cat: 'aquaponics', tags: ['aquaponics', 'aquaculture', 'hydroponics'], uses: ['money'], status: 'live',
     icon: '<path d="M12 4v16M8 20h8"/><path d="M4 8h16"/><path d="M4 8l-2 6a3 2 0 0 0 4 0zM20 8l-2 6a3 2 0 0 0 4 0z"/>' },
-  { slug: 'light-fixture-layout', name: 'Light Fixture Layout', blurb: 'How many grow lights, and where', cat: 'hydroponics', tags: ['hydroponics', 'aquaponics'], uses: ['lighting', 'design', 'power', 'money'], status: 'soon',
-    icon: '<rect x="3" y="3" width="18" height="18" rx="2"/><path d="M7 8h4M13 8h4M7 16h4M13 16h4"/>' },
+  { slug: 'light-fixture-layout', name: 'Light Fixture Layout', blurb: 'Fixture count, spacing and light map', cat: 'hydroponics', tags: ['hydroponics', 'aquaponics'], uses: ['lighting', 'design', 'power', 'money'], status: 'live',
+    icon: '<rect x="3" y="3" width="18" height="18" rx="2"/><path d="M7 7h3M14 7h3M7 12h3M14 12h3M7 17h3M14 17h3"/>' },
 ];
 
 // Guided walkthroughs: step-by-step designs that chain several calculators.

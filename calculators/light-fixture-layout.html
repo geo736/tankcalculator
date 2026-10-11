@@ -1,0 +1,342 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Grow Light Fixture Layout Calculator</title>
+  <meta name="description" content="Work out how many grow-light fixtures you need for a target PPFD or DLI, how to lay them out in a grid, the spacing from each other and the walls, the expected light map, power density and electricity cost.">
+  <link rel="stylesheet" href="../assets/style.css">
+  <style>
+    #tmode-group { grid-template-columns: repeat(2, 1fr); }
+    #tmode-group button { padding: 10px 6px; }
+    .viz .room { fill: none; stroke: var(--tank-stroke); stroke-width: 2; }
+    .viz .fixture { fill: none; stroke: var(--text); stroke-width: 1.5; stroke-dasharray: 5 3; }
+    .viz .fixture-dot { fill: var(--text); }
+    .viz .legend-box { fill: none; stroke: var(--border); stroke-width: 1; }
+    .viz .tick { stroke: var(--text-muted); stroke-width: 1; }
+    .viz .val-text { fill: var(--text); font-size: 15px; font-weight: 700; font-family: var(--font); }
+    .viz .probe { fill: none; stroke: var(--text); stroke-width: 1.5; }
+    .viz .probe-bg { fill: var(--surface); fill-opacity: .92; stroke: var(--border); }
+    .viz .msg-text { fill: var(--text-muted); font-size: 14px; font-family: var(--font); }
+    #viz { touch-action: pan-y; }
+    #viz .dim-text, #viz .depth-text { font-size: 15px; }
+    .status { font-size: .95rem; font-weight: 600; margin-top: 2px; }
+    .result-main .sub { font-size: .9rem; color: var(--text-muted); margin-top: 2px; }
+    .result-group { font-size: .78rem; text-transform: uppercase; letter-spacing: .04em; color: var(--text-muted); margin: 14px 0 0; }
+    .out-row { display: flex; align-items: center; gap: 8px; margin: 12px 0 0; font-size: .9rem; color: var(--text-muted); }
+    .out-row select { width: auto; padding: 6px 8px; }
+    .preset-note { font-size: .8rem; color: var(--warn-text); background: var(--warn-bg); border-radius: 8px; padding: 6px 10px; margin-top: 6px; }
+    .article .table-wrap { overflow-x: auto; }
+  </style>
+</head>
+<body>
+  <header class="site-header">
+    <div class="wrap">
+      <a class="brand" href="../">
+        <span class="brand-mark" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3c3 4 6 7 6 11a6 6 0 0 1-12 0c0-4 3-7 6-11z"/></svg>
+        </span>
+        Tank Calculator
+      </a>
+      <nav><a href="../">All calculators</a></nav>
+    </div>
+  </header>
+
+  <main class="wrap">
+    <div class="crumbs"><a href="../">Home</a> / Grow Light Fixture Layout</div>
+    <h1 class="page-title">Grow Light Fixture Layout Calculator</h1>
+    <p class="page-lede">Find how many grow-light fixtures you need to reach a target light level (PPFD) or daily light integral (DLI) over a grow room, greenhouse bay or vertical rack. You also get a grid layout with spacings, an approximate light map of the canopy, the power density and the electricity cost.</p>
+
+    <div class="calc-layout">
+      <!-- Calculator -->
+      <section class="card" aria-labelledby="calc-heading">
+        <h2 id="calc-heading">Calculator</h2>
+
+        <div class="two-col">
+          <div class="field">
+            <label for="len">Grow area length</label>
+            <div class="input-row"><input id="len" type="number" inputmode="decimal" min="0" step="any"><select class="unit-select" data-unit-group="length" data-unit-for="len" data-unit-default="m" aria-label="Grow area length unit"></select></div>
+          </div>
+          <div class="field">
+            <label for="wid">Grow area width</label>
+            <div class="input-row"><input id="wid" type="number" inputmode="decimal" min="0" step="any"><select class="unit-select" data-unit-group="length" data-unit-for="wid" data-unit-default="m" aria-label="Grow area width unit"></select></div>
+          </div>
+        </div>
+
+        <div class="field">
+          <span class="label" id="tmode-label">Light target</span>
+          <div class="segmented" role="group" aria-labelledby="tmode-label" id="tmode-group">
+            <button type="button" data-tmode="ppfd" aria-pressed="true">
+              <svg viewBox="0 0 34 26" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M3 22h28"/><path d="M11 4h12l-2 4h-8z"/><path d="M13 10l-3 9M17 10v9M21 10l3 9" stroke-opacity=".6"/></svg>
+              PPFD at canopy
+            </button>
+            <button type="button" data-tmode="dli" aria-pressed="false">
+              <svg viewBox="0 0 34 26" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M3 22h28"/><path d="M7 22V12h20v10" /><path d="M10 15h14M10 18h14" stroke-opacity=".5"/><circle cx="17" cy="6" r="3"/></svg>
+              Daily light (DLI)
+            </button>
+          </div>
+        </div>
+
+        <div class="field" data-tfor="ppfd">
+          <label for="ppfd">Target PPFD at canopy (average)</label>
+          <div class="input-row"><input id="ppfd" type="number" inputmode="decimal" min="0" step="any"><span class="unit">µmol/m²/s</span></div>
+          <div class="field-hint" id="ppfd-hint"></div>
+        </div>
+
+        <div class="field" data-tfor="dli" hidden>
+          <label for="dli">Target daily light integral</label>
+          <div class="input-row"><input id="dli" type="number" inputmode="decimal" min="0" step="any"><span class="unit">mol/m²/day</span></div>
+          <div class="field-hint">Electric light only. Not sure what your crop needs? See the <a href="daily-light-integral.html">DLI calculator</a>.</div>
+        </div>
+
+        <div class="field">
+          <label for="hours">Lights on per day (photoperiod)</label>
+          <div class="input-row"><input id="hours" type="number" inputmode="decimal" min="0" step="any"><select class="unit-select" data-unit-group="time" data-unit-for="hours" data-unit-default="h" aria-label="Photoperiod unit"></select></div>
+          <div class="field-hint">Used for the DLI and the electricity use.</div>
+        </div>
+
+        <div class="field">
+          <label for="preset">Fixture</label>
+          <select id="preset">
+            <option value="led">LED bar 680 W (illustrative)</option>
+            <option value="hps">HPS 1000 W DE (illustrative)</option>
+            <option value="t5">T5 HO 4 × 54 W (illustrative)</option>
+            <option value="custom">Custom (from your datasheet)</option>
+          </select>
+          <div class="preset-note" id="preset-note"></div>
+        </div>
+
+        <div class="two-col">
+          <div class="field">
+            <label for="ppf">Photon output (PPF)</label>
+            <div class="input-row"><input id="ppf" type="number" inputmode="decimal" min="0" step="any"><span class="unit">µmol/s</span></div>
+          </div>
+          <div class="field">
+            <label for="watts">Input power</label>
+            <div class="input-row"><input id="watts" type="number" inputmode="decimal" min="0" step="any"><select class="unit-select" data-unit-group="power" data-unit-for="watts" data-unit-default="W" aria-label="Fixture input power unit"></select></div>
+          </div>
+        </div>
+        <div class="field-hint" style="margin:-8px 0 14px">PPF is the total 400–700 nm photon output of the whole fixture; input power is the wall-plug watts, driver or ballast included.</div>
+
+        <div class="two-col">
+          <div class="field">
+            <label for="fl">Fixture length</label>
+            <div class="input-row"><input id="fl" type="number" inputmode="decimal" min="0" step="any"><select class="unit-select" data-unit-group="length" data-unit-for="fl" data-unit-default="m" aria-label="Fixture length unit"></select></div>
+          </div>
+          <div class="field">
+            <label for="fw">Fixture width</label>
+            <div class="input-row"><input id="fw" type="number" inputmode="decimal" min="0" step="any"><select class="unit-select" data-unit-group="length" data-unit-for="fw" data-unit-default="m" aria-label="Fixture width unit"></select></div>
+          </div>
+        </div>
+
+        <div class="field">
+          <label for="mh">Mounting height above canopy</label>
+          <div class="input-row"><input id="mh" type="number" inputmode="decimal" min="0" step="any"><select class="unit-select" data-unit-group="length" data-unit-for="mh" data-unit-default="m" aria-label="Mounting height unit"></select></div>
+          <div class="field-hint">From the light-emitting face down to the top of the plants.</div>
+        </div>
+
+        <div class="two-col">
+          <div class="field">
+            <label for="cu">Utilization factor</label>
+            <div class="input-row"><input id="cu" type="number" inputmode="decimal" min="0" max="100" step="any"><span class="unit">%</span></div>
+          </div>
+          <div class="field">
+            <label for="mf">Maintenance factor</label>
+            <div class="input-row"><input id="mf" type="number" inputmode="decimal" min="0" max="100" step="any"><span class="unit">%</span></div>
+          </div>
+        </div>
+        <div class="field-hint" id="cu-hint" style="margin:-8px 0 14px"></div>
+
+        <div class="field">
+          <label for="price">Electricity price</label>
+          <div class="input-row"><input id="price" type="number" inputmode="decimal" min="0" step="any"><span class="unit">per kWh</span></div>
+        </div>
+
+        <hr class="divider">
+
+        <div class="notice" id="notice" hidden></div>
+
+        <div class="result-main" aria-live="polite">
+          <div class="label">Fixtures needed</div>
+          <div class="value" id="r-main">–</div>
+          <div class="status" id="r-status"></div>
+          <div class="sub" id="r-sub"></div>
+        </div>
+
+        <div class="result-group">Layout</div>
+        <ul class="result-list">
+          <li><span>Suggested grid (rows × columns)</span><span class="v" id="r-grid">–</span></li>
+          <li><span>Spacing between centers (along length × width)</span><span class="v" id="r-space">–</span></li>
+          <li><span>Center to wall (half spacing)</span><span class="v" id="r-wall">–</span></li>
+          <li><span>Spacing ÷ mounting height</span><span class="v" id="r-smh">–</span></li>
+          <li><span>Model uniformity, central area (min ÷ avg)</span><span class="v" id="r-unif">–</span></li>
+        </ul>
+
+        <div class="result-group">Light</div>
+        <ul class="result-list">
+          <li><span>Average PPFD achieved</span><span class="v" id="r-ppfd">–</span></li>
+          <li><span>DLI achieved</span><span class="v" id="r-dli">–</span></li>
+          <li><span>Target PPFD used</span><span class="v" id="r-target">–</span></li>
+          <li><span>Photon efficacy</span><span class="v" id="r-eff">–</span></li>
+          <li><span>Photons landing directly (model, no wall reflection)</span><span class="v" id="r-cap">–</span></li>
+        </ul>
+
+        <div class="result-group">Power and cost</div>
+        <ul class="result-list">
+          <li><span>Total power</span><span class="v" id="r-power">–</span></li>
+          <li><span>Power density</span><span class="v" id="r-dens">–</span></li>
+          <li><span>Energy per day</span><span class="v" id="r-kwh-d">–</span></li>
+          <li><span>Energy per month (30.44 days)</span><span class="v" id="r-kwh-m">–</span></li>
+          <li><span>Energy per year</span><span class="v" id="r-kwh-y">–</span></li>
+          <li><span>Running cost per day / month / year</span><span class="v" id="r-cost">–</span></li>
+        </ul>
+
+        <div class="out-row">
+          <label for="sp_u">Show spacings in</label>
+          <select id="sp_u" class="unit-select" data-unit-group="length" data-unit-default="m"></select>
+        </div>
+
+        <div class="share-bar">
+          <button class="btn btn-primary" type="button" id="btn-share">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="m8.6 13.5 6.8 4M15.4 6.5l-6.8 4"/></svg>
+            Share
+          </button>
+          <button class="btn" type="button" id="btn-link">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.5.5l3-3a5 5 0 0 0-7-7l-1.7 1.7"/><path d="M14 11a5 5 0 0 0-7.5-.5l-3 3a5 5 0 0 0 7 7l1.7-1.7"/></svg>
+            Copy link
+          </button>
+          <button class="btn" type="button" id="btn-copy">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h10a1 1 0 0 1 1 1v1"/></svg>
+            Copy results
+          </button>
+          <button class="btn" type="button" id="btn-reset">Reset</button>
+        </div>
+      </section>
+
+      <!-- Visualization -->
+      <section class="card viz-card" aria-labelledby="viz-heading">
+        <h2 id="viz-heading">Visualization</h2>
+        <svg class="viz" id="viz" viewBox="0 0 480 400" role="img" aria-label="Top-down plan of the grow area drawn to scale, with the fixture grid and an approximate PPFD heat map of the canopy"></svg>
+        <p class="viz-caption" id="viz-caption"></p>
+      </section>
+    </div>
+
+    <article class="article">
+      <h2>How the fixture layout calculator works</h2>
+      <p>The calculator uses the <strong>lumen method</strong> from interior lighting design, with photons instead of lumens. Every fixture sends out a known number of photosynthetic photons per second (its <strong>PPF</strong>, in µmol/s). Only part of them ends up on the plants. Some miss the canopy and hit walls, aisles or the floor. Fixtures also lose output as they age and collect dust. Two factors cover these losses:</p>
+      <ul>
+        <li><strong>Utilization factor</strong> (called the <em>coefficient of utilization</em>, CU, in lighting design): the share of the fixture's photons that land on the canopy, including light that bounces back off the walls.</li>
+        <li><strong>Maintenance factor</strong> (part of the <em>light loss factor</em>, LLF): how much of its new output a fixture still gives between cleanings and late in its life.</li>
+      </ul>
+      <p>Divide the photons that reach the canopy by the canopy area and you get the average PPFD. The calculator turns this around: it finds how many fixtures give your target PPFD, rounds up, and arranges them in a grid that suits the shape of the room. It then shows the PPFD and DLI you actually get, the spacings, the power use and the cost.</p>
+      <p>If you set the target as a DLI, the calculator first converts it to the PPFD needed during your photoperiod (the same formula as the <a href="daily-light-integral.html">Daily Light Integral calculator</a>). If you only have a lux meter, convert your readings with the <a href="light-conversions.html">Light Conversions calculator</a> first.</p>
+
+      <h3>Why it matters for hydroponics and aquaponics</h3>
+      <ul>
+        <li>Lighting is often the biggest running cost of an indoor farm or a lit greenhouse. Buying one fixture too many costs money every day. One too few means slower crops.</li>
+        <li>The fixture count, power density (W/m²) and running cost let you compare LED, HPS and fluorescent options, or a brighter light for fewer hours against a dimmer one for longer.</li>
+        <li>Spacing and hanging height decide how evenly the light falls on the rafts, NFT channels or media beds. Uneven light gives uneven crops.</li>
+      </ul>
+
+      <h3>Formulas</h3>
+      <p>Grow area A = length × width. Target PPFD from a target DLI and a photoperiod of h hours:</p>
+      <div class="formula">PPFD<sub>target</sub> = DLI × 1,000,000 ÷ (h × 3600)</div>
+      <p>Number of fixtures (PPF in µmol/s, CU and MF as fractions), rounded up to a whole fixture:</p>
+      <div class="formula">N = ⌈ PPFD<sub>target</sub> × A ÷ (PPF × CU × MF) ⌉</div>
+      <p>The grid has r rows (across the width) and c columns (along the length) with r × c ≥ N. The calculator tries every column count and picks the grid with the fewest extra fixtures and the most even spacing in both directions. With M = r × c fixtures:</p>
+      <div class="formula">Spacing along length  s<sub>L</sub> = length ÷ c
+Spacing across width  s<sub>W</sub> = width ÷ r
+Center to wall        = s ÷ 2
+PPFD achieved         = M × PPF × CU × MF ÷ A
+DLI achieved          = PPFD × h × 3600 ÷ 1,000,000
+Photon efficacy       = PPF ÷ input power   (µmol/J)
+Total power           = M × input power
+Energy per day (kWh)  = total power (W) × h ÷ 1000
+Cost                  = energy × price per kWh</div>
+
+      <h3>The light map</h3>
+      <p>The heat map is <strong>approximate</strong>. Each fixture is split into a 4 × 4 grid of small sources across its footprint, and each source is treated as a <em>Lambertian</em> emitter: it shines straight down and its intensity falls off with the cosine of the angle. The PPFD that one source of photon flux Φ gives on the canopy at horizontal distance r, from height H, is:</p>
+      <div class="formula">PPFD = (Φ ÷ π) × H² ÷ (H² + r²)²</div>
+      <p>The map adds up all sources, then scales the whole picture so that its average equals the PPFD from the formula above. Real fixtures have lenses and reflectors that make their beam narrower or wider, and walls reflect light back onto the edges of the canopy. Use the fixture maker's PPFD map or a quantum sensor for the final layout.</p>
+      <p>The model also gives the share of photons that would land directly on the canopy if the walls absorbed everything (“photons landing directly”). This is calculated exactly for each small source with the standard view-factor formula for a rectangle parallel to a point source. It is a useful lower bound for the utilization factor: white or reflective walls send part of the rest back, so the real CU is usually somewhat higher.</p>
+
+      <h3>Rules of thumb</h3>
+      <p>These are <strong>rules of thumb</strong>, not standards. Use the values from your fixture's photometric report if you have them.</p>
+      <div class="table-wrap">
+      <table>
+        <thead><tr><th>Setting</th><th>Typical value</th><th>Notes</th></tr></thead>
+        <tbody>
+          <tr><td>Utilization factor, room or tent with white/reflective walls, canopy covering the floor</td><td>80–90%</td><td>Our rule of thumb. The no-reflection model value plus part of the wall losses.</td></tr>
+          <tr><td>Utilization factor, open bench, rack or greenhouse bay with aisles</td><td>60–80%</td><td>Our rule of thumb. Light falling on aisles is lost; Nelson &amp; Bugbee (2014) show how much the share of photons captured by the canopy affects lighting cost.</td></tr>
+          <tr><td>Maintenance factor</td><td>85–95%</td><td>Our rule of thumb. Runkle (2018) notes dirty lamps and reflectors can each cut output by as much as 10–15%, so clean them every year or two. LEDs also lose output slowly over their life.</td></tr>
+          <tr><td>Spacing ÷ mounting height</td><td>≤ 1.0 even; 1.0–1.5 usually acceptable; &gt; 1.5 expect dim strips</td><td>Rule of thumb for wide-beam fixtures. A fixture maker's “spacing criterion” overrides it. Long bar fixtures can be spaced wider because the fixture itself spreads the light.</td></tr>
+          <tr><td>Uniformity (min ÷ average)</td><td>about 0.7 or more</td><td>Rule of thumb used by many growers. The calculator reports it for the central area between the outer fixture rows, where wall reflections matter least.</td></tr>
+        </tbody>
+      </table>
+      </div>
+
+      <h3>Fixture presets</h3>
+      <p>The presets are <strong>illustrative round numbers</strong> so the page works out of the box. They are not a specific product. Always use the PPF, wattage and size from your own fixture's datasheet (or better, an independent test report).</p>
+      <div class="table-wrap">
+      <table>
+        <thead><tr><th>Preset</th><th>PPF (µmol/s)</th><th>Input (W)</th><th>µmol/J</th><th>Footprint</th></tr></thead>
+        <tbody>
+          <tr><td>LED bar fixture</td><td>1700</td><td>680</td><td>2.5</td><td>1.1 × 1.1 m</td></tr>
+          <tr><td>HPS 1000 W double-ended</td><td>1800</td><td>1060</td><td>1.7</td><td>0.65 × 0.5 m</td></tr>
+          <tr><td>T5 HO fluorescent, 4 × 54 W</td><td>230</td><td>230</td><td>1.0</td><td>1.2 × 0.6 m</td></tr>
+        </tbody>
+      </table>
+      </div>
+      <p>The HPS efficacy matches the ≈1.7 µmol/J that Runkle &amp; Bugbee give for a 1000 W double-ended HPS lamp with an electronic ballast, and the 1.66–1.70 µmol/J Nelson &amp; Bugbee (2014) measured for the best double-ended HPS fixtures. The LED value sits between the 2.0 µmol/J that Runkle &amp; Bugbee say many new LED fixtures exceed and the ≈3.4 µmol/J upper limit that Kusuma, Pattison &amp; Bugbee (2020) calculate for white + red LED fixtures with today's technology. The fluorescent value is our estimate for a complete fixture. Runkle &amp; Bugbee list about 1.2 µmol/J for cool-white fluorescent lamps, and we have allowed for ballast and reflector losses. PPF and efficacy follow the definitions in ANSI/ASABE S640.</p>
+
+      <h3>Example (the default values)</h3>
+      <p>A 6.5 m × 4 m grow room (26 m²) for a fruiting crop. Target <strong>600 µmol/m²/s</strong> for <strong>12 hours</strong> a day. LED bar fixtures with 1700 µmol/s and 680 W, 1.1 m × 1.1 m, hung 1.1 m above the canopy. Utilization factor 85%, maintenance factor 90%, electricity 0.15 per kWh.</p>
+      <div class="formula">Photons per fixture on canopy = 1700 × 0.85 × 0.90 = 1300.5 µmol/s
+N = ⌈ 600 × 26 ÷ 1300.5 ⌉ = ⌈ 11.995 ⌉ = 12 fixtures
+Grid: 3 rows × 4 columns = 12 fixtures
+Spacing: 6.5 ÷ 4 = 1.625 m along the length, 4 ÷ 3 = 1.333 m across
+Center to wall: 0.8125 m and 0.667 m (shown as 0.813 m × 0.667 m)
+Spacing ÷ height = 1.625 ÷ 1.1 = 1.48
+PPFD achieved = 12 × 1300.5 ÷ 26 = 600.2 µmol/m²/s
+DLI = 600.2 × 12 × 0.0036 = 25.9 mol/m²/day
+Efficacy = 1700 ÷ 680 = 2.5 µmol/J
+Total power = 12 × 680 = 8160 W → 8160 ÷ 26 = 313.8 W/m² (29.2 W/ft²)
+Energy = 8.16 kW × 12 h = 97.92 kWh/day, 2980.7 kWh/month, 35,740.8 kWh/year
+Cost = 97.92 × 0.15 = 14.69 per day, 447.10 per month, 5361.12 per year</div>
+      <p>A DLI of about 26 mol/m²/day is in the 20–30 mol/m²/day rule-of-thumb range for tomatoes and other fruiting crops (Stallknecht 2025; see the <a href="daily-light-integral.html">DLI calculator</a>). A spacing-to-height ratio of 1.48 is just inside the rule-of-thumb limit, and the light map shows the expected fall-off toward the walls and corners. With the walls absorbing everything, the model puts about 68% of the photons directly on the canopy, so the 85% utilization factor assumes reflective walls.</p>
+
+      <h3>Limitations and assumptions</h3>
+      <ul>
+        <li><strong>Average, not every spot.</strong> The lumen method gives the average PPFD over the whole area. Edges and corners get less light than the middle unless the walls are reflective or fixtures are added along the edges.</li>
+        <li><strong>The utilization factor is the big unknown.</strong> It depends on the fixture's beam, the mounting height, the room shape and the wall finish. A fixture maker's photometric files, a lighting simulation or a quantum-sensor survey of a test bay give a much better number than a rule of thumb.</li>
+        <li><strong>Simple light map.</strong> The Lambertian model ignores lenses, reflectors, shading by fixtures and plants, and wall reflections (which are spread evenly when the map is scaled). Treat the map as a guide to where the dim spots will be, not a measurement.</li>
+        <li><strong>Electric light only.</strong> In a greenhouse, sunlight adds to the DLI. Work out how much supplemental light you need first, for example with monthly DLI maps (Faust &amp; Logan 2018), and enter only the shortfall.</li>
+        <li><strong>Datasheet values.</strong> PPF and wattage claims vary in quality. Look for values measured in an integrating sphere by an independent lab. Both et al. (2017) proposed a standard label for plant lamps that reports photon efficacy and the light distribution, which is the information this calculator needs. Remember that PPF covers 400–700 nm only; far-red output is not included.</li>
+        <li><strong>Running cost</strong> is lighting electricity only. Cooling to remove the heat from the lights, demand charges and fixture replacement are not included.</li>
+      </ul>
+
+      <h2>Sources</h2>
+      <ol class="sources">
+        <li>DiLaura, D. L., Houser, K. W., Mistrick, R. G. &amp; Steffy, G. R. (2011). <em>The Lighting Handbook: Reference and Application</em>, 10th ed. Illuminating Engineering Society of North America, New York. (Lumen method, coefficient of utilization and light loss factor.)</li>
+        <li>ANSI/ASABE S640 (2017, reaffirmed 2022). <em>Quantities and Units of Electromagnetic Radiation for Plants (Photosynthetic Organisms)</em>. American Society of Agricultural and Biological Engineers, St. Joseph, MI.</li>
+        <li>Kusuma, P., Pattison, P. M. &amp; Bugbee, B. (2020). From physics to fixtures to food: current and potential LED efficacy. <em>Horticulture Research</em>, 7, 56. <a href="https://doi.org/10.1038/s41438-020-0283-7" rel="noopener" target="_blank">doi:10.1038/s41438-020-0283-7</a></li>
+        <li>Nelson, J. A. &amp; Bugbee, B. (2014). Economic analysis of greenhouse lighting: light emitting diodes vs. high intensity discharge fixtures. <em>PLoS ONE</em>, 9(6), e99010. <a href="https://doi.org/10.1371/journal.pone.0099010" rel="noopener" target="_blank">doi:10.1371/journal.pone.0099010</a></li>
+        <li>Runkle, E. &amp; Bugbee, B. “Lighting efficacy.” Michigan State University Floriculture (reprinted from <em>Greenhouse Product News</em>). <a href="https://www.canr.msu.edu/floriculture/uploads/files/lighting-efficacy.pdf" rel="noopener" target="_blank">canr.msu.edu</a></li>
+        <li>Runkle, E. (2018). “Maximizing supplemental lighting.” Michigan State University Floriculture (reprinted from <em>Greenhouse Product News</em>, January 2018). <a href="https://www.canr.msu.edu/floriculture/uploads/files/maximizesupplementallighting.pdf" rel="noopener" target="_blank">canr.msu.edu</a></li>
+        <li>Both, A. J., Bugbee, B., Kubota, C., Lopez, R. G., Mitchell, C., Runkle, E. S. &amp; Wallace, C. (2017). Proposed product label for electric lamps used in the plant sciences. <em>HortTechnology</em>, 27(4), 544–549.</li>
+        <li>Faust, J. E. &amp; Logan, J. (2018). Daily light integral: A research review and high-resolution maps of the United States. <em>HortScience</em>, 53(9), 1250–1257. <a href="https://doi.org/10.21273/HORTSCI13144-18" rel="noopener" target="_blank">doi:10.21273/HORTSCI13144-18</a></li>
+        <li>Stallknecht, E. (2025). <em>Calculating and Using Daily Light Integral (DLI): An Introductory Guide</em>. Virginia Cooperative Extension, Virginia Tech, SPES-720NP. <a href="https://www.pubs.ext.vt.edu/SPES/spes-720/spes-720.html" rel="noopener" target="_blank">pubs.ext.vt.edu</a></li>
+        <li>Torres, A. P. &amp; Lopez, R. G. (2010). <em>Commercial Greenhouse Production: Measuring Daily Light Integral in a Greenhouse</em>. Purdue Extension HO-238-W. <a href="https://www.extension.purdue.edu/extmedia/ho/ho-238-w.pdf" rel="noopener" target="_blank">extension.purdue.edu</a></li>
+      </ol>
+    </article>
+  </main>
+
+  <footer class="site-footer">
+    <div class="wrap">Calculations are estimates. Check the sources above before relying on a result.</div>
+  </footer>
+
+  <script src="../assets/share.js"></script>
+  <script src="../assets/units.js"></script>
+  <script src="../assets/light-fixture-layout.js"></script>
+</body>
+</html>
