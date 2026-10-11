@@ -68,4 +68,4 @@ Every input that has a unit gets its **own** unit dropdown – never one shared 
 - [x] Battery Life Estimator – `calculators/battery-life.html`
 - [x] UV Filtration Sizing – `calculators/uv-sterilizer-sizing.html`
 - [x] Drum Filter Sizing – `calculators/drum-filter-sizing.html`
-- [ ] Cost Benefit Analysis
+- [x] Cost Benefit Analysis

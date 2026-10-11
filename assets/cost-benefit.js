@@ -82,6 +82,8 @@
 
   function pct(x, digits) {
     if (!isFinite(x)) return '–';
+    const d = digits === undefined ? 1 : digits;
+    if (Math.abs(x * 100) < 0.5 * Math.pow(10, -d)) x = 0;
     return (x < 0 ? '−' : '') + fmt(Math.abs(x * 100), digits === undefined ? 1 : digits) + '%';
   }
 
@@ -130,8 +132,8 @@
       '<div class="two-col">' +
       moneyField('ou' + id, 'Upfront cost') +
       moneyField('os' + id, 'Salvage / resale at end') +
-      moneyField('oc' + id, 'Yearly costs', '/yr') +
-      moneyField('ob' + id, 'Yearly benefits', '/yr') +
+      moneyField('oc' + id, 'Yearly costs') +
+      moneyField('ob' + id, 'Yearly benefits') +
       '<div class="field"><label for="ol' + id + '">Useful life</label><div class="input-row">' +
       '<input id="ol' + id + '" type="number" inputmode="numeric" min="1" max="50" step="1"><span class="unit">years</span></div></div>' +
       '</div>' +
@@ -324,7 +326,6 @@
       m.T = Math.round(pRaw);
       if (m.T !== pRaw) m.warnings.push('Analysis period rounded to ' + m.T + ' years.');
     }
-    $('period').placeholder = 'auto: ' + m.autoPeriod;
     $('period-hint').textContent = 'Blank = longest life (' + m.autoPeriod + ' years).';
 
     m.ok = m.errors.length === 0;
@@ -404,7 +405,10 @@
     let sub = m.key === 'eav'
       ? money(m.best.eav, true) + ' per year · NPV ' + money(m.best.res.npv, true) + ' over ' + m.T + ' yr'
       : 'NPV ' + money(m.best.res.npv, true) + ' over ' + m.T + ' yr · ' + money(m.best.eav, true) + ' per year';
-    if (m.bestVal < -0.5) sub += '. Every option loses money at ' + fmt(m.rateRaw) + '%; this one loses least.';
+    const second = m.ranked[1];
+    const secondVal = m.key === 'eav' ? second.eav : second.res.npv;
+    if (Math.abs(m.bestVal - secondVal) < 0.5) sub += '. Tied with “' + second.name + '”.';
+    else if (m.bestVal < -0.5) sub += '. Every option loses money at ' + fmt(m.rateRaw) + '%; this one loses least.';
     else if (m.best.zero) sub += '. None of the other options beats doing nothing at ' + fmt(m.rateRaw) + '%.';
     $('r-best-sub').textContent = sub;
 

@@ -58,6 +58,6 @@ window.CALCULATORS = [
     icon: '<rect x="3" y="9" width="18" height="6" rx="3"/><path d="M8 5v2M12 4v3M16 5v2M8 17v2M12 17v3M16 17v2"/>' },
   { slug: 'drum-filter-sizing', name: 'Drum Filter Sizing', blurb: 'Size a drum microscreen', cat: 'aquaculture', tags: ['aquaculture', 'aquaponics'], status: 'live',
     icon: '<ellipse cx="7" cy="12" rx="3" ry="7"/><path d="M7 5h10M7 19h10"/><ellipse cx="17" cy="12" rx="3" ry="7"/>' },
-  { slug: 'cost-benefit', name: 'Cost Benefit Analysis', cat: 'aquaponics', tags: ['aquaponics', 'aquaculture', 'hydroponics'], status: 'soon',
-    icon: '<path d="M4 20V10M10 20V4M16 20v-7"/><path d="M2 20h20"/>' }
+  { slug: 'cost-benefit', name: 'Cost Benefit Analysis', blurb: 'Compare farm decisions: NPV, payback', cat: 'aquaponics', tags: ['aquaponics', 'aquaculture', 'hydroponics'], status: 'live',
+    icon: '<path d="M12 4v16M8 20h8"/><path d="M4 8h16"/><path d="M4 8l-2 6a3 2 0 0 0 4 0zM20 8l-2 6a3 2 0 0 0 4 0z"/>' },
 ];
