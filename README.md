@@ -54,7 +54,7 @@ Every input that has a unit gets its **own** unit dropdown – never one shared 
 - [x] Growing Media Fill – `calculators/growing-media-fill.html`
 - [x] Iron Addition – `calculators/iron-addition.html`
 - [x] Biofilter Surface Area – `calculators/biological-surface-area.html`
-- [ ] Fish Hauling
+- [x] Fish Hauling
 - [x] Pipe Water Velocity – `calculators/water-velocity.html`
 - [x] Grow Bed Volume – `calculators/grow-bed-volume.html`
 - [x] Salt Addition – `calculators/salt-addition.html`

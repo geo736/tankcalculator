@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Fish Hauling Calculator</title>
+  <meta name="description" content="How many fish a hauling tank can carry safely, using published channel catfish loading tables with a temperature correction, plus water displacement, oxygen use, salt and tempering time for the trip.">
+  <link rel="stylesheet" href="../assets/style.css">
+  <style>
+    .viz .axis { stroke: var(--tank-stroke); stroke-width: 1.5; fill: none; }
+    .viz .grid { stroke: var(--border); stroke-width: 1; }
+    .viz .curve { fill: none; stroke: var(--water-deep); stroke-width: 2.5; stroke-linejoin: round; }
+    .viz .curve-air { fill: none; stroke: var(--tank-back); stroke-width: 1.5; stroke-dasharray: 5 4; }
+    .viz .point { fill: var(--water); stroke: var(--surface); stroke-width: 2; }
+    .viz .plan-line { stroke: var(--accent); stroke-width: 1.5; stroke-dasharray: 5 4; fill: none; }
+    .viz .plan-text { fill: var(--accent); font-size: 12px; font-weight: 600; font-family: var(--font); }
+    .viz .axis-title { fill: var(--text-muted); font-size: 11px; font-family: var(--font); }
+    .viz .truck-body { fill: var(--surface-2); stroke: var(--tank-stroke); stroke-width: 2; stroke-linejoin: round; }
+    .viz .wheel { fill: var(--tank-stroke); stroke: var(--surface); stroke-width: 3; }
+    .viz .road { stroke: var(--tank-back); stroke-width: 2; }
+    .viz .fish-ok { fill: var(--accent); }
+    .viz .fish-over { fill: var(--warn-text); }
+    .viz .fish-empty { fill: none; stroke: var(--tank-back); stroke-width: 1; stroke-dasharray: 2 2; }
+    .viz .gauge-track { fill: none; stroke: var(--surface-2); stroke-width: 14; }
+    .viz .gauge-ok { fill: none; stroke: var(--accent); stroke-opacity: .45; stroke-width: 14; }
+    .viz .gauge-over { fill: none; stroke: var(--warn-text); stroke-opacity: .55; stroke-width: 14; }
+    .viz .needle { stroke: var(--text); stroke-width: 3; stroke-linecap: round; }
+    .viz .hub { fill: var(--text); }
+    .viz .big-text { fill: var(--text); font-size: 16px; font-weight: 700; font-family: var(--font); }
+    .viz .warn-text { fill: var(--warn-text); font-size: 12px; font-weight: 700; font-family: var(--font); }
+    .result-main .sub { font-size: .95rem; color: var(--text-muted); margin-top: 2px; font-variant-numeric: tabular-nums; }
+    .muted { font-weight: 400; color: var(--text-muted); }
+    @media (max-width: 480px) { .two-col.stack { grid-template-columns: minmax(0, 1fr); gap: 0; } }
+  </style>
+</head>
+<body>
+  <header class="site-header">
+    <div class="wrap">
+      <a class="brand" href="../">
+        <span class="brand-mark" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3c3 4 6 7 6 11a6 6 0 0 1-12 0c0-4 3-7 6-11z"/></svg>
+        </span>
+        Tank Calculator
+      </a>
+      <nav><a href="../">All calculators</a></nav>
+    </div>
+  </header>
+
+  <main class="wrap">
+    <div class="crumbs"><a href="../">Home</a> / Fish Hauling</div>
+    <h1 class="page-title">Fish Hauling Calculator</h1>
+    <p class="page-lede">Find how many fish a transport tank can carry safely, from published channel catfish loading tables adjusted for water temperature and trip length. The calculator also gives the water and tank space a load needs, an estimate of the oxygen the fish will use, the salt to add, and how long to temper the fish when you arrive.</p>
+
+    <div class="calc-layout">
+      <!-- Calculator -->
+      <section class="card" aria-labelledby="calc-heading">
+        <h2 id="calc-heading">Calculator</h2>
+
+        <div class="field">
+          <label for="species">Fish and loading guide</label>
+          <select id="species">
+            <option value="catfish">Channel catfish (Piper et al. 1982 table)</option>
+            <option value="custom">Other species: enter your own loading rate</option>
+          </select>
+          <div class="field-hint" id="species-hint"></div>
+        </div>
+
+        <div class="two-col stack" data-sp="custom">
+          <div class="field">
+            <label for="crate">Loading rate from your guide</label>
+            <div class="input-row"><input id="crate" type="number" inputmode="decimal" min="0" step="any"><select class="unit-select" data-unit-group="density" data-unit-for="crate" data-unit-default="lbgal" aria-label="Loading rate unit"></select></div>
+          </div>
+          <div class="field">
+            <label for="ctemp">Temperature rule</label>
+            <select id="ctemp">
+              <option value="1">Rate is for 65 °F: adjust 25% per 10 °F</option>
+              <option value="0">Rate is already for my water temperature</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="field">
+          <span class="label" id="tank-label">Hauling tank water</span>
+          <div class="segmented" role="group" aria-labelledby="tank-label" id="tank-group" style="grid-template-columns: repeat(2, 1fr);">
+            <button type="button" data-tank="vol" aria-pressed="true">
+              <svg viewBox="0 0 34 26" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M6 4v17a2 2 0 0 0 2 2h18a2 2 0 0 0 2-2V4"/><path d="M6 12c3.7 1.6 7.3-1.6 11 0s7.3 1.6 11 0"/></svg>
+              Water volume
+            </button>
+            <button type="button" data-tank="dims" aria-pressed="false">
+              <svg viewBox="0 0 34 26" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M4 8h20v15H4zM4 8l6-5h20l-6 5M24 23l6-5V3"/></svg>
+              Tank dimensions
+            </button>
+          </div>
+        </div>
+
+        <div class="field" data-tank-for="vol">
+          <label for="water">Water in the tank (before loading fish)</label>
+          <div class="input-row"><input id="water" type="number" inputmode="decimal" min="0" step="any"><select class="unit-select" data-unit-group="volume" data-unit-for="water" data-unit-default="gal" aria-label="Water volume unit"></select></div>
+        </div>
+
+        <div class="two-col stack" data-tank-for="dims">
+          <div class="field">
+            <label for="tl">Inside length</label>
+            <div class="input-row"><input id="tl" type="number" inputmode="decimal" min="0" step="any"><select class="unit-select" data-unit-group="length" data-unit-for="tl" data-unit-default="ft" aria-label="Length unit"></select></div>
+          </div>
+          <div class="field">
+            <label for="tw">Inside width</label>
+            <div class="input-row"><input id="tw" type="number" inputmode="decimal" min="0" step="any"><select class="unit-select" data-unit-group="length" data-unit-for="tw" data-unit-default="ft" aria-label="Width unit"></select></div>
+          </div>
+          <div class="field">
+            <label for="td">Water depth (before loading)</label>
+            <div class="input-row"><input id="td" type="number" inputmode="decimal" min="0" step="any"><select class="unit-select" data-unit-group="length" data-unit-for="td" data-unit-default="ft" aria-label="Water depth unit"></select></div>
+          </div>
+        </div>
+
+        <div class="field">
+          <label for="sizemode">Give fish size as</label>
+          <select id="sizemode">
+            <option value="weight">Average weight per fish</option>
+            <option value="count">Number of fish per pound / kg</option>
+            <option value="length">Average length (channel catfish weight-length relation)</option>
+          </select>
+        </div>
+
+        <div class="two-col stack">
+          <div class="field" data-size="weight">
+            <label for="fishw">Average fish weight</label>
+            <div class="input-row"><input id="fishw" type="number" inputmode="decimal" min="0" step="any"><select class="unit-select" data-unit-group="mass" data-unit-for="fishw" data-unit-default="lb" aria-label="Fish weight unit"></select></div>
+          </div>
+          <div class="field" data-size="count">
+            <label for="fishn">Fish count</label>
+            <div class="input-row"><input id="fishn" type="number" inputmode="decimal" min="0" step="any"><select class="unit-select" data-unit-group="fishcount" data-unit-for="fishn" data-unit-default="perlb" aria-label="Fish count unit"></select></div>
+          </div>
+          <div class="field" data-size="length">
+            <label for="fishl">Average total length</label>
+            <div class="input-row"><input id="fishl" type="number" inputmode="decimal" min="0" step="any"><select class="unit-select" data-unit-group="length" data-unit-for="fishl" data-unit-default="in" aria-label="Fish length unit"></select></div>
+          </div>
+          <div class="field">
+            <label for="planned">Fish to haul <span class="muted">(optional)</span></label>
+            <div class="input-row"><input id="planned" type="number" inputmode="numeric" min="0" step="1"><span class="unit">fish</span></div>
+          </div>
+          <div class="field">
+            <label for="temp">Hauling water temperature</label>
+            <div class="input-row"><input id="temp" type="number" inputmode="decimal" step="any"><select class="unit-select" data-unit-group="temperature" data-unit-for="temp" data-unit-default="F" aria-label="Water temperature unit"></select></div>
+          </div>
+          <div class="field">
+            <label for="trip">Trip duration</label>
+            <div class="input-row"><input id="trip" type="number" inputmode="decimal" min="0" step="any"><select class="unit-select" data-unit-group="time" data-unit-for="trip" data-unit-default="h" aria-label="Trip duration unit"></select></div>
+          </div>
+        </div>
+
+        <div class="field">
+          <label for="o2">Oxygen supply</label>
+          <select id="o2">
+            <option value="oxygen">Bottled or liquid oxygen through diffusers</option>
+            <option value="air">Air only (agitators or air blower)</option>
+          </select>
+        </div>
+
+        <div class="two-col stack">
+          <div class="field">
+            <label for="dest">Receiving water temperature</label>
+            <div class="input-row"><input id="dest" type="number" inputmode="decimal" step="any"><select class="unit-select" data-unit-group="temperature" data-unit-for="dest" data-unit-default="F" aria-label="Receiving water temperature unit"></select></div>
+          </div>
+          <div class="field">
+            <label for="salt">Salt in hauling water</label>
+            <div class="input-row"><input id="salt" type="number" inputmode="decimal" min="0" step="any"><span class="unit">% w/v</span></div>
+          </div>
+          <div class="field">
+            <label for="o2rate">Fish oxygen use <span class="muted">(estimate)</span></label>
+            <div class="input-row"><input id="o2rate" type="number" inputmode="decimal" min="0" step="any"><span class="unit">mg O₂/kg/h</span></div>
+            <div class="field-hint">Adult fish typically use 200–500. Small fish and warm water use more.</div>
+          </div>
+        </div>
+
+        <hr class="divider">
+
+        <div class="notice" id="notice" hidden></div>
+
+        <div class="two-col">
+          <div class="field">
+            <label for="mout">Show weights in</label>
+            <select class="unit-select" id="mout" data-unit-group="mass" data-unit-default="lb" aria-label="Output weight unit"></select>
+          </div>
+          <div class="field">
+            <label for="dout">Show loading rate in</label>
+            <select class="unit-select" id="dout" data-unit-group="density" data-unit-default="lbgal" aria-label="Output loading rate unit"></select>
+          </div>
+        </div>
+
+        <div class="result-main" aria-live="polite">
+          <div class="label">Maximum safe fish load</div>
+          <div class="value" id="r-max">–</div>
+          <div class="sub" id="r-maxn">–</div>
+        </div>
+
+        <div class="fill-bar" aria-hidden="true"><span id="r-fillbar" style="width:0%"></span></div>
+
+        <ul class="result-list">
+          <li><span>Safe loading rate</span><span class="v" id="r-rate">–</span></li>
+          <li><span>How it was found</span><span class="v" id="r-basis">–</span></li>
+          <li><span>Planned load</span><span class="v" id="r-plan">–</span></li>
+          <li><span>Water needed for planned load</span><span class="v" id="r-need">–</span></li>
+          <li><span>Tank space incl. fish displacement</span><span class="v" id="r-space">–</span></li>
+          <li><span>Oxygen the fish use on the trip (supply more)</span><span class="v" id="r-o2">–</span></li>
+          <li><span>Salt to add</span><span class="v" id="r-salt">–</span></li>
+          <li><span>Tempering time at delivery</span><span class="v" id="r-temper">–</span></li>
+          <li><span>Fish size</span><span class="v" id="r-size">–</span></li>
+        </ul>
+
+        <div class="share-bar">
+          <button class="btn btn-primary" type="button" id="btn-share">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="m8.6 13.5 6.8 4M15.4 6.5l-6.8 4"/></svg>
+            Share
+          </button>
+          <button class="btn" type="button" id="btn-link">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.5.5l3-3a5 5 0 0 0-7-7l-1.7 1.7"/><path d="M14 11a5 5 0 0 0-7.5-.5l-3 3a5 5 0 0 0 7 7l1.7-1.7"/></svg>
+            Copy link
+          </button>
+          <button class="btn" type="button" id="btn-copy">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h10a1 1 0 0 1 1 1v1"/></svg>
+            Copy results
+          </button>
+          <button class="btn" type="button" id="btn-reset">Reset</button>
+        </div>
+      </section>
+
+      <!-- Visualization -->
+      <section class="card viz-card" aria-labelledby="viz-heading">
+        <h2 id="viz-heading">Visualization</h2>
+        <svg class="viz" id="viz" viewBox="0 0 480 410" role="img" aria-label="Hauling truck showing the planned fish load against the safe maximum, a load gauge, and a chart of safe loading rate against water temperature"></svg>
+        <p class="viz-caption" id="viz-caption"></p>
+      </section>
+    </div>
+
+    <article class="article">
+      <h2>How the fish hauling calculator works</h2>
+      <p>Hatcheries and extension services publish <strong>loading rates</strong>: the weight of fish that can be hauled per gallon of water. The rate depends on the fish's size, the water temperature and how long the trip takes. Small fish use more oxygen per pound than large fish, warm water speeds up their metabolism, and on a long trip ammonia and carbon dioxide have more time to build up. So the safe rate goes <em>down</em> for smaller fish, warmer water and longer trips.</p>
+      <p>For channel catfish the calculator looks up the classic table from <em>Fish Hatchery Management</em> (Piper et al., 1982, based on McCraren's data). The same table is reprinted in Texas and North Central Region catfish culture guides. It interpolates between the table's fish sizes and trip lengths, then adjusts for water temperature. The result is multiplied by the water in your tank to give the maximum load. For any other species, enter the loading rate from a guide written for that species. The same temperature rule, displacement, oxygen, salt and tempering steps are then applied.</p>
+
+      <h3>Why it matters</h3>
+      <p>Hauling is one of the most stressful things that happens to farmed fish. According to SRAC Publication 390, dissolved oxygen and the build-up of wastes (ammonia and carbon dioxide) are the main limits on how densely fish can be hauled. Temperature, pH, loading density, fish condition and trip length all change those limits. Fish that are overloaded may look fine when they are unloaded and then die days later. This matters whether you are moving fingerlings into an aquaponics system, delivering stockers to ponds, or taking food-size fish to market. SRAC's own advice is to treat published rates as a starting point, be conservative, and only increase loads based on your own experience.</p>
+
+      <h3>Channel catfish loading table</h3>
+      <p>Pounds of channel catfish that can be hauled per US gallon of water at 65 °F (18.3 °C), with good aeration:</p>
+      <table>
+        <thead><tr><th>Fish per pound</th><th>Approx. weight each</th><th>8 h trip</th><th>12 h trip</th><th>16 h trip</th></tr></thead>
+        <tbody>
+          <tr><td>1</td><td>454 g (1 lb)</td><td>6.30</td><td>5.50</td><td>4.80</td></tr>
+          <tr><td>2</td><td>227 g</td><td>5.90</td><td>4.80</td><td>3.45</td></tr>
+          <tr><td>4</td><td>113 g</td><td>5.00</td><td>4.10</td><td>2.95</td></tr>
+          <tr><td>50</td><td>9.1 g</td><td>3.45</td><td>2.50</td><td>2.05</td></tr>
+          <tr><td>125</td><td>3.6 g</td><td>2.95</td><td>2.20</td><td>1.80</td></tr>
+          <tr><td>250</td><td>1.8 g</td><td>2.20</td><td>1.75</td><td>1.50</td></tr>
+        </tbody>
+      </table>
+      <p>Values in lb/gal. Multiply by 0.1198 for kg/L. From Piper et al. (1982) via Wyatt et al. (Texas Parks and Wildlife) and NCRAC Extension Publication 444. Between table rows the calculator interpolates linearly on the logarithm of fish per pound, and linearly between trip lengths. Trips shorter than 8 hours use the 8-hour column. The table does not cover fish smaller than 250 per pound, fish larger than 1 lb, or trips longer than 16 hours, and the calculator warns when you go outside it.</p>
+
+      <h3>Formulas</h3>
+      <p><strong>Temperature correction.</strong> The catfish guides say loading rates may be increased by 25% for each 10 °F (5.5 °C) the water is cooler than 65 °F, and must be reduced by 25% for each 10 °F it is warmer. The calculator applies this linearly. It caps the increase at +50% (45 °F), because the guides do not go further.</p>
+      <div class="formula">f<sub>T</sub> = 1 + 0.25 × (65 − T<sub>°F</sub>) ÷ 10      (capped at 1.5)
+rate = rate<sub>65 °F</sub>(fish per lb, hours) × f<sub>T</sub></div>
+      <p><strong>Air only.</strong> The table assumes good aeration. The University of Kentucky catfish hauling guide (Wynne &amp; Wurts) gives about <strong>4 lb of food-size catfish per gallon</strong> as a general rule when the water is aerated with air (21% oxygen) instead of pure oxygen. When you choose <em>Air only</em>, the catfish rate is capped at 4 lb/gal × f<sub>T</sub>. This cap only changes the result for large fish. With small fish and air only, it is wise to haul less than the table allows.</p>
+      <p><strong>Maximum load and number of fish.</strong></p>
+      <div class="formula">Max load (lb)  = rate (lb/gal) × water (gal)
+Max fish       = Max load ÷ weight per fish</div>
+      <p><strong>Water and tank space.</strong> The rate is per gallon of water <em>before</em> the fish go in. Water pushed up by the fish does not count. SRAC 393 gives the rule of thumb that about 8 lb of fish displace about 1 gallon, or <strong>12 gallons per 100 lb of fish</strong> (about 1.0 L per kg). The tank therefore needs room for both:</p>
+      <div class="formula">Water needed (gal) = planned load (lb) ÷ rate (lb/gal)
+Displaced (gal)    = 0.12 × planned load (lb)
+Tank space (gal)   = water needed + displaced</div>
+      <p><strong>Oxygen used by the fish.</strong> This is a rough estimate. Fish oxygen use varies a lot with species, size, temperature and stress. Adult fish usually use about 200–500 mg O₂ per kg per hour (Boyd, Global Seafood Alliance). Small fish use more per kg, and the rate roughly doubles for a 10 °C rise in temperature. The default is 500 mg/kg/h, the top of that range, because hauled fish are stressed.</p>
+      <div class="formula">O₂ (kg) = biomass (kg) × rate (mg/kg/h) × hours ÷ 1,000,000
+Gas volume (L at 21 °C, 1 atm) = O₂ (kg) × 754.6</div>
+      <p>The gas conversion uses the ideal gas law: 1 kg of O₂ is 31.25 mol (molar mass 31.999 g/mol), and 1 mol occupies 24.15 L at 21.1 °C (70 °F) and 1 atm. This is only what the fish <em>absorb</em>. Diffusers in a hauling tank let much of the gas escape at the surface, so the cylinder or liquid-oxygen supply must hold several times this amount. Size it from your diffuser's flow rate and the trip time, and keep a reserve. Keep dissolved oxygen at or above 6 mg/L the whole trip (SRAC 390 and 392). See the <a href="dissolved-oxygen.html">Dissolved Oxygen calculator</a> for saturation values.</p>
+      <p><strong>Salt.</strong> Adding salt reduces the difference in salt content between the water and the fish's blood. This eases osmotic stress during handling. SRAC 392 lists rates of 0.05 to 1% (500–10,000 mg/L, 0.4–8 lb per 100 gal), with the lower rates for freshwater fish. The Texas catfish guide uses 0.5% for catfish hauling water. Use non-iodized salt.</p>
+      <div class="formula">Salt (kg) = water (L) × salt % ÷ 100</div>
+      <p>The <a href="salt-addition.html">Salt Addition calculator</a> covers dosing salt in more detail.</p>
+      <p><strong>Tempering.</strong> SRAC 392 advises tempering fish for at least 20 minutes for every 10 °F of difference between the hauling water and the receiving water. When the difference is more than 10 °F, or the pH differs by 1 unit or more, mix receiving water into the hauling tank gradually.</p>
+      <div class="formula">Tempering time (min) ≥ 20 × |T<sub>haul</sub> − T<sub>receiving</sub>| (°F) ÷ 10</div>
+
+      <h3>Fish length to weight</h3>
+      <p>If you enter a length, the calculator estimates weight from the channel catfish standard-weight equation (Brown et al., 1995), with total length TL in mm and weight W in g. Standard weight describes a fish in good condition. Well-fed farm fish are often heavier, so weighing a sample is more accurate. This option only makes sense for channel catfish.</p>
+      <div class="formula">log<sub>10</sub> W = −5.800 + 3.294 × log<sub>10</sub> TL</div>
+
+      <h3>Example</h3>
+      <p>A truck tank holds <strong>500 US gallons</strong> of water. You want to haul 12,000 channel catfish stockers averaging <strong>0.1 lb</strong> each (10 per pound), in water at <strong>75 °F</strong>, on a <strong>10-hour</strong> trip with bottled oxygen.</p>
+      <ul>
+        <li>10 fish per pound lies between the 4 and 50 per pound rows: on a log scale it is 36.3% of the way from 4 to 50. The 8-hour rate is 5.00 + (3.45 − 5.00) × 0.363 = 4.438 lb/gal. The 12-hour rate is 4.10 + (2.50 − 4.10) × 0.363 = 3.520 lb/gal. Halfway between them, for 10 hours, the rate is <strong>3.979 lb/gal</strong> at 65 °F.</li>
+        <li>75 °F is 10 °F warmer than 65 °F, so f<sub>T</sub> = 0.75 and the safe rate is 3.979 × 0.75 = <strong>2.984 lb/gal</strong> (0.358 kg/L).</li>
+        <li>Max load = 2.984 × 500 = <strong>1,492 lb</strong> (677 kg), or about <strong>14,919 fish</strong>.</li>
+        <li>The planned 12,000 fish weigh 1,200 lb, which is 80% of the safe maximum. They need 1,200 ÷ 2.984 = 402 gal of water. They displace 0.12 × 1,200 = 144 gal, so they take up about 546 gal of tank space.</li>
+        <li>Oxygen: 544 kg × 500 mg/kg/h × 10 h = 2.72 kg of O₂, about 2,054 L (72.5 ft³) of gas actually absorbed by the fish.</li>
+        <li>Salt at 0.5% in 500 gal (1,893 L) is 9.46 kg (20.9 lb). If the receiving pond is at 80 °F, temper the fish for at least 10 minutes.</li>
+      </ul>
+
+      <h3>Before and during the trip</h3>
+      <ul>
+        <li><strong>Withhold feed</strong> for at least a day before hauling (SRAC 3903; WSU Extension). Fish with empty guts use less oxygen and foul the water less.</li>
+        <li><strong>Haul cool when possible.</strong> SRAC 393 notes that catfish haul well and are easier to temper at about 60 °F in summer and 45–50 °F in winter. SRAC 392 notes that ice at about ½ lb per gallon lowers water temperature by about 10 °F. Use ice made from chlorine-free water.</li>
+        <li><strong>Monitor dissolved oxygen</strong> throughout the trip, not just at loading, and keep it at 6 mg/L or more.</li>
+        <li><strong>Temper on arrival</strong> as described above, and check pH as well as temperature.</li>
+      </ul>
+
+      <h3>Limitations and assumptions</h3>
+      <ul>
+        <li>The catfish table dates from the 1970s–80s. Commercial haulers often carry food-size catfish at 5–10 lb/gal on short 1–4 hour trips (SRAC 390), but that is outside this table. Your fish's condition, water chemistry and equipment can make the true safe load higher or lower.</li>
+        <li>The 25%-per-10 °F rule and the 4 lb/gal air-only figure are rules of thumb from extension guides, not physiological models.</li>
+        <li>Rates for other species (tilapia, trout, baitfish, hybrid striped bass and others) differ a lot. Use a species-specific source, such as SRAC 392/393 for warmwater species or Piper et al. (1982) for salmonids, and enter that rate in custom mode.</li>
+        <li>The oxygen figure is an estimate. Size the oxygen supply with a margin and measure DO.</li>
+      </ul>
+
+      <h2>Sources</h2>
+      <ol class="sources">
+        <li>Piper, R. G., McElwain, I. B., Orme, L. E., McCraren, J. P., Fowler, L. G. &amp; Leonard, J. R. (1982). <em>Fish Hatchery Management</em>. Washington, D.C.: U.S. Department of the Interior, Fish and Wildlife Service. (Chapter “Transportation of Live Fishes”; channel catfish loading table and the cooling/loading relationship.)</li>
+        <li>Wyatt, T., Barkoh, A. &amp; Martinez, J. <em>Guidelines for the Culture of Blue and Channel Catfish</em>. Texas Parks and Wildlife Department, Inland Fisheries. Table 9: estimated weights of channel catfish hauled per gallon at 18.3 °C (65 °F), after McCraren (1978) and Piper et al. (1982); temperature adjustment of 25% per 5.5 °C; 0.5% salt in hauling water. <a href="https://tpwd.texas.gov/publications/pwdpubs/media/pwd_rp_t3200_1556.pdf" rel="noopener" target="_blank">tpwd.texas.gov</a></li>
+        <li>North Central Regional Aquaculture Center. <em>Pond Culture of Channel Catfish in the North Central Region</em>. NCR Extension Publication 444. Table 3: recommended loading densities for hauling channel catfish (65 °F, ideal aeration; reduce 25% for each 10 °F rise). <a href="https://www.ncrac.org/files/biblio/ncrac444.pdf" rel="noopener" target="_blank">ncrac.org</a></li>
+        <li>Southern Regional Aquaculture Center. <em>Transportation of Warmwater Fish: Equipment and Guidelines</em>. SRAC Publication No. 390 (Jensen, 1990; revised 2011). <a href="https://srac.msstate.edu/HarvestingHoldingandHauling.html" rel="noopener" target="_blank">srac.msstate.edu</a></li>
+        <li>Jensen, G. L. (1990). <em>Transportation of Warmwater Fish: Procedures and Loading Rates</em>. SRAC Publication No. 392. Southern Regional Aquaculture Center. (Revised August 2023 as <em>Procedures, Loading Rates, and Tips by Species</em>.)</li>
+        <li>Jensen, G. L. (1990). <em>Transportation of Warmwater Fish: Loading Rates and Tips by Species</em>. SRAC Publication No. 393. Southern Regional Aquaculture Center.</li>
+        <li>Wynne, F. &amp; Wurts, W. A. <em>Live-Hauling Channel Catfish</em>. Kentucky State University / University of Kentucky Cooperative Extension. <a href="https://aquaculture.mgcafe.uky.edu/sites/aquaculture.ca.uky.edu/files/livehaulcatfish.pdf" rel="noopener" target="_blank">uky.edu (PDF)</a></li>
+        <li>Brown, M. L., Jaramillo, F., Gatlin, D. M. &amp; Murphy, B. R. (1995). A revised standard weight (W<sub>s</sub>) equation for channel catfish. <em>Journal of Freshwater Ecology</em>, 10(3), 295–302.</li>
+        <li>Boyd, C. E. “Dissolved oxygen requirements in aquatic animal respiration.” <em>Responsible Seafood Advocate</em>, Global Seafood Alliance. <a href="https://www.globalseafood.org/advocate/dissolved-oxygen-requirements-in-aquatic-animal-respiration/" rel="noopener" target="_blank">globalseafood.org</a></li>
+        <li>Southern Regional Aquaculture Center. <em>Shipping Fish in Boxes</em>. SRAC Publication No. 3903.</li>
+        <li>Washington State University Veterinary Extension (2026). “Fish transport: Basic considerations.” <a href="https://vetextension.wsu.edu/2026/09/08/fish-transport-basic-considerations/" rel="noopener" target="_blank">vetextension.wsu.edu</a></li>
+        <li>National Institute of Standards and Technology. <em>NIST Chemistry WebBook</em>, SRD 69: Oxygen (molar mass); CODATA value of the molar gas constant. <a href="https://webbook.nist.gov/cgi/cbook.cgi?ID=C7782447" rel="noopener" target="_blank">webbook.nist.gov</a></li>
+      </ol>
+    </article>
+  </main>
+
+  <footer class="site-footer">
+    <div class="wrap">Calculations are estimates. Check the sources above before relying on a result.</div>
+  </footer>
+
+  <script src="../assets/share.js"></script>
+  <script src="../assets/units.js"></script>
+  <script src="../assets/fish-hauling.js"></script>
+</body>
+</html>
