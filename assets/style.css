@@ -173,6 +173,32 @@ a:hover { color: var(--accent-strong); }
   gap: 8px;
 }
 
+.use-filters {
+  flex-basis: 100%;
+  align-items: center;
+}
+
+.filter-label {
+  font-size: .85rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  margin-right: 2px;
+}
+
+.use-filters .chip { font-size: .85rem; padding: 5px 12px; }
+
+@media (max-width: 600px) {
+  .use-filters {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    scrollbar-width: none;
+    margin: 0 -16px;
+    padding: 2px 16px;
+  }
+  .use-filters::-webkit-scrollbar { display: none; }
+  .use-filters .chip, .filter-label { flex: none; white-space: nowrap; }
+}
+
 .search {
   display: flex;
   align-items: center;

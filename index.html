@@ -26,7 +26,7 @@
     </section>
 
     <div class="toolbar">
-      <div class="filters" role="group" aria-label="Filter calculators">
+      <div class="filters" id="sys-filters" role="group" aria-label="Filter by system">
         <button class="chip" type="button" data-filter="all" aria-pressed="true">All</button>
         <button class="chip" type="button" data-filter="aquaponics" aria-pressed="false">Aquaponics</button>
         <button class="chip" type="button" data-filter="aquaculture" aria-pressed="false">Aquaculture</button>
@@ -37,10 +37,14 @@
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-4-4"/></svg>
         <input id="search" type="search" placeholder="Search calculators" autocomplete="off">
       </label>
+      <div class="filters use-filters" id="use-filters" role="group" aria-labelledby="use-label">
+        <span class="filter-label" id="use-label">I'm working on</span>
+        <button class="chip" type="button" data-use="all" aria-pressed="true">Anything</button>
+      </div>
     </div>
 
     <section class="app-grid" id="app-grid" aria-label="Calculators"></section>
-    <p class="empty" id="empty" hidden>No calculators match your search.</p>
+    <p class="empty" id="empty" hidden>No calculators match these filters.</p>
   </main>
 
   <footer class="site-footer">
@@ -53,8 +57,21 @@
       var CAT_LABEL = { aquaculture: 'Aquaculture', aquaponics: 'Aquaponics', hydroponics: 'Hydroponics' };
       var grid = document.getElementById('app-grid');
       var search = document.getElementById('search');
-      var chips = document.querySelectorAll('.chip');
-      var filter = 'all';
+      var chips = document.querySelectorAll('#sys-filters .chip');
+      var useBox = document.getElementById('use-filters');
+      var filter = 'all', use = 'all';
+      var USE_LABEL = {};
+      (window.CALC_USES || []).forEach(function (u) {
+        USE_LABEL[u.id] = u.label;
+        var b = document.createElement('button');
+        b.className = 'chip';
+        b.type = 'button';
+        b.setAttribute('data-use', u.id);
+        b.setAttribute('aria-pressed', 'false');
+        b.textContent = u.label;
+        useBox.appendChild(b);
+      });
+      var useChips = useBox.querySelectorAll('.chip');
 
       // Live calculators first, then the ones still being built; keep catalog order inside each group.
       var items = window.CALCULATORS.slice().sort(function (a, b) {
@@ -74,6 +91,7 @@
           '<span class="app-name"></span><span class="app-cat"></span>';
         tile.querySelector('.app-name').textContent = c.name;
         tile.querySelector('.app-cat').textContent = c.blurb || CAT_LABEL[c.cat];
+        tile.title = c.name + ' · ' + (c.uses || []).map(function (u) { return USE_LABEL[u]; }).join(', ');
         tile._item = c;
         grid.appendChild(tile);
       });
@@ -83,8 +101,11 @@
         var shown = 0;
         Array.prototype.forEach.call(grid.children, function (t) {
           var c = t._item;
+          var uses = c.uses || [];
+          var text = c.name + ' ' + (c.blurb || '') + ' ' + c.tags.join(' ') + ' ' + uses.map(function (u) { return USE_LABEL[u]; }).join(' ');
           var ok = (filter === 'all' || c.tags.indexOf(filter) !== -1) &&
-            (!q || (c.name + ' ' + (c.blurb || '') + ' ' + c.tags.join(' ')).toLowerCase().indexOf(q) !== -1);
+            (use === 'all' || uses.indexOf(use) !== -1) &&
+            (!q || text.toLowerCase().indexOf(q) !== -1);
           t.hidden = !ok;
           if (ok) shown++;
         });
@@ -95,6 +116,13 @@
         chip.addEventListener('click', function () {
           filter = chip.getAttribute('data-filter');
           chips.forEach(function (c) { c.setAttribute('aria-pressed', String(c === chip)); });
+          apply();
+        });
+      });
+      useChips.forEach(function (chip) {
+        chip.addEventListener('click', function () {
+          use = chip.getAttribute('data-use');
+          useChips.forEach(function (c) { c.setAttribute('aria-pressed', String(c === chip)); });
           apply();
         });
       });
