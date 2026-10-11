@@ -46,6 +46,7 @@
 //     allowZero: true,               // allow 0 but not negatives
 //     check: function (v, ctx) { return 'message' or '' },  // extra validation (v in base units)
 //     sig: 4,                        // significant digits when a default is shown (default 4)
+//     half: true,                    // lay out two short fields side by side
 //     hint: 'text' | function (ctx) { return 'text' },
 //     show: function (ctx) { return bool },   // hide when not relevant (value still computed)
 //     options: [{ value, label }] | function (ctx) {...}   // for type 'select'
@@ -214,7 +215,7 @@
       const v = ctx.v[f.id];
       if (!isFinite(v)) return '–';
       const shown = Object.prototype.hasOwnProperty.call(state.ov, f.id) ? parseFloat(state.ov[f.id]) : parseFloat(displayValue(f, v));
-      const u = f.group ? ' ' + CalcUnits.label(f.group, unitOf(f)) : (f.suffix ? (f.suffix === '%' ? '%' : ' ' + f.suffix) : '');
+      const u = f.group ? ' ' + CalcUnits.label(f.group, unitOf(f)) : (f.suffix ? (f.suffix.charAt(0) === '%' ? f.suffix : ' ' + f.suffix) : '');
       return fmt(shown, 4) + u;
     }
 
@@ -322,7 +323,7 @@
     }
 
     function buildField(f) {
-      const wrap = h('div', { class: 'field', 'data-field': f.id });
+      const wrap = h('div', { class: 'field' + (f.half ? ' guide-half' : ''), 'data-field': f.id });
       const head = h('div', { class: 'guide-label-row' });
       head.appendChild(h('label', { for: 'gf-' + f.id }, esc(f.label)));
       const useBtn = h('button', { type: 'button', class: 'guide-use', hidden: '' }, 'Use suggested');

@@ -176,6 +176,16 @@
 
 .guide-src li { margin-bottom: 6px; }
 
+.guide-fields {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  column-gap: 12px;
+}
+.guide-fields .field { grid-column: 1 / -1; }
+.guide-fields .field.guide-half { grid-column: auto; }
+
+.guide .result-main .value { font-size: 1.6rem; }
+
 /* ---------- Back / Next ---------- */
 .guide-nav {
   display: flex;
@@ -205,10 +215,12 @@
 .viz .g-line { stroke: var(--text); stroke-width: 1.5; fill: none; }
 .viz .g-line-accent { stroke: var(--accent); stroke-width: 2.5; fill: none; }
 .viz .g-line-warn { stroke: var(--warn-text); stroke-width: 1.5; stroke-dasharray: 5 4; fill: none; }
-.viz .g-label { fill: var(--text); font-size: 13px; font-family: var(--font); }
-.viz .g-strong { fill: var(--text); font-size: 13px; font-weight: 700; font-family: var(--font); }
-.viz .g-warn-text { fill: var(--warn-text); font-size: 12px; font-weight: 600; font-family: var(--font); }
-.viz .g-accent-text { fill: var(--accent-strong); font-size: 12px; font-weight: 700; font-family: var(--font); }
+.guide .viz .dim-text { font-size: 14px; }
+.guide .viz .depth-text { font-size: 14px; }
+.viz .g-label { fill: var(--text); font-size: 15px; font-family: var(--font); }
+.viz .g-strong { fill: var(--text); font-size: 16px; font-weight: 700; font-family: var(--font); }
+.viz .g-warn-text { fill: var(--warn-text); font-size: 14px; font-weight: 600; font-family: var(--font); }
+.viz .g-accent-text { fill: var(--accent-strong); font-size: 14px; font-weight: 700; font-family: var(--font); }
 .viz .g-box { fill: var(--surface); stroke: var(--tank-stroke); stroke-width: 1.5; }
 .viz .g-box-accent { fill: var(--accent-soft); stroke: var(--accent); stroke-width: 1.5; }
 .viz .g-arrow { stroke: var(--text-muted); stroke-width: 1.6; fill: none; }

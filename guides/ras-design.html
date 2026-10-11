@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Engineer a Recirculating Aquaculture System (RAS) – Guided Design</title>
+  <meta name="description" content="Step-by-step guided design of a recirculating aquaculture system: production goal, feed, fish tanks, oxygen, biofilter, water flow, drum filter, tank inlets, pipes and pump, UV, backup power and sump, ending in a shareable design sheet.">
+  <link rel="stylesheet" href="../assets/style.css">
+  <link rel="stylesheet" href="../assets/guide.css">
+</head>
+<body>
+  <header class="site-header">
+    <div class="wrap">
+      <a class="brand" href="../">
+        <span class="brand-mark" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3c3 4 6 7 6 11a6 6 0 0 1-12 0c0-4 3-7 6-11z"/></svg>
+        </span>
+        Tank Calculator
+      </a>
+      <nav><a href="../">All calculators</a></nav>
+    </div>
+  </header>
+
+  <main class="wrap">
+    <div class="crumbs"><a href="../">Home</a> / Guides / Engineer a RAS</div>
+    <h1 class="page-title">Engineer a recirculating aquaculture system</h1>
+    <p class="page-lede">A guided, step-by-step design of a RAS. Start from how much fish you want to grow and work through feed, tanks, oxygen, biofilter, flow, solids removal, tank inlets, pipes and pump, UV, backup power and the sump. Each step suggests values from the steps before it, and every value stays editable.</p>
+
+    <div id="guide">
+      <noscript><p class="notice">This guide needs JavaScript. The individual calculators on the <a href="../">home page</a> cover each step.</p></noscript>
+    </div>
+
+    <article class="article">
+      <h2>How this guide works</h2>
+      <p>The guide follows the order a RAS engineer usually works in: the production goal sets the daily feed, and the feed sets the oxygen demand, the ammonia the biofilter must remove and the solids the filter must catch. Those loads decide the water flow, and the flow sizes the drum filter, the tank inlets, the pipes and the pump. The last steps check what happens when the power fails.</p>
+      <ul>
+        <li><strong>Suggestions carry forward.</strong> Inputs show a suggested value worked out from earlier steps. Change any value and the later steps follow. A <em>Use suggested</em> button brings the suggestion back.</li>
+        <li><strong>Every input has its own unit picker</strong>, as on the calculators, so you can mix metres, feet, litres and gallons.</li>
+        <li><strong>Same formulas as the calculators.</strong> Each step uses the formulas and constants of the matching calculator, and its <em>Open the full calculator</em> button opens that calculator pre-filled with your numbers for the full detail and explanation.</li>
+        <li><strong>Rules of thumb are labelled.</strong> Where a value is a typical figure or a design assumption rather than a measured or published limit, the step says so. Replace those with your own data whenever you have it.</li>
+        <li><strong>Save and share.</strong> The page address always holds your inputs and the step you are on, so you can bookmark it, share it, or come back later. The last step is a design sheet you can copy, share or print.</li>
+      </ul>
+      <p>The guide gives first-pass estimates for a single-loop system with round tanks. It does not size carbon dioxide stripping, heating, pH control or effluent treatment, and it does not replace equipment data or an experienced designer.</p>
+
+      <h2>Sources</h2>
+      <ol class="sources" id="guide-sources"></ol>
+    </article>
+  </main>
+
+  <footer class="site-footer">
+    <div class="wrap">Calculations are estimates. Check the sources above before relying on a result.</div>
+  </footer>
+
+  <script src="../assets/share.js"></script>
+  <script src="../assets/units.js"></script>
+  <script src="../assets/guide.js"></script>
+  <script src="../assets/guide-ras-design.js"></script>
+</body>
+</html>

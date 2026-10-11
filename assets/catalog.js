@@ -82,7 +82,7 @@ window.CALCULATORS = [
 // Guided walkthroughs: step-by-step designs that chain several calculators.
 // status: 'live' links to guides/<slug>.html; 'soon' shows a disabled card.
 window.GUIDES = [
-  { slug: 'ras-design', name: 'Engineer a recirculating aquaculture system', blurb: 'From production goal to tanks, feed, oxygen, biofilter, solids, flow, pumps and backup power.', cat: 'aquaculture', tags: ['aquaculture'], uses: ['design', 'plumbing', 'filtration', 'water', 'fish', 'power'], status: 'soon',
+  { slug: 'ras-design', name: 'Engineer a recirculating aquaculture system', blurb: 'From production goal to tanks, feed, oxygen, biofilter, solids, flow, pumps and backup power.', cat: 'aquaculture', tags: ['aquaculture'], uses: ['design', 'plumbing', 'filtration', 'water', 'fish', 'power'], status: 'live',
     icon: '<circle cx="7" cy="14" r="4"/><path d="M11 14h4l2-4h4M17 10v8"/><path d="M5 6h4M7 4v4"/>' },
   { slug: 'lighting-design', name: 'Design a grow light system', blurb: 'From crop light needs to PPFD, fixture count and layout, power and running cost.', cat: 'hydroponics', tags: ['hydroponics', 'aquaponics'], uses: ['lighting', 'design', 'power', 'money'], status: 'soon',
     icon: '<path d="M4 5h16"/><path d="M7 5l-2 5h14l-2-5"/><path d="M8 14l-1 2M12 14v3M16 14l1 2"/><path d="M5 21h14"/>' }
