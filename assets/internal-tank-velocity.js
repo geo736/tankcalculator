@@ -9,12 +9,19 @@
   const BL_LOW = 0.5, BL_HIGH = 2.0;            // body lengths/s (Losordo & Westers 1994)
   const RATIO_LOW = 5, RATIO_HIGH = 10;         // diameter:depth (Timmons et al. 1998)
   const G = 9.80665;                            // m/s², standard gravity
+  // Square tanks with corner radius ≥ 20% of the side rotate about as fast as circular tanks;
+  // sharp-cornered square tanks about half as fast (Zhang et al. 2022).
+  const RB_GOOD = 0.2, SHARP_FACTOR = 0.5;
 
-  const FIELDS = ['diameter', 'depth', 'flow', 'ports', 'portd', 'fish', 'target'];
+  const FIELDS = ['diameter', 'side', 'corner', 'rlen', 'rwid', 'depth', 'flow', 'ports', 'portd', 'fish', 'target'];
   const DEFAULTS = {
-    diameter: [4, 'm'], depth: [0.8, 'm'], flow: [400, 'Lpm'], ports: [8, ''],
+    diameter: [4, 'm'], side: [3, 'm'], corner: [75, 'cm'], rlen: [12, 'm'], rwid: [3, 'm'],
+    depth: [0.8, 'm'], flow: [400, 'Lpm'], ports: [8, ''],
     portd: [25, 'mm'], fish: [20, 'cm'], target: [30, 'cmps']
   };
+  const SHAPES = ['round', 'square', 'rect'];
+  const shapeButtons = document.querySelectorAll('#shape-group button');
+  let shape = 'round';
 
   const $ = function (id) { return document.getElementById(id); };
   const vout = $('vout');
@@ -51,7 +58,6 @@
   }
 
   function compute() {
-    const D = CalcUnits.base('diameter');          // m
     const d = CalcUnits.base('depth');             // m
     const Q = CalcUnits.base('flow') / 1000;       // m³/s
     const n = portCount();
@@ -59,23 +65,46 @@
     const L = CalcUnits.base('fish');              // m
     const vTarget = CalcUnits.base('target');      // m/s
 
-    const r = { D: D, d: d, Q: Q, n: n, dp: dp, L: L, vTarget: vTarget };
-    r.vol = Math.PI * D * D / 4 * d;               // m³
+    const r = { shape: shape, d: d, Q: Q, n: n, dp: dp, L: L, vTarget: vTarget, cells: 1, kf: 1 };
+    // span = width of one rotating body of water (diameter, side or cell width), m
+    if (shape === 'square') {
+      const B = CalcUnits.base('side');
+      const Rc = Math.min(Math.max(CalcUnits.base('corner') || 0, 0), B / 2);
+      r.B = B; r.Rc = Rc; r.rb = B > 0 ? Rc / B : NaN; r.span = B;
+      r.plan = B * B - (4 - Math.PI) * Rc * Rc;
+      if (B > 0 && r.rb < RB_GOOD) r.kf = SHARP_FACTOR;
+    } else if (shape === 'rect') {
+      const a = CalcUnits.base('rlen'), b = CalcUnits.base('rwid');
+      r.long = Math.max(a, b); r.short = Math.min(a, b);
+      r.cells = r.short > 0 ? Math.max(1, Math.round(r.long / r.short)) : 1;
+      r.cellLen = r.long / r.cells;
+      r.aspect = r.short > 0 ? r.cellLen / r.short : NaN;
+      r.span = r.short;
+      r.plan = a * b;
+    } else {
+      const D = CalcUnits.base('diameter');
+      r.D = D; r.span = D;
+      r.plan = Math.PI * D * D / 4;
+    }
+    r.vol = r.plan * d;                            // m³
     r.hrt = Q > 0 && r.vol > 0 ? r.vol / Q : NaN;  // s
     r.area = n * Math.PI * dp * dp / 4;            // m²
     r.okJet = Q > 0 && r.area > 0;
     r.vin = r.okJet ? Q / r.area : NaN;            // m/s
-    r.vLow = K_LOW * r.vin;
-    r.vHigh = K_HIGH * r.vin;
-    r.vMid = K_MID * r.vin;
+    r.kLow = K_LOW * r.kf; r.kHigh = K_HIGH * r.kf;
+    r.vLow = r.kLow * r.vin;
+    r.vHigh = r.kHigh * r.vin;
+    r.vMid = (r.kLow + r.kHigh) / 2 * r.vin;
+    r.qCell = Q / r.cells;
+    r.portsCell = n / r.cells;
     r.head = r.vin * r.vin / (2 * G);              // m
     r.blLow = L > 0 ? r.vLow / L : NaN;
     r.blHigh = L > 0 ? r.vHigh / L : NaN;
     r.blMid = L > 0 ? r.vMid / L : NaN;
-    r.ratio = d > 0 ? D / d : NaN;
+    r.ratio = d > 0 ? r.span / d : NaN;
     if (vTarget > 0) {
-      r.reqLow = vTarget / K_HIGH;                 // jet needed if k = 0.20
-      r.reqHigh = vTarget / K_LOW;                 // jet needed if k = 0.15
+      r.reqLow = vTarget / r.kHigh;                // jet needed at the high k
+      r.reqHigh = vTarget / r.kLow;                // jet needed at the low k
       if (Q > 0 && n > 0) {
         r.dpBig = Math.sqrt(4 * Q / (n * Math.PI * r.reqLow));   // slower jet → bigger port
         r.dpSmall = Math.sqrt(4 * Q / (n * Math.PI * r.reqHigh));
@@ -112,9 +141,16 @@
   }
 
   // ---------- State ----------
+  function setShape(s) {
+    shape = SHAPES.indexOf(s) >= 0 ? s : 'round';
+    shapeButtons.forEach(function (b) { b.setAttribute('aria-pressed', String(b.dataset.shape === shape)); });
+    document.querySelectorAll('[data-shape-for]').forEach(function (el) { el.hidden = el.dataset.shapeFor !== shape; });
+  }
+
   function getState() {
-    const st = { vout: vout.value };
+    const st = { vout: vout.value, shape: shape };
     FIELDS.forEach(function (f) {
+      if ($(f).closest('.field').hidden) return;
       st[f] = $(f).value;
       const u = CalcUnits.unit(f);
       if (u) st[f + '_u'] = u;
@@ -132,19 +168,27 @@
     const r = compute();
     const notes = [];
     const tankOk = r.vol > 0;
-    if (!(r.D > 0 && r.d > 0)) notes.push('Enter the tank diameter and water depth.');
+    const sizeName = { round: 'tank diameter', square: 'side length', rect: 'tank length and width' }[shape];
+    if (!(r.plan > 0 && r.d > 0)) notes.push('Enter the ' + sizeName + ' and water depth.');
     if (!(r.Q > 0)) notes.push('Enter the total inflow.');
     if (!(r.n > 0)) notes.push('Enter at least one inlet port.');
     else if (Math.abs(parseFloat($('ports').value) - r.n) > 1e-9) notes.push('Number of ports rounded to ' + r.n + '.');
     if (!(r.dp > 0)) notes.push('Enter the port diameter.');
-    if (r.dp > 0 && r.D > 0 && r.dp * 10 > r.D) notes.push('Port diameter looks too large for this tank; check the units.');
+    if (r.dp > 0 && r.span > 0 && r.dp * 10 > r.span) notes.push('Port diameter looks too large for this tank; check the units.');
+    if (shape === 'square' && r.B > 0 && r.kf < 1) notes.push('Sharp or small corners (radius ' + fmt(r.rb * 100, 0) + '% of the side): rotation is roughly half that of a round tank. Rounding the corners to 20–40% of the side roughly doubles it.');
+    if (shape === 'rect' && r.short > 0) {
+      if (r.aspect > 1.2 || r.aspect < 0.85) notes.push('Length ÷ width is ' + fmt(r.long / r.short, 2) + ', so each of the ' + r.cells + ' cells is ' + fmt(r.aspect, 2) + ' times as long as it is wide. Square cells rotate best.');
+      if (r.n > 0 && Math.abs(r.portsCell - Math.round(r.portsCell)) > 1e-9) notes.push(r.n + ' ports do not divide evenly among ' + r.cells + ' cells.');
+      notes.push('Each cell needs its own inlet pipes and center drain.');
+    }
     if (r.okJet && r.vin < 0.3) notes.push('The jets are very slow (' + fmtV(r.vin) + '). Smaller or fewer ports would raise the velocity.');
     const notice = $('notice');
     notice.textContent = notes.join(' ');
     notice.hidden = notes.length === 0;
 
     $('r-vt').textContent = r.okJet ? fmtVRange(r.vLow, r.vHigh) : '–';
-    $('r-vt-sub').textContent = r.okJet ? '15–20% of the inlet jet velocity · mid estimate ' + fmtV(r.vMid) : '';
+    const kTxt = fmt(r.kLow * 100, 1) + '–' + fmt(r.kHigh * 100, 1) + '%';
+    $('r-vt-sub').textContent = r.okJet ? kTxt + ' of the inlet jet velocity' + (shape === 'rect' ? ', in each cell' : '') + ' · mid estimate ' + fmtV(r.vMid) : '';
     $('r-vin').textContent = r.okJet ? fmtV(r.vin) + ' · ' + fmt(r.vin, 2) + ' m/s' : '–';
     if (vout.value === 'mps') $('r-vin').textContent = r.okJet ? fmtV(r.vin) : '–';
 
@@ -157,7 +201,20 @@
     $('r-vol').textContent = tankOk ? fmt(r.vol) + ' m³ · ' + fmt(r.vol * 1000, 0) + ' L · ' + fmt(r.vol * 1000 / 3.785411784, 0) + ' US gal' : '–';
     $('r-hrt').textContent = isFinite(r.hrt) ? fmtTime(r.hrt) + ' · ' + fmt(3600 / r.hrt, 2) + ' exchanges/h' : '–';
     const rs = ratioStatus(r);
+    $('r-ratio-label').textContent = { round: 'Diameter : depth', square: 'Side : depth', rect: 'Cell width : depth' }[shape];
     $('r-ratio').innerHTML = rs ? fmt(r.ratio, 1) + ' : 1 ' + pill(rs) : '–';
+    const cellsLi = $('r-cells').closest('li');
+    cellsLi.hidden = shape === 'round';
+    if (shape === 'square') {
+      $('r-cells-label').textContent = 'Corner radius : side';
+      $('r-cells').innerHTML = r.B > 0 ? fmt(r.rb, 2) + ' ' + pill(r.kf < 1 ? { ok: false, text: 'sharp (guide 0.2–0.4)' } : r.rb > 0.4 ? { ok: true, text: 'very round' } : { ok: true, text: 'in 0.2–0.4 guide' }) : '–';
+    } else if (shape === 'rect') {
+      $('r-cells-label').textContent = 'Rotating cells';
+      $('r-cells').textContent = r.short > 0
+        ? r.cells + ' × ' + inUnitOf('rwid', r.cellLen) + ' by ' + inUnitOf('rwid', r.short) +
+          (r.Q > 0 ? ' · ' + fmt(CalcUnits.fromBase('flow', r.qCell * 1000)) + ' ' + CalcUnits.unitLabel('flow') + (r.n > 0 ? ', ' + fmt(r.portsCell, 1) + ' ports' : '') + ' each' : '')
+        : '–';
+    }
     $('r-head').textContent = r.okJet ? inUnitOf('depth', r.head) : '–';
 
     if (r.vTarget > 0) {
@@ -173,7 +230,7 @@
     }
 
     $('viz-caption').textContent = r.okJet
-      ? 'Jets ' + fmtV(r.vin) + ' → tank ≈ ' + fmtVRange(r.vLow, r.vHigh) + (isFinite(r.blLow) ? ' · ' + r.blLow.toFixed(2) + '–' + r.blHigh.toFixed(2) + ' BL/s' : '')
+      ? 'Jets ' + fmtV(r.vin) + ' → ' + (shape === 'rect' ? 'each cell' : 'tank') + ' ≈ ' + fmtVRange(r.vLow, r.vHigh) + (isFinite(r.blLow) ? ' · ' + r.blLow.toFixed(2) + '–' + r.blHigh.toFixed(2) + ' BL/s' : '')
       : 'Enter flow and port size to draw the jets';
 
     drawViz(r);
@@ -182,11 +239,12 @@
 
   // ---------- SVG drawing ----------
   const NS = 'http://www.w3.org/2000/svg';
+  let root = svg;   // default parent; the right panel is drawn into a moved group for rectangular tanks
   function el(name, attrs, text, parent) {
     const e = document.createElementNS(NS, name);
     Object.keys(attrs).forEach(function (a) { e.setAttribute(a, attrs[a]); });
     if (text !== undefined) e.textContent = text;
-    (parent || svg).appendChild(e);
+    (parent || root).appendChild(e);
     return e;
   }
   function label(x, y, text, anchor, cls) {
@@ -213,62 +271,122 @@
       ' Q' + p(x - b * 0.45, y + h * 2) + ' ' + p(x, y) + 'Z' }, undefined, parent);
   }
 
+  // Swirl arrows around (cx, cy) at radius rr. dir 1 = counter-clockwise on screen, -1 = clockwise.
+  function swirl(cx, cy, rr, count, span, offset, dir) {
+    for (let i = 0; i < count; i++) {
+      const a0 = i * 2 * Math.PI / count + offset;
+      const a1 = a0 + span;
+      const x0 = cx + rr * Math.cos(a0), y0 = cy - dir * rr * Math.sin(a0);
+      const x1 = cx + rr * Math.cos(a1), y1 = cy - dir * rr * Math.sin(a1);
+      const large = span > Math.PI ? 1 : 0;
+      el('path', { class: 'swirl', d: 'M' + p(x0, y0) + ' A' + rr.toFixed(1) + ',' + rr.toFixed(1) + ' 0 ' + large + ' ' + (dir > 0 ? 0 : 1) + ' ' + p(x1, y1) });
+      const ux = -Math.sin(a1), uy = -dir * Math.cos(a1);
+      head(x1 + ux * 4, y1 + uy * 4, ux, uy, 9, 'swirl-head');
+    }
+  }
+
+  // Tangential inlet jets on a circle of radius rp around (cx, cy).
+  function jets(r, cx, cy, rp, shown, dir, maxLen) {
+    const jetLen = r.okJet ? Math.max(6, Math.min(maxLen, r.vin / 3 * maxLen)) : 0;
+    for (let i = 0; i < shown; i++) {
+      const a = Math.PI / 2 + i * 2 * Math.PI / shown + (shown === 4 ? Math.PI / 4 : 0);
+      const x = cx + rp * Math.cos(a), y = cy - dir * rp * Math.sin(a);
+      const ux = -Math.sin(a), uy = -dir * Math.cos(a);
+      if (jetLen > 0) {
+        el('path', { class: 'jet', d: 'M' + p(x, y) + ' L' + p(x + ux * (jetLen - 6), y + uy * (jetLen - 6)) });
+        head(x + ux * jetLen, y + uy * jetLen, ux, uy, 8, 'jet-head');
+      }
+      el('circle', { cx: x, cy: y, r: 3.5, class: 'nozzle' });
+    }
+  }
+
+  function swirlSpan(r, scale) { return Math.max(10, Math.min(110, r.vMid / 0.6 * 110)) * scale * Math.PI / 180; }
+
+  function dimLine(x0, x1, y, text) {
+    el('path', { class: 'dim', d: 'M' + p(x0, y) + ' L' + p(x1, y) +
+      ' M' + p(x0, y - 5) + ' L' + p(x0, y + 5) + ' M' + p(x1, y - 5) + ' L' + p(x1, y + 5) });
+    label((x0 + x1) / 2, y - 8, text);
+  }
+
+  function fishScale(r, x, y, spanPx) {
+    if (r.L > 0 && r.span > 0) {
+      const lenPx = Math.max(6, Math.min(80, r.L / r.span * spanPx));
+      fish(x + lenPx / 2, y, lenPx);
+    }
+  }
+
+  function depthTxt(r) { return r.d > 0 ? ' · depth ' + inUnitOf('depth', r.d) : ''; }
+
+  function drawRound(r, cx, cy, R) {
+    el('circle', { cx: cx, cy: cy, r: R, class: 'tank-water' });
+    el('circle', { cx: cx, cy: cy, r: R, class: 'tank-line' });
+    dimLine(cx - R, cx + R, cy - R - 12, r.D > 0 ? 'D ' + inUnitOf('diameter', r.D) + depthTxt(r) : 'Tank (top view)');
+    if (r.okJet) {
+      swirl(cx, cy, R * 0.76, 3, swirlSpan(r, 1), 0.3, 1);
+      swirl(cx, cy, R * 0.5, 2, swirlSpan(r, 0.8), 1.2, 1);
+    }
+    el('circle', { cx: cx, cy: cy, r: 7, class: 'drain' });
+    const shown = Math.min(r.n, 12);
+    if (shown > 0) jets(r, cx, cy, R - 12, shown, 1, 50);
+    if (r.n > 12) label(cx, cy + R + 22, r.n + ' ports (12 drawn)');
+    fishScale(r, cx, cy + R * 0.3, 2 * R);
+  }
+
+  function drawSquare(r, cx, cy, R) {
+    const rx = r.B > 0 ? Math.min(R, r.Rc / r.B * 2 * R) : 0;
+    el('rect', { x: cx - R, y: cy - R, width: 2 * R, height: 2 * R, rx: rx, class: 'tank-water' });
+    el('rect', { x: cx - R, y: cy - R, width: 2 * R, height: 2 * R, rx: rx, class: 'tank-line' });
+    dimLine(cx - R, cx + R, cy - R - 12, r.B > 0 ? 'side ' + inUnitOf('side', r.B) + ' · corner ' + inUnitOf('corner', r.Rc) + depthTxt(r) : 'Tank (top view)');
+    if (r.okJet) {
+      swirl(cx, cy, R * 0.72, 3, swirlSpan(r, 1), 0.3, 1);
+      swirl(cx, cy, R * 0.46, 2, swirlSpan(r, 0.8), 1.2, 1);
+    }
+    el('circle', { cx: cx, cy: cy, r: 7, class: 'drain' });
+    const shown = Math.min(r.n, 12);
+    // ports on the largest circle that fits inside the rounded square
+    if (shown > 0) jets(r, cx, cy, R - 12, shown, 1, 44);
+    if (r.n > 12) label(cx, cy + R + 22, r.n + ' ports (12 drawn)');
+    fishScale(r, cx, cy + R * 0.3, 2 * R);
+  }
+
+  // Rectangular tank drawn lengthwise across the full width. Returns the y of its bottom edge.
+  function drawRect(r) {
+    const maxDraw = 8;
+    const cells = r.short > 0 ? r.cells : 4;
+    const drawn = Math.min(cells, maxDraw);
+    const ratio = cells > maxDraw ? drawn * r.aspect : (r.short > 0 ? r.long / r.short : 4);
+    let w = 440, h = w / ratio;
+    if (h > 170) { h = 170; w = h * ratio; }
+    const x0 = 240 - w / 2, y0 = 58;
+    el('rect', { x: x0, y: y0, width: w, height: h, class: 'tank-water' });
+    const cellW = w / drawn;
+    for (let i = 1; i < drawn; i++) el('line', { x1: x0 + i * cellW, y1: y0, x2: x0 + i * cellW, y2: y0 + h, class: 'cell-line' });
+    el('rect', { x: x0, y: y0, width: w, height: h, class: 'tank-line' });
+    label(240, 30, r.short > 0 ? inUnitOf('rlen', r.long) + ' × ' + inUnitOf('rwid', r.short) + depthTxt(r) : 'Tank (top view)');
+    if (r.short > 0) label(240, 46, r.cells + ' rotating cell' + (r.cells > 1 ? 's' : '') + (cells > maxDraw ? ' (' + maxDraw + ' drawn)' : '') + (r.cells > 1 ? ', neighbours turn opposite ways' : ''));
+    const cr = Math.min(cellW, h) / 2;
+    const perCell = r.n > 0 ? Math.min(Math.max(1, Math.round(r.portsCell)), 6) : 0;
+    for (let i = 0; i < drawn; i++) {
+      const ccx = x0 + cellW * (i + 0.5), ccy = y0 + h / 2;
+      const dir = i % 2 ? -1 : 1;   // neighbouring cells counter-rotate
+      if (r.okJet && cr > 18) swirl(ccx, ccy, cr * 0.6, 2, swirlSpan(r, 0.9), 0.3, dir);
+      el('circle', { cx: ccx, cy: ccy, r: Math.max(3, Math.min(7, cr * 0.12)), class: 'drain' });
+      if (perCell > 0) jets(r, ccx, ccy, cr - 9, perCell, dir, Math.max(10, Math.min(40, cr * 0.55)));
+    }
+    fishScale(r, x0 + cellW / 2, y0 + h * 0.8, h);
+    return y0 + h;
+  }
+
   function drawViz(r) {
     while (svg.firstChild) svg.removeChild(svg.firstChild);
     const cx = 128, cy = 166, R = 108;
-
-    // ----- Tank (top view) -----
-    el('circle', { cx: cx, cy: cy, r: R, class: 'tank-water' });
-    el('circle', { cx: cx, cy: cy, r: R, class: 'tank-line' });
-    el('path', { class: 'dim', d: 'M' + p(cx - R, cy - R - 12) + ' L' + p(cx + R, cy - R - 12) +
-      ' M' + p(cx - R, cy - R - 17) + ' L' + p(cx - R, cy - R - 7) + ' M' + p(cx + R, cy - R - 17) + ' L' + p(cx + R, cy - R - 7) });
-    const dLabel = r.D > 0 ? 'D ' + inUnitOf('diameter', r.D) + (r.d > 0 ? ' · depth ' + inUnitOf('depth', r.d) : '') : 'Tank (top view)';
-    label(cx, cy - R - 20, dLabel);
-
-    // swirl arrows: arc span grows with the mid velocity estimate (counter-clockwise on screen)
-    if (r.okJet) {
-      const span = Math.max(10, Math.min(110, r.vMid / 0.6 * 110)) * Math.PI / 180;
-      [0.76, 0.5].forEach(function (f, ring) {
-        const rr = R * f;
-        const count = ring === 0 ? 3 : 2;
-        for (let i = 0; i < count; i++) {
-          const a0 = i * 2 * Math.PI / count + ring * 0.9 + 0.3;
-          const a1 = a0 + span * (ring === 0 ? 1 : 0.8);
-          const x0 = cx + rr * Math.cos(a0), y0 = cy - rr * Math.sin(a0);
-          const x1 = cx + rr * Math.cos(a1), y1 = cy - rr * Math.sin(a1);
-          const large = (a1 - a0) > Math.PI ? 1 : 0;
-          el('path', { class: 'swirl', d: 'M' + p(x0, y0) + ' A' + rr.toFixed(1) + ',' + rr.toFixed(1) + ' 0 ' + large + ' 0 ' + p(x1, y1) });
-          head(x1 + (-Math.sin(a1)) * 4, y1 + (-Math.cos(a1)) * 4, -Math.sin(a1), -Math.cos(a1), 9, 'swirl-head');
-        }
-      });
-    }
-
-    // center drain
-    el('circle', { cx: cx, cy: cy, r: 7, class: 'drain' });
-
-    // inlet ports with tangential jets (length grows with jet velocity)
-    const shown = Math.min(r.n, 12);
-    if (shown > 0) {
-      const rp = R - 12;
-      const jetLen = r.okJet ? Math.max(8, Math.min(50, r.vin / 3 * 50)) : 0;
-      for (let i = 0; i < shown; i++) {
-        const a = Math.PI / 2 + i * 2 * Math.PI / shown;
-        const x = cx + rp * Math.cos(a), y = cy - rp * Math.sin(a);
-        const ux = -Math.sin(a), uy = -Math.cos(a);
-        if (jetLen > 0) {
-          el('path', { class: 'jet', d: 'M' + p(x, y) + ' L' + p(x + ux * (jetLen - 6), y + uy * (jetLen - 6)) });
-          head(x + ux * jetLen, y + uy * jetLen, ux, uy, 8, 'jet-head');
-        }
-        el('circle', { cx: x, cy: y, r: 3.5, class: 'nozzle' });
-      }
-      if (r.n > 12) label(cx, cy + R + 22, r.n + ' ports (12 drawn)');
-    }
-
-    // fish to tank scale, near the wall
-    if (r.L > 0 && r.D > 0) {
-      const lenPx = Math.max(6, Math.min(80, r.L / r.D * 2 * R));
-      fish(cx + lenPx / 2, cy + R * 0.3, lenPx);
-    }
+    let dy = 0;
+    if (shape === 'square') drawSquare(r, cx, cy, R);
+    else if (shape === 'rect') dy = drawRect(r) - 10;
+    else drawRound(r, cx, cy, R);
+    // rectangular tanks fill the top, so the gauges move below them to the left edge
+    root = dy ? el('g', { transform: 'translate(-242,' + dy.toFixed(1) + ')' }) : svg;
+    svg.setAttribute('viewBox', '0 0 480 ' + (dy ? Math.ceil(310 + dy) : 320));
 
     // ----- Right panel -----
     const X0 = 262, W = 200;
@@ -322,6 +440,7 @@
     } else {
       label(X0, 232, r.okJet ? 'Enter fish length' : '–', 'start');
     }
+    root = svg;
   }
 
   // ---------- Results text ----------
@@ -329,19 +448,21 @@
     const r = compute();
     const lines = [
       'Internal Tank Velocity Calculator',
-      'Tank: D ' + typed('diameter') + ', water depth ' + typed('depth') + ', inflow ' + typed('flow'),
+      'Tank: ' + (shape === 'square' ? 'square, side ' + typed('side') + ', corner radius ' + typed('corner')
+        : shape === 'rect' ? 'rectangular, ' + typed('rlen') + ' × ' + typed('rwid') + ' (' + r.cells + ' rotating cell' + (r.cells > 1 ? 's' : '') + ')'
+        : 'circular, D ' + typed('diameter')) + ', water depth ' + typed('depth') + ', inflow ' + typed('flow'),
       'Inlet: ' + typed('ports') + ' × ' + typed('portd') + '; fish length ' + typed('fish')
     ];
     if (r.okJet) {
       lines.push('Inlet jet velocity: ' + fmtV(r.vin));
-      lines.push('Estimated mean tank velocity (15–20% of jet, rule of thumb): ' + fmtVRange(r.vLow, r.vHigh));
+      lines.push('Estimated mean ' + (shape === 'rect' ? 'cell' : 'tank') + ' velocity (' + fmt(r.kLow * 100, 1) + '–' + fmt(r.kHigh * 100, 1) + '% of jet, rule of thumb): ' + fmtVRange(r.vLow, r.vHigh));
       if (isFinite(r.blLow)) lines.push('Fish swimming speed: ' + r.blLow.toFixed(2) + '–' + r.blHigh.toFixed(2) + ' BL/s (guide 0.5–2)');
       lines.push('Self-cleaning (> 15–30 cm/s): ' + cleanStatus(r).text);
       lines.push('Jet velocity head (minimum): ' + inUnitOf('depth', r.head));
     }
     if (r.vol > 0) lines.push('Tank volume: ' + fmt(r.vol) + ' m³ (' + fmt(r.vol * 1000, 0) + ' L)');
     if (isFinite(r.hrt)) lines.push('Retention time: ' + fmtTime(r.hrt) + ' (' + fmt(3600 / r.hrt, 2) + ' exchanges/h)');
-    if (isFinite(r.ratio)) lines.push('Diameter:depth ' + fmt(r.ratio, 1) + ':1 (guide 5–10)');
+    if (isFinite(r.ratio)) lines.push({ round: 'Diameter', square: 'Side', rect: 'Cell width' }[shape] + ':depth ' + fmt(r.ratio, 1) + ':1 (guide 5–10)');
     if (r.vTarget > 0) {
       lines.push('For target ' + fmtV(r.vTarget) + ': jet ' + fmtVRange(r.reqLow, r.reqHigh) +
         (isFinite(r.dpSmall) ? ', ports ' + fmt(CalcUnits.fromBase('portd', r.dpSmall)) + '–' + inUnitOf('portd', r.dpBig) : ''));
@@ -352,6 +473,7 @@
 
   // ---------- Events ----------
   FIELDS.forEach(function (f) { $(f).addEventListener('input', render); });
+  shapeButtons.forEach(function (b) { b.addEventListener('click', function () { setShape(b.dataset.shape); render(); }); });
   CalcUnits.init(render);
 
   $('btn-link').addEventListener('click', function () {
@@ -366,6 +488,7 @@
   $('btn-reset').addEventListener('click', function () {
     vout.value = 'cmps';
     applyDefaults();
+    setShape('round');
     render();
   });
 
@@ -374,6 +497,7 @@
     const prm = CalcShare.readParams();
     applyDefaults();
     if (prm.vout && CalcUnits.unitDef('velocity', prm.vout)) vout.value = prm.vout;
+    setShape(prm.shape);
     FIELDS.forEach(function (f) {
       const u = prm[f + '_u'];
       if (f === 'target' && prm.target === 'off') CalcUnits.set(f, '', u);

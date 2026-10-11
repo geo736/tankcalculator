@@ -4,11 +4,14 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Internal Tank Velocity Calculator</title>
-  <meta name="description" content="Estimate the rotational water velocity in a circular fish tank from the inlet jets, check self-cleaning and fish swimming speed in body lengths per second, and size inlet ports for a target velocity.">
+  <meta name="description" content="Estimate the rotational water velocity in a circular, square or rectangular (mixed-cell) fish tank from the inlet jets, check self-cleaning and fish swimming speed in body lengths per second, and size inlet ports for a target velocity.">
   <link rel="stylesheet" href="../assets/style.css">
   <style>
     @media (max-width: 480px) { .two-col.stack-sm { grid-template-columns: minmax(0, 1fr); gap: 0; } }
     .opt { font-weight: 400; color: var(--text-muted); }
+    #shape-group { grid-template-columns: repeat(3, 1fr); }
+    #shape-group button { padding: 10px 6px; }
+    .viz .cell-line { stroke: var(--tank-stroke); stroke-width: 1; stroke-dasharray: 4 4; fill: none; }
     .result-main .sub { font-size: .9rem; color: var(--text-muted); margin-top: 2px; }
     .pill { display: inline-block; padding: 1px 8px; border-radius: 999px; font-size: .85rem; font-weight: 600; }
     .pill-ok { background: var(--accent-soft); color: var(--accent-strong); }
@@ -50,18 +53,47 @@
   <main class="wrap">
     <div class="crumbs"><a href="../">Home</a> / Internal Tank Velocity</div>
     <h1 class="page-title">Internal Tank Velocity Calculator</h1>
-    <p class="page-lede">Estimate how fast the water rotates in a circular fish tank driven by inlet jets. Check whether the tank should self-clean, how hard the fish are swimming in body lengths per second, and what jet velocity or port size you need for a target velocity.</p>
+    <p class="page-lede">Estimate how fast the water rotates in a circular, square or rectangular fish tank driven by inlet jets. Check whether the tank should self-clean, how hard the fish are swimming in body lengths per second, and what jet velocity or port size you need for a target velocity.</p>
 
     <div class="calc-layout">
       <!-- Calculator -->
       <section class="card" aria-labelledby="calc-heading">
         <h2 id="calc-heading">Calculator</h2>
 
+        <div class="field">
+          <span class="label" id="shape-label">Tank shape</span>
+          <div class="segmented" role="group" aria-labelledby="shape-label" id="shape-group">
+            <button type="button" data-shape="round" aria-pressed="true">Circular</button>
+            <button type="button" data-shape="square" aria-pressed="false">Square</button>
+            <button type="button" data-shape="rect" aria-pressed="false">Rectangular</button>
+          </div>
+        </div>
+
         <div class="two-col stack-sm">
-          <div class="field">
+          <div class="field" data-shape-for="round">
             <label for="diameter">Tank diameter</label>
             <div class="input-row"><input id="diameter" type="number" inputmode="decimal" min="0" step="any"><select class="unit-select" data-unit-group="length" data-unit-for="diameter" data-unit-default="m" aria-label="Tank diameter unit"></select></div>
             <div class="field-hint">Inside diameter.</div>
+          </div>
+          <div class="field" data-shape-for="square">
+            <label for="side">Side length</label>
+            <div class="input-row"><input id="side" type="number" inputmode="decimal" min="0" step="any"><select class="unit-select" data-unit-group="length" data-unit-for="side" data-unit-default="m" aria-label="Side length unit"></select></div>
+            <div class="field-hint">Inside, wall to wall.</div>
+          </div>
+          <div class="field" data-shape-for="square">
+            <label for="corner">Corner radius</label>
+            <div class="input-row"><input id="corner" type="number" inputmode="decimal" min="0" step="any"><select class="unit-select" data-unit-group="length" data-unit-for="corner" data-unit-default="cm" aria-label="Corner radius unit"></select></div>
+            <div class="field-hint">0 for sharp corners. Rounded corners of 20–40% of the side rotate best.</div>
+          </div>
+          <div class="field" data-shape-for="rect">
+            <label for="rlen">Tank length</label>
+            <div class="input-row"><input id="rlen" type="number" inputmode="decimal" min="0" step="any"><select class="unit-select" data-unit-group="length" data-unit-for="rlen" data-unit-default="m" aria-label="Tank length unit"></select></div>
+            <div class="field-hint">Inside, long side.</div>
+          </div>
+          <div class="field" data-shape-for="rect">
+            <label for="rwid">Tank width</label>
+            <div class="input-row"><input id="rwid" type="number" inputmode="decimal" min="0" step="any"><select class="unit-select" data-unit-group="length" data-unit-for="rwid" data-unit-default="m" aria-label="Tank width unit"></select></div>
+            <div class="field-hint">Split into square rotating cells, each with its own inlets and drain.</div>
           </div>
           <div class="field">
             <label for="depth">Water depth</label>
@@ -115,7 +147,8 @@
           <li><span>Self-cleaning (needs &gt; 15–30 cm/s)</span><span class="v" id="r-clean">–</span></li>
           <li><span>Tank volume</span><span class="v" id="r-vol">–</span></li>
           <li><span>Hydraulic retention time</span><span class="v" id="r-hrt">–</span></li>
-          <li><span>Diameter : depth</span><span class="v" id="r-ratio">–</span></li>
+          <li><span id="r-cells-label">Rotating cells</span><span class="v" id="r-cells">–</span></li>
+          <li><span id="r-ratio-label">Diameter : depth</span><span class="v" id="r-ratio">–</span></li>
           <li><span>Jet velocity head (minimum)</span><span class="v" id="r-head">–</span></li>
           <li><span id="r-req-label">Jet velocity for target</span><span class="v" id="r-req">–</span></li>
           <li><span id="r-reqd-label">Port diameter for target</span><span class="v" id="r-reqd">–</span></li>
@@ -141,7 +174,7 @@
       <!-- Visualization -->
       <section class="card viz-card" aria-labelledby="viz-heading">
         <h2 id="viz-heading">Visualization</h2>
-        <svg class="viz" id="viz" viewBox="0 0 480 320" role="img" aria-label="Top view of the circular tank with inlet jets, swirl arrows, and a fish-length scale"></svg>
+        <svg class="viz" id="viz" viewBox="0 0 480 320" role="img" aria-label="Top view of the tank with inlet jets, swirl arrows, and a fish-length scale"></svg>
         <p class="viz-caption" id="viz-caption"></p>
       </section>
     </div>
@@ -190,6 +223,14 @@ d<sub>p, needed</sub> = √( 4 × Q / (n × π × v<sub>in, needed</sub>) )</div
       <p>The water enters through 8 ports of 25 mm. Total port area = 8 × π × 0.025² ÷ 4 = 0.003927 m², so the jets leave at 0.006667 ÷ 0.003927 = <strong>1.70 m/s</strong>. The estimated rotation is 0.15–0.20 × 1.70 = <strong>25.5–34.0 cm/s</strong>. For 20 cm fish that is <strong>1.27–1.70 body lengths per second</strong>, within the 0.5–2.0 BL/s guidance, and the velocity is in or above the 15–30 cm/s band needed to carry solids to the drain.</p>
       <p>To aim for 30 cm/s you need jets of 30 ÷ 0.20 = 1.50 m/s to 30 ÷ 0.15 = 2.00 m/s. With the same flow and 8 ports, that means ports of about <strong>23.0–26.6 mm</strong>.</p>
 
+      <h3>Square and rectangular tanks</h3>
+      <p>Square and rectangular tanks use floor space better than round ones and are easier to build, but water does not rotate as well in them. The jets lose energy in the corners, and dead zones form there where solids settle.</p>
+      <ul>
+        <li><strong>Square tanks.</strong> Rounding (or cutting) the corners helps a lot. In a computer flow study of dual-drain square tanks, tanks whose corner radius was 20–40% of the side (R/B = 0.2–0.4) had about <strong>twice the average velocity</strong> of square tanks with sharp corners at the same water exchange, and were not significantly different from circular tanks (Zhang et al., 2022). The calculator therefore uses the circular-tank 15–20% rule for square tanks with R/B ≥ 0.2, and roughly halves it (7.5–10%) for sharper corners. The volume subtracts the four corner pieces: V = (B² − (4 − π) R²) × d.</li>
+        <li><strong>Rectangular tanks (mixed-cell raceways).</strong> A long tank does not rotate as one body. Instead it is run as a row of square <strong>rotating cells</strong>, each with its own inlet pipes in the corners and its own center drain, with neighbouring cells turning in opposite directions (Watten et al., 2000; Oca &amp; Masaló, 2007). The calculator divides the tank into n = length ÷ width cells (rounded), shares the flow and ports equally among them and applies the circular-tank rule to each cell. In a multivortex tank with four cells, Masaló &amp; Oca (2014) found that cell velocity followed the same impulse-force relation as a circular tank, and that baffles between cells raised the average velocity and made the cells more even. Watten et al. (2000) measured average velocities of only about 12–14 cm/s in a six-cell raceway run with many low-velocity jets, so treat the estimate as an upper guide and measure your own tank.</li>
+      </ul>
+      <p>For both shapes the width (or cell width) to depth ratio is compared with the 5–10 guide for circular tanks.</p>
+
       <h3>Limitations and assumptions</h3>
       <ul>
         <li><strong>The 15–20% ratio is a rule of thumb.</strong> It is not a fitted equation for your tank. Real tanks can be faster or slower, especially with unusual nozzle angles, very deep tanks, baffles or heavy fish loads.</li>
@@ -207,6 +248,10 @@ d<sub>p, needed</sub> = √( 4 × Q / (n × π × v<sub>in, needed</sub>) )</div
         <li>Paul, T. C., Sayal, S. K., Sakhuja, V. S. &amp; Dhillon, G. S. (1991). Vortex-settling basin design considerations. <em>Journal of Hydraulic Engineering</em>, 117(2), 172–189.</li>
         <li>Losordo, T. M. &amp; Westers, H. (1994). System carrying capacity and flow estimation. In M. B. Timmons &amp; T. M. Losordo (Eds.), <em>Aquaculture Water Reuse Systems: Engineering Design and Management</em> (pp. 9–60). Amsterdam: Elsevier.</li>
         <li>Davidson, J. &amp; Summerfelt, S. T. (2004). Solids flushing, mixing, and water velocity profiles within large (10 and 150 m³) circular ‘Cornell-type’ dual-drain tanks. <em>Aquacultural Engineering</em>, 32(1), 245–271. <a href="https://www.sciencedirect.com/science/article/pii/S0144860904000214" rel="noopener" target="_blank">sciencedirect.com</a></li>
+        <li>Zhang, Q., Gui, J., Ren, X., Xue, B., Bi, C. &amp; Liu, Y. (2022). Optimization of flow field in dual-drain square aquaculture tank with relative arc to width ratio. <em>South China Fisheries Science</em>, 18(4), 119–125. <a href="https://doi.org/10.12131/20210044" rel="noopener" target="_blank">doi.org</a></li>
+        <li>Watten, B. J., Honeyfield, D. C. &amp; Schwartz, M. F. (2000). Hydraulic characteristics of a rectangular mixed-cell rearing unit. <em>Aquacultural Engineering</em>, 24(1), 59–73. <a href="https://pubs.usgs.gov/publication/1015008" rel="noopener" target="_blank">pubs.usgs.gov</a></li>
+        <li>Oca, J. &amp; Masaló, I. (2007). Design criteria for rotating flow cells in rectangular aquaculture tanks. <em>Aquacultural Engineering</em>, 36(1), 36–44. <a href="https://doi.org/10.1016/j.aquaeng.2006.06.001" rel="noopener" target="_blank">doi.org</a></li>
+        <li>Masaló, I. &amp; Oca, J. (2014). Hydrodynamics in a multivortex aquaculture tank: Effect of baffles and water inlet characteristics. <em>Aquacultural Engineering</em>, 58, 69–76. <a href="https://doi.org/10.1016/j.aquaeng.2013.11.001" rel="noopener" target="_blank">doi.org</a></li>
         <li>Khater, E.-S., Ali, S., Abbas, W. &amp; Morsy, O. (2022). Flow patterns in circular fish tanks and its relations with flow rate and nozzle features. <em>Scientific Reports</em>, 12, 12883. <a href="https://doi.org/10.1038/s41598-022-17186-z" rel="noopener" target="_blank">doi.org</a></li>
       </ol>
     </article>
