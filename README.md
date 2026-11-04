@@ -53,7 +53,7 @@ Every input that has a unit gets its **own** unit dropdown – never one shared 
 - [x] pH Up Adjustment – `calculators/ph-up-adjustment.html`
 - [x] Air Pump & Air Stone Sizing (fish systems) – `calculators/aeration-aquaculture.html`
 - [x] Air Pump & Air Stone Sizing (hydroponic systems) – `calculators/aeration-hydroponic.html`
-- [ ] Feed Conversion Ratio (FCR)
+- [x] Feed Conversion Ratio (FCR) – `calculators/fcr.html`
 - [ ] Hydroponic Nutrient Additions
 - [ ] Plant Feed Conversion Ratio (FCRplant)
 - [ ] Plant-Fish Mass Ratio (PFRM)
