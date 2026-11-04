@@ -51,7 +51,7 @@
     </section>
 
     <h2 class="section-title" id="calc-heading">Calculators</h2>
-    <section class="app-grid" id="app-grid" aria-labelledby="calc-heading"></section>
+    <div id="calc-groups"></div>
     <p class="empty" id="empty" hidden>No calculators match these filters.</p>
   </main>
 
@@ -63,7 +63,20 @@
   <script>
     (function () {
       var CAT_LABEL = { aquaculture: 'Aquaculture', aquaponics: 'Aquaponics', hydroponics: 'Hydroponics' };
-      var grid = document.getElementById('app-grid');
+      var groupsBox = document.getElementById('calc-groups');
+      var GROUP_EL = {};
+      (window.CALC_GROUPS || [{ id: 'all', label: '' }]).forEach(function (g) {
+        var sec = document.createElement('section');
+        sec.className = 'calc-group';
+        sec.setAttribute('aria-labelledby', 'grp-' + g.id);
+        sec.innerHTML = '<h3 class="group-title" id="grp-' + g.id + '"></h3><p class="group-blurb"></p><div class="app-grid"></div>';
+        sec.querySelector('.group-title').textContent = g.label;
+        sec.querySelector('.group-blurb').textContent = g.blurb || '';
+        groupsBox.appendChild(sec);
+        GROUP_EL[g.id] = { sec: sec, grid: sec.querySelector('.app-grid') };
+      });
+      var firstGroup = GROUP_EL[Object.keys(GROUP_EL)[0]];
+      var tiles = [];
       var search = document.getElementById('search');
       var chips = document.querySelectorAll('#sys-filters .chip');
       var useBox = document.getElementById('use-filters');
@@ -101,7 +114,8 @@
         tile.querySelector('.app-cat').textContent = c.blurb || CAT_LABEL[c.cat];
         tile.title = c.name + ' · ' + (c.uses || []).map(function (u) { return USE_LABEL[u]; }).join(', ');
         tile._item = c;
-        grid.appendChild(tile);
+        (GROUP_EL[c.group] || firstGroup).grid.appendChild(tile);
+        tiles.push(tile);
       });
 
       // Guided walkthroughs, filtered by the same chips and search.
@@ -134,11 +148,14 @@
       function apply() {
         var q = search.value.trim().toLowerCase();
         var shown = 0;
-        Array.prototype.forEach.call(grid.children, function (t) {
-          var c = t._item;
-          var ok = matches(c, q);
+        tiles.forEach(function (t) {
+          var ok = matches(t._item, q);
           t.hidden = !ok;
           if (ok) shown++;
+        });
+        Object.keys(GROUP_EL).forEach(function (k) {
+          var g = GROUP_EL[k];
+          g.sec.hidden = !Array.prototype.some.call(g.grid.children, function (t) { return !t.hidden; });
         });
         var guidesShown = 0;
         Array.prototype.forEach.call(guideGrid.children, function (g) {

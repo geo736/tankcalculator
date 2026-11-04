@@ -6,6 +6,7 @@ Aquaponics, aquaculture and hydroponics calculators as a static website. No buil
 
 - `index.html` – home page with an app-style grid of calculators, search and filters
 - `assets/catalog.js` – the list of calculators on the home page (set `status: 'live'` when one is finished). `tags` drive the system filter (aquaponics, aquaculture, hydroponics) and `uses` drive the "I'm working on" task filter, whose options are listed in `CALC_USES`
+- `group` on each calculator places it in a home-page section listed in `CALC_GROUPS` (water quality, system design, equipment, fish management, plants & lighting, power & costs)
 - `window.GUIDES` in `assets/catalog.js` – step-by-step guided designs shown in the "Guided design" section of the home page (`guides/<slug>.html`)
 - `calculators/` – one HTML page per calculator
 - `assets/style.css` – shared styles (light and dark mode)
@@ -52,6 +53,8 @@ Every input that has a unit gets its **own** unit dropdown – never one shared 
 - [x] pH Up Adjustment – `calculators/ph-up-adjustment.html`
 - [x] Air Pump & Air Stone Sizing (fish systems) – `calculators/aeration-aquaculture.html`
 - [ ] Air Pump & Air Stone Sizing (hydroponic systems)
+- [ ] Feed Conversion Ratio (FCR)
+- [ ] Hydroponic Nutrient Additions
 - [x] Daily Light Integral – `calculators/daily-light-integral.html`
 - [x] Dissolved Oxygen – `calculators/dissolved-oxygen.html`
 - [x] Hydrostatic Pressure – `calculators/hydrostatic-pressure.html`

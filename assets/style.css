@@ -312,6 +312,21 @@ a.guide-card:hover { transform: translateY(-3px); border-color: var(--accent); c
 .guide-kicker { font-size: .72rem; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; color: var(--accent-strong); }
 .guide-blurb { font-size: .85rem; color: var(--text-muted); line-height: 1.4; }
 
+.calc-group { margin-bottom: 8px; }
+
+.group-title {
+  font-size: 1rem;
+  margin: 18px 0 2px;
+}
+
+.group-blurb {
+  color: var(--text-muted);
+  font-size: .88rem;
+  margin: 0 0 12px;
+}
+
+.calc-group .app-grid { padding-bottom: 20px; }
+
 .app-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
