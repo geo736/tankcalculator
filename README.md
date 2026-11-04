@@ -49,7 +49,7 @@ Every input that has a unit gets its **own** unit dropdown – never one shared 
 - [x] Pump & Turnover – `calculators/pump-turnover.html`
 - [x] Nutrient EC – `calculators/nutrient-ec.html`
 - [x] pH Down Adjustment – `calculators/ph-adjustment.html`
-- [ ] pH Up Adjustment
+- [x] pH Up Adjustment – `calculators/ph-up-adjustment.html`
 - [ ] Air Pump & Air Stone Sizing (fish systems)
 - [ ] Air Pump & Air Stone Sizing (hydroponic systems)
 - [x] Daily Light Integral – `calculators/daily-light-integral.html`

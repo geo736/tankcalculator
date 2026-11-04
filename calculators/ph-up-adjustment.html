@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>pH Up Adjustment Calculator</title>
+  <meta name="description" content="Work out how much potassium hydroxide, potassium carbonate, bicarbonate, hydrated lime, calcium carbonate, magnesium hydroxide or sodium base raises aquaponic, RAS or hydroponic water to a target pH, from alkalinity and carbonate chemistry.">
+  <link rel="stylesheet" href="../assets/style.css">
+  <style>
+    .viz .ph-pk { stroke: var(--water-deep); stroke-width: 1; stroke-dasharray: 2 4; opacity: .7; }
+    .viz .ph-grid { stroke: var(--border); stroke-width: 1; }
+    .viz .ph-axis { stroke: var(--text-muted); stroke-width: 1.5; fill: none; }
+    .viz .ph-curve { stroke: var(--accent); stroke-width: 3; fill: none; stroke-linejoin: round; stroke-linecap: round; }
+    .viz .ph-curve-faint { stroke: var(--text-muted); stroke-width: 1.5; fill: none; opacity: .45; stroke-dasharray: 5 4; }
+    .viz .ph-target { stroke: var(--accent); stroke-width: 1; stroke-dasharray: 6 4; opacity: .8; }
+    .viz .ph-pt-cur { fill: var(--surface); stroke: var(--tank-stroke); stroke-width: 2.5; }
+    .viz .ph-pt-eq { fill: var(--water-top); stroke: var(--water-deep); stroke-width: 1.5; }
+    .viz .ph-pt-tgt { fill: var(--accent); stroke: var(--surface); stroke-width: 2; }
+    .viz .ph-pt-lim { fill: var(--warn-bg); stroke: var(--warn-text); stroke-width: 2; }
+    .viz .ph-label { fill: var(--text); font-size: 12px; font-weight: 600; font-family: var(--font); }
+    .viz .ph-tag { fill: var(--text-muted); font-size: 11px; font-family: var(--font); }
+    .viz .ph-tag-main { fill: var(--accent); font-size: 12px; font-weight: 700; font-family: var(--font); }
+    .viz .ph-amt { fill: var(--accent-strong); font-size: 11px; font-family: var(--font); }
+    .result-main .sub { font-size: .9rem; color: var(--text-muted); margin-top: 2px; }
+    .notice.safety { margin-top: 12px; margin-bottom: 0; }
+    .cmp-title { font-size: .9rem; font-weight: 600; margin: 18px 0 4px; }
+    .cmp-wrap { overflow-x: auto; border: 1px solid var(--border); border-radius: 10px; }
+    .cmp { width: 100%; border-collapse: collapse; font-size: .85rem; font-variant-numeric: tabular-nums; }
+    .cmp th, .cmp td { padding: 6px 8px; text-align: right; border-bottom: 1px solid var(--border); }
+    .cmp th { font-weight: 600; color: var(--text-muted); background: var(--surface-2); }
+    .cmp th:first-child, .cmp td:first-child { text-align: left; }
+    .cmp tbody tr:last-child td { border-bottom: 0; }
+    .cmp tbody tr { cursor: pointer; }
+    .cmp tbody tr:hover, .cmp tbody tr:focus { background: var(--surface-2); outline: none; }
+    .cmp tbody tr.sel { background: var(--accent-soft); font-weight: 600; }
+    .cmp td.cmp-na { text-align: center; color: var(--text-muted); font-style: italic; }
+    .cmp-note { font-size: .8rem; color: var(--text-muted); margin: 4px 0 0; }
+    .article .table-wrap { overflow-x: auto; }
+  </style>
+</head>
+<body>
+  <header class="site-header">
+    <div class="wrap">
+      <a class="brand" href="../">
+        <span class="brand-mark" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3c3 4 6 7 6 11a6 6 0 0 1-12 0c0-4 3-7 6-11z"/></svg>
+        </span>
+        Tank Calculator
+      </a>
+      <nav><a href="../">All calculators</a></nav>
+    </div>
+  </header>
+
+  <main class="wrap">
+    <div class="crumbs"><a href="../">Home</a> / pH Up Adjustment</div>
+    <h1 class="page-title">pH Up Adjustment Calculator</h1>
+    <p class="page-lede">Work out how much base or buffer raises aquaponic, aquaculture or hydroponic water to a target pH. Choose the buffer species: potassium, calcium, magnesium or sodium, as hydroxide, carbonate or bicarbonate. The dose comes from the water's alkalinity and carbonate chemistry, and it depends on whether CO₂ can escape to the air.</p>
+
+    <div class="calc-layout">
+      <!-- Calculator -->
+      <section class="card" aria-labelledby="calc-heading">
+        <h2 id="calc-heading">Calculator</h2>
+
+        <div class="field">
+          <label for="vol">Water volume</label>
+          <div class="input-row"><input id="vol" type="number" inputmode="decimal" min="0" step="any"><select class="unit-select" data-unit-group="volume" data-unit-for="vol" data-unit-default="L" aria-label="Water volume unit"></select></div>
+        </div>
+
+        <div class="two-col">
+          <div class="field">
+            <label for="ph0">Current pH</label>
+            <div class="input-row"><input id="ph0" type="number" inputmode="decimal" min="3" max="10" step="0.1"></div>
+          </div>
+          <div class="field">
+            <label for="ph1">Target pH</label>
+            <div class="input-row"><input id="ph1" type="number" inputmode="decimal" min="4" max="10" step="0.1"></div>
+          </div>
+        </div>
+
+        <div class="field">
+          <label for="alk">Current alkalinity</label>
+          <div class="input-row"><input id="alk" type="number" inputmode="decimal" min="0" step="any"><select class="unit-select" data-unit-group="alkalinity" data-unit-for="alk" data-unit-default="caco3" aria-label="Alkalinity unit"></select></div>
+          <div class="field-hint" id="alk-hint">Total alkalinity (KH) from a water test.</div>
+        </div>
+
+        <div class="field">
+          <label for="temp">Water temperature</label>
+          <div class="input-row"><input id="temp" type="number" inputmode="decimal" step="any"><select class="unit-select" data-unit-group="temperature" data-unit-for="temp" data-unit-default="C" aria-label="Water temperature unit"></select></div>
+          <div class="field-hint" id="temp-hint"></div>
+        </div>
+
+        <div class="field">
+          <label for="mode">CO₂ exchange with air</label>
+          <select id="mode">
+            <option value="closed">Closed: pH right after dosing (no CO₂ exchange)</option>
+            <option value="open">Open: pH after equilibrating with air</option>
+          </select>
+          <div class="field-hint" id="mode-hint"></div>
+        </div>
+
+        <div class="field" id="co2-field" hidden>
+          <label for="co2">CO₂ in the air</label>
+          <div class="input-row"><input id="co2" type="number" inputmode="decimal" min="0" step="any"><span class="unit">ppm</span></div>
+          <div class="field-hint">Outdoor air is about 420–425 ppm (NOAA, 2024–2025). Indoor and greenhouse air is often higher, which gives a lower equilibrium pH.</div>
+        </div>
+
+        <div class="field">
+          <label for="ca">Calcium already in the water <span style="font-weight:400;color:var(--text-muted)">(optional)</span></label>
+          <div class="input-row"><input id="ca" type="number" inputmode="decimal" min="0" step="any"><select class="unit-select" data-unit-group="concentration" data-unit-for="ca" data-unit-default="mgL" aria-label="Calcium concentration unit"></select></div>
+          <div class="field-hint">As Ca (not as CaCO₃). Used only to check calcite saturation: whether calcium carbonate can still dissolve, or may scale out.</div>
+        </div>
+
+        <div class="field">
+          <label for="base">Base / buffer to add</label>
+          <select id="base">
+            <optgroup label="Potassium (plant nutrient)">
+              <option value="koh">Potassium hydroxide flakes, KOH</option>
+              <option value="kohsol">Potassium hydroxide solution, KOH</option>
+              <option value="k2co3">Potassium carbonate, K₂CO₃</option>
+              <option value="khco3">Potassium bicarbonate, KHCO₃</option>
+            </optgroup>
+            <optgroup label="Calcium / magnesium (nutrients)">
+              <option value="caoh2">Calcium hydroxide (hydrated lime), Ca(OH)₂</option>
+              <option value="caco3">Calcium carbonate (limestone, shell), CaCO₃</option>
+              <option value="mgoh2">Magnesium hydroxide, Mg(OH)₂</option>
+            </optgroup>
+            <optgroup label="Sodium (builds up, not recommended)">
+              <option value="naoh">Sodium hydroxide, NaOH</option>
+              <option value="nahco3">Sodium bicarbonate (baking soda), NaHCO₃</option>
+            </optgroup>
+          </select>
+        </div>
+
+        <div class="two-col">
+          <div class="field">
+            <label for="pct" id="pct-label">Purity (%)</label>
+            <div class="input-row"><input id="pct" type="number" inputmode="decimal" min="0" max="100" step="any"><span class="unit">%</span></div>
+          </div>
+          <div class="field" id="dens-field" hidden>
+            <label for="dens">Solution density</label>
+            <div class="input-row"><input id="dens" type="number" inputmode="decimal" min="0" step="any"><select class="unit-select" data-unit-group="density" data-unit-for="dens" data-unit-default="kgL" aria-label="Solution density unit"></select></div>
+          </div>
+        </div>
+        <div class="field-hint" id="pct-hint" style="margin-top:-8px;margin-bottom:14px"></div>
+
+        <hr class="divider">
+
+        <div class="notice" id="notice" hidden></div>
+
+        <div class="field">
+          <label for="out-mass">Show amount in</label>
+          <select class="unit-select-out" id="out-vol" data-unit-group="volume" data-unit-default="mL" aria-label="Product volume unit" hidden></select>
+          <select class="unit-select-out" id="out-mass" data-unit-group="mass" data-unit-default="g" aria-label="Product mass unit"></select>
+        </div>
+
+        <div class="result-main" aria-live="polite">
+          <div class="label">Amount to add</div>
+          <div class="value" id="r-amount">–</div>
+          <div class="sub" id="r-unit"></div>
+        </div>
+
+        <ul class="result-list">
+          <li><span>Per 100 L</span><span class="v" id="r-per100">–</span></li>
+          <li><span>Per 100 US gal</span><span class="v" id="r-pergal">–</span></li>
+          <li><span>Base added</span><span class="v" id="r-eq">–</span></li>
+          <li><span>Alkalinity added</span><span class="v" id="r-alkadd">–</span></li>
+          <li><span>Alkalinity after dosing</span><span class="v" id="r-alkfinal">–</span></li>
+          <li><span>Dissolved inorganic carbon (C<sub>T</sub>)</span><span class="v" id="r-dic">–</span></li>
+          <li><span>Cation added</span><span class="v" id="r-cat">–</span></li>
+          <li><span id="r-extra-label">pH if left to equilibrate with air</span><span class="v" id="r-extra">–</span></li>
+          <li><span>Calcite saturation index after dosing</span><span class="v" id="r-si">–</span></li>
+          <li><span>Suggested dosing <small>(rule of thumb)</small></span><span class="v" id="r-steps">–</span></li>
+        </ul>
+
+        <div class="cmp-title" id="cmp-title">Compare bases for the same pH change</div>
+        <div class="cmp-wrap">
+          <table class="cmp" aria-labelledby="cmp-title">
+            <thead><tr><th>Base</th><th>Amount</th><th>Cation mg/L</th><th>Alk. added<br>mg/L CaCO₃</th></tr></thead>
+            <tbody id="cmp-body"></tbody>
+          </table>
+        </div>
+        <p class="cmp-note" id="cmp-note"></p>
+
+        <div class="notice safety" role="note"><strong>Estimate only.</strong> Dissolve or dilute the base in a bucket of system water first, then add it slowly where the flow is strong (sump or biofilter outlet), never straight onto fish. Add part of the dose, wait, measure, and repeat. Hydroxides are corrosive: wear goggles and gloves, and add the solid to water, not water to the solid.</div>
+
+        <div class="share-bar">
+          <button class="btn btn-primary" type="button" id="btn-share">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="m8.6 13.5 6.8 4M15.4 6.5l-6.8 4"/></svg>
+            Share
+          </button>
+          <button class="btn" type="button" id="btn-link">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.5.5l3-3a5 5 0 0 0-7-7l-1.7 1.7"/><path d="M14 11a5 5 0 0 0-7.5-.5l-3 3a5 5 0 0 0 7 7l1.7-1.7"/></svg>
+            Copy link
+          </button>
+          <button class="btn" type="button" id="btn-copy">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h10a1 1 0 0 1 1 1v1"/></svg>
+            Copy results
+          </button>
+          <button class="btn" type="button" id="btn-reset">Reset</button>
+        </div>
+      </section>
+
+      <!-- Visualization -->
+      <section class="card viz-card" aria-labelledby="viz-heading">
+        <h2 id="viz-heading">Visualization</h2>
+        <svg class="viz" id="viz" viewBox="0 0 480 330" role="img" aria-label="Titration curve: pH against base added, for the chosen base, with hydroxide, carbonate and bicarbonate curves for comparison and the current and target pH marked"></svg>
+        <p class="viz-caption" id="viz-caption"></p>
+      </section>
+    </div>
+
+    <article class="article">
+      <h2>How the pH up calculator works</h2>
+      <p>The pH of most system water is held in place by dissolved carbonate: carbon dioxide (CO₂), bicarbonate (HCO₃⁻) and carbonate (CO₃²⁻). The amount of bicarbonate and carbonate is measured as <em>alkalinity</em> (often sold as a "KH" test). To raise the pH you add a base, which turns some dissolved CO₂ into bicarbonate. How much base you need depends on how much carbonate the water holds, not only on how far the pH has to move.</p>
+      <p>The calculator first works out the total dissolved carbonate (C<sub>T</sub>) from your alkalinity and pH. Then it finds how much of your chosen base brings the water to the target pH. The result depends on the kind of base, because each kind adds different amounts of alkalinity and carbon:</p>
+      <ul>
+        <li><strong>Hydroxides</strong> (KOH, NaOH, Ca(OH)₂, Mg(OH)₂) add alkalinity but no carbon. Each OH⁻ turns one CO₂ into HCO₃⁻, so they need the smallest dose, but they also move the pH fastest and are the easiest to overshoot.</li>
+        <li><strong>Carbonates</strong> (K₂CO₃, CaCO₃) add two units of alkalinity and one unit of carbon per molecule. They need more alkalinity for the same pH change than a hydroxide, and leave the water better buffered.</li>
+        <li><strong>Bicarbonates</strong> (KHCO₃, NaHCO₃) add one unit of alkalinity and one unit of carbon. In a closed tank they mostly add buffering, raise the pH only slowly, and can never take it above about pH 8.3, where bicarbonate itself is the main species. They are the gentlest choice and the hardest to overshoot.</li>
+      </ul>
+      <p>The chart shows these three families as the water's titration curve: pH (up) against base added in milliequivalents per litre (across). The second row of axis labels gives the amount of your chosen product for your batch. The bold line is the base you chose; the faint dashed lines are the other two families.</p>
+
+      <h3>Closed tank or open to the air?</h3>
+      <p>Dosing changes the dissolved CO₂, and CO₂ then slowly moves between the water and the air until the two are in balance. The calculator offers both cases:</p>
+      <ul>
+        <li><strong>Closed</strong> (the default) assumes no CO₂ escapes or dissolves while you dose. It gives the pH right after mixing, which is what you measure a few minutes later and what the fish feel. Use it for a dose into a tank or reservoir.</li>
+        <li><strong>Open</strong> assumes the water has fully balanced with air at the CO₂ level you enter (about 420 ppm outdoors). The dissolved CO₂ is then fixed by the air, so the pH depends only on the alkalinity. Every base gives the same final pH for the same milliequivalents of alkalinity, whatever its carbon content, because extra carbon from a carbonate or bicarbonate degasses as CO₂, and a hydroxide takes up CO₂ from the air.</li>
+      </ul>
+      <p>That is why the answers differ. Bicarbonate added to a closed tank barely moves the pH, but in water that is aerated for a day or two the same alkalinity settles at the CO₂-equilibrium pH, which can be well above 8. It also explains a common surprise in recirculating systems: fish breathing and bacteria keep the water full of CO₂, so its pH is often lower than its alkalinity alone would give. Stripping that CO₂ with aeration raises the pH with no chemical at all. In open mode, the "pH right after mixing" result shows the pH before the air exchange, which is the one to watch for fish safety.</p>
+
+      <h3>Why alkalinity matters in aquaponics, RAS and hydroponics</h3>
+      <ul>
+        <li><strong>Nitrification uses up alkalinity.</strong> Nitrifying bacteria turn ammonia into nitrate and release acid: NH₄⁺ + 2 O₂ → NO₃⁻ + 2 H⁺ + H₂O. Two equivalents of acid per mole of nitrogen is 2 × 50.04 ÷ 14.007 = <strong>7.14 g of alkalinity (as CaCO₃) per g of TAN-N</strong> nitrified. The figure is slightly lower once the carbon the bacteria use for growth is counted (Ebeling, Timmons &amp; Bisogni, 2006). This is why aquaponic and RAS water loses alkalinity and drifts down in pH, and why it needs regular base additions (Timmons &amp; Ebeling, 2010).</li>
+        <li><strong>How much to expect.</strong> A system fed 1 kg/day of 35% protein feed makes about 1 × 0.35 × 0.092 = 0.032 kg of TAN per day (Timmons et al., 2002). Nitrifying it uses about 0.032 × 7.14 = 0.23 kg of alkalinity as CaCO₃ per day, or 4.6 eq. Replacing that takes about 258 g of KOH, 318 g of K₂CO₃ or 460 g of KHCO₃ per day, before any losses to water exchange.</li>
+        <li><strong>The buffer is also a fertilizer.</strong> The FAO aquaponics manual names potassium hydroxide and calcium hydroxide as the usual bases and recommends adding them slowly; carbonates are a gentler alternative (Somerville et al., 2014). The University of the Virgin Islands system alternates calcium hydroxide and potassium hydroxide, which also supplies calcium and potassium that fish feed provides too little of for the plants (Rakocy, Masser &amp; Losordo, 2006). Magnesium hydroxide supplies magnesium. Sodium, from sodium hydroxide or baking soda, is not a plant nutrient for most crops and is not removed in a recirculating system, so it accumulates with every dose. The calculator compares each cation added with the full-strength Hoagland solution (235 mg/L K, 200 mg/L Ca, 48 mg/L Mg; Hoagland &amp; Arnon, 1950).</li>
+        <li><strong>Target pH.</strong> The FAO manual recommends a compromise pH of 6–7 for fish, plants and nitrifying bacteria together (Somerville et al., 2014). Most hydroponic crops are grown at pH 5.5–6.5. If your water is too alkaline instead, use the <a href="ph-adjustment.html">pH Down Adjustment calculator</a>.</li>
+        <li><strong>Ammonia toxicity rises with pH.</strong> The toxic un-ionized share of ammonia rises about tenfold for each unit of pH. Before raising the pH of a system with measurable ammonia, check it with the <a href="tan-conversion.html">TAN Conversion calculator</a>.</li>
+      </ul>
+
+      <h3>Formulas</h3>
+      <p>Alkalinity converts with 1 meq/L = 50.04 mg/L as CaCO₃ = 61.02 mg/L as HCO₃⁻. With h = 10<sup>−pH</sup>, the carbonate constants K₁ and K₂ and the water constant K<sub>w</sub>, the bicarbonate and carbonate fractions of the total carbonate C<sub>T</sub> are:</p>
+      <div class="formula">α₁ = h·K₁ / (h² + h·K₁ + K₁·K₂)
+α₂ = K₁·K₂ / (h² + h·K₁ + K₁·K₂)
+f(pH) = α₁ + 2α₂       w(pH) = K<sub>w</sub>/h − h
+Alk = C<sub>T</sub>·f(pH) + w(pH)            (all in mol/L)
+C<sub>T,0</sub> = (Alk₀ − w(pH₀)) / f(pH₀)</div>
+      <p>A base that adds <em>e</em> equivalents of alkalinity and <em>c</em> moles of carbon per mole (KOH: e = 1, c = 0; Ca(OH)₂ and Mg(OH)₂: 2, 0; K₂CO₃ and CaCO₃: 2, 1; KHCO₃ and NaHCO₃: 1, 1) at a dose of x mol/L gives, in a <strong>closed</strong> tank, Alk₀ + e·x = (C<sub>T,0</sub> + c·x)·f(pH<sub>t</sub>) + w(pH<sub>t</sub>), so:</p>
+      <div class="formula">x = (C<sub>T,0</sub>·f(pH<sub>t</sub>) + w(pH<sub>t</sub>) − Alk₀) / (e − c·f(pH<sub>t</sub>))</div>
+      <p>For a bicarbonate (e = c = 1) the bottom line reaches zero where f = 1, about pH 8.3, so it cannot go higher in a closed tank. In <strong>open</strong> water the dissolved CO₂ is fixed by the air (CO₂* = K<sub>H</sub>·pCO₂) and:</p>
+      <div class="formula">Alk(pH) = K<sub>H</sub>·pCO₂·(K₁/h + 2K₁K₂/h²) + K<sub>w</sub>/h − h
+x = (Alk(pH<sub>t</sub>) − Alk₀) / e</div>
+      <p>The product amount is then: grams = x × V × M ÷ (purity), and mL = grams ÷ density for a liquid, where V is the water volume in litres and M the molar mass. Cation added (mg/L) = x × cations per molecule × atomic mass × 1000.</p>
+      <p>The constants change with temperature. As on the pH Down page, the calculator uses Plummer &amp; Busenberg (1982) for K₁, K₂, the CO₂ solubility K<sub>H</sub> and the calcite solubility product, and the Harned–Owen equation for K<sub>w</sub> given by Stumm &amp; Morgan (1996). At 25 °C: pK₁ = 6.35, pK₂ = 10.33, pK<sub>H</sub> = 1.47, pK<sub>calcite</sub> = 8.48 and pK<sub>w</sub> = 14.00. The same equations are used in the PHREEQC database (Parkhurst &amp; Appelo, 2013). If you leave the temperature blank, 25 °C is used.</p>
+
+      <h3>Solubility: calcium carbonate and magnesium hydroxide</h3>
+      <p>Calcium carbonate dissolves only while the water is <em>undersaturated</em> with calcite. The calculator works out the saturation index, SI = log([Ca²⁺][CO₃²⁻]·γ² / K<sub>calcite</sub>), with activity coefficients γ from the Davies equation and an ionic strength estimated from the ions it knows. Adding CaCO₃ raises both calcium and carbonate, so it stops dissolving when SI reaches 0. With the example water below that happens at about pH 8.1 in a closed tank if the water has no calcium, about 7.7 with 40 mg/L Ca, and about 8.3 in water open to the air (the textbook value for calcite in pure water at today's CO₂). Harder, more alkaline water saturates sooner and may not dissolve any at all. Dissolution is also slow, and it slows down more as the water approaches saturation (Plummer, Wigley &amp; Parkhurst, 1978). In practice crushed limestone, oyster shell or coral works as a slow, self-limiting buffer. It dissolves at a useful rate mainly in acidic water, typically below about pH 7. It cannot be used to correct pH quickly. Enter the water's calcium for a realistic limit: with none entered the calculator assumes there is none, which gives the most CaCO₃ that could possibly dissolve.</p>
+      <p>Magnesium hydroxide is checked the same way against its solubility product (5.61 × 10⁻¹² at 25 °C; Haynes, 2016). It stays dissolved at normal system pH, but the powder dissolves slowly. For any base, the result list shows the calcite saturation index after dosing when calcium is known. A positive value means calcium carbonate can come out as scale, which takes back part of the alkalinity and calcium added.</p>
+
+      <h3>Base data used</h3>
+      <div class="table-wrap">
+      <table>
+        <thead><tr><th>Base</th><th>Molar mass</th><th>e, c</th><th>Typical strength</th></tr></thead>
+        <tbody>
+          <tr><td>Potassium hydroxide flakes, KOH</td><td>56.105 g/mol</td><td>1, 0</td><td>about 90% (technical grade)</td></tr>
+          <tr><td>Potassium hydroxide solution</td><td>56.105 g/mol</td><td>1, 0</td><td>45%, about 1.45 g/mL</td></tr>
+          <tr><td>Potassium carbonate, K₂CO₃</td><td>138.204 g/mol</td><td>2, 1</td><td>100%</td></tr>
+          <tr><td>Potassium bicarbonate, KHCO₃</td><td>100.114 g/mol</td><td>1, 1</td><td>100%</td></tr>
+          <tr><td>Calcium hydroxide, Ca(OH)₂</td><td>74.092 g/mol</td><td>2, 0</td><td>100%</td></tr>
+          <tr><td>Calcium carbonate, CaCO₃</td><td>100.086 g/mol</td><td>2, 1</td><td>100%</td></tr>
+          <tr><td>Magnesium hydroxide, Mg(OH)₂</td><td>58.319 g/mol</td><td>2, 0</td><td>100%</td></tr>
+          <tr><td>Sodium hydroxide, NaOH</td><td>39.997 g/mol</td><td>1, 0</td><td>100%</td></tr>
+          <tr><td>Sodium bicarbonate, NaHCO₃</td><td>84.006 g/mol</td><td>1, 1</td><td>100%</td></tr>
+        </tbody>
+      </table>
+      </div>
+      <p>Molar masses are from the IUPAC standard atomic weights (Prohaska et al., 2022). The strengths are typical values only and you can change them. KOH flakes take up water from the air, so technical grade is usually about 90% KOH. 45% KOH solutions are listed by suppliers at about 1.45–1.46 g/mL at 20 °C. Hydroponic "pH Up" products vary widely, so use the strength and density on your label or safety data sheet. Agricultural lime is often less than 100% pure.</p>
+
+      <h3>Example</h3>
+      <p>An aquaponic system holds 1,000 L of water at 25 °C. Nitrification has pulled the pH down to 6.4 and the alkalinity to 30 mg/L as CaCO₃ (0.60 meq/L). The target is pH 7.0 with 90% KOH flakes, dosed into the closed tank.</p>
+      <ul>
+        <li>At 25 °C, pK₁ = 6.35. At pH 6.4, 52.8% of the carbonate is bicarbonate, so C<sub>T</sub> = 0.600 ÷ 0.528 = <strong>1.137 mmol/L</strong>.</li>
+        <li>At pH 7.0, 81.6% is bicarbonate, so the same carbonate carries 1.137 × 0.816 = 0.928 meq/L of alkalinity.</li>
+        <li>Base needed = 0.928 − 0.600 = <strong>0.329 meq/L</strong> = 0.329 mmol/L of KOH, or 0.329 mol in 1,000 L.</li>
+        <li>0.329 mol × 56.105 g/mol = 18.5 g of pure KOH; ÷ 0.90 = <strong>about 20.5 g of KOH flakes</strong> (2.05 g per 100 L).</li>
+        <li>Alkalinity rises by 16.5 to 46.5 mg/L as CaCO₃, and the water gains 0.329 × 39.098 = <strong>12.9 mg/L of potassium</strong>, about 5% of Hoagland strength.</li>
+        <li>The rise of 0.6 pH units is more than the 0.3 units per dose this calculator suggests as a rule of thumb, so it recommends two doses of about 10 g.</li>
+        <li>The comparison table shows the alternatives for the same change: 38.4 g of K₂CO₃ (adds 27.8 mg/L alkalinity and 21.7 mg/L K) or 180 g of KHCO₃ (adds 90 mg/L alkalinity and 70 mg/L K). The bicarbonate leaves the water much better buffered, at the cost of more potassium.</li>
+        <li>In open mode, 0.60 meq/L of alkalinity in balance with 420 ppm CO₂ settles at about pH 7.97, so no base would be needed. The low pH of 6.4 comes from excess CO₂, and aeration alone would raise it.</li>
+      </ul>
+
+      <h3>Limitations and assumptions</h3>
+      <ul>
+        <li><strong>It is an estimate.</strong> Alkalinity tests are often ±10% or worse, and product strengths vary. Add the base in steps and measure.</li>
+        <li><strong>Activity is ignored in the carbonate balance,</strong> as on the pH Down page. Concentrations are used instead of activities, which shifts the apparent pK values by a few hundredths (pK₁) to about a tenth (pK₂) of a unit in nutrient solutions. The saturation checks do use Davies activity coefficients, but with a minimum ionic strength. Real nutrient solutions have more dissolved salt, which makes calcite somewhat more soluble than shown.</li>
+        <li><strong>Only carbonate buffering is counted.</strong> Phosphate, ammonium, organic acids and humic matter add buffering, so a nutrient solution or an established aquaponic system can need more base than calculated. Potassium silicate, another common "pH up", is not modelled.</li>
+        <li><strong>Precipitation is not subtracted.</strong> If the water becomes supersaturated with calcite (positive saturation index), some calcium carbonate may scale out and the pH rise will be smaller. Magnesium already in the water is not entered, so the Mg(OH)₂ check uses only the magnesium you add.</li>
+        <li><strong>Open mode is an end point, not a rate.</strong> How fast water reaches equilibrium with air depends on aeration, surface area and temperature, from hours to days. The air CO₂ figure is a dry-air mole fraction at sea level; water vapour and altitude lower the partial pressure slightly (about 3% at 25 °C, and about 17% less at 1,500 m), which raises the equilibrium pH by up to about 0.1.</li>
+        <li><strong>Dose step size is a rule of thumb.</strong> The suggestion of no more than about 0.3 pH units per dose is a cautious practice, not a published limit. The calculator warns when one dose would raise the pH by more than 0.5. Fish and nitrifying bacteria cope much better with gradual change, and the FAO manual advises adding bases slowly (Somerville et al., 2014).</li>
+        <li><strong>pH limits:</strong> current pH 3–10, target pH 4–10, temperature 0–50 °C.</li>
+      </ul>
+
+      <h3>Safety</h3>
+      <ul>
+        <li>Hydroxides (KOH, NaOH and, less so, Ca(OH)₂) are caustic and can cause severe burns and eye damage. Wear goggles and gloves. Dissolving KOH or NaOH releases a lot of heat, so add the solid slowly to cold water, never water to the solid.</li>
+        <li>Undiluted hydroxide makes a local zone at pH 12 or more. Always pre-dissolve or dilute it and add it to a well-mixed sump or biofilter outlet, away from fish.</li>
+        <li>Keep products in labelled containers away from acids and from children.</li>
+      </ul>
+
+      <h2>Sources</h2>
+      <ol class="sources">
+        <li>Somerville, C., Cohen, M., Pantanella, E., Stankus, A. &amp; Lovatelli, A. (2014). <em>Small-scale aquaponic food production: Integrated fish and plant farming</em>. FAO Fisheries and Aquaculture Technical Paper No. 589. Rome: FAO. <a href="https://www.fao.org/3/i4021e/i4021e.pdf" rel="noopener" target="_blank">fao.org</a></li>
+        <li>Rakocy, J. E., Masser, M. P. &amp; Losordo, T. M. (2006). <em>Recirculating Aquaculture Tank Production Systems: Aquaponics—Integrating Fish and Plant Culture</em>. SRAC Publication No. 454. Stoneville, MS: Southern Regional Aquaculture Center.</li>
+        <li>Timmons, M. B. &amp; Ebeling, J. M. (2010). <em>Recirculating Aquaculture</em> (2nd ed.). Ithaca, NY: Cayuga Aqua Ventures.</li>
+        <li>Ebeling, J. M., Timmons, M. B. &amp; Bisogni, J. J. (2006). Engineering analysis of the stoichiometry of photoautotrophic, autotrophic, and heterotrophic removal of ammonia–nitrogen in aquaculture systems. <em>Aquaculture</em>, 257(1–4), 346–358. <a href="https://www.sciencedirect.com/science/article/pii/S004484860600216X" rel="noopener" target="_blank">sciencedirect.com</a></li>
+        <li>Timmons, M. B., Ebeling, J. M., Wheaton, F. W., Summerfelt, S. T. &amp; Vinci, B. J. (2002). <em>Recirculating Aquaculture Systems</em> (2nd ed.). Ithaca, NY: Cayuga Aqua Ventures.</li>
+        <li>Stumm, W. &amp; Morgan, J. J. (1996). <em>Aquatic Chemistry: Chemical Equilibria and Rates in Natural Waters</em> (3rd ed.). New York: Wiley-Interscience.</li>
+        <li>Plummer, L. N. &amp; Busenberg, E. (1982). The solubilities of calcite, aragonite and vaterite in CO₂–H₂O solutions between 0 and 90 °C, and an evaluation of the aqueous model for the system CaCO₃–CO₂–H₂O. <em>Geochimica et Cosmochimica Acta</em>, 46(6), 1011–1040.</li>
+        <li>Plummer, L. N., Wigley, T. M. L. &amp; Parkhurst, D. L. (1978). The kinetics of calcite dissolution in CO₂–water systems at 5° to 60 °C and 0.0 to 1.0 atm CO₂. <em>American Journal of Science</em>, 278(2), 179–216.</li>
+        <li>Parkhurst, D. L. &amp; Appelo, C. A. J. (2013). <em>Description of input and examples for PHREEQC version 3</em>. U.S. Geological Survey Techniques and Methods, book 6, chap. A43. <a href="https://pubs.usgs.gov/tm/06/a43/" rel="noopener" target="_blank">pubs.usgs.gov</a></li>
+        <li>Haynes, W. M. (ed.). <em>CRC Handbook of Chemistry and Physics</em> (97th ed., 2016). Boca Raton: CRC Press. Section “Solubility Product Constants”.</li>
+        <li>Prohaska, T. et al. (2022). Standard atomic weights of the elements 2021 (IUPAC Technical Report). <em>Pure and Applied Chemistry</em>, 94(5), 573–600. <a href="https://www.ciaaw.org/atomic-weights.htm" rel="noopener" target="_blank">ciaaw.org</a></li>
+        <li>Lan, X., Tans, P. &amp; Thoning, K. W. <em>Trends in globally-averaged CO₂ determined from NOAA Global Monitoring Laboratory measurements</em>. NOAA Global Monitoring Laboratory. <a href="https://gml.noaa.gov/ccgg/trends/global.html" rel="noopener" target="_blank">gml.noaa.gov</a></li>
+        <li>Hoagland, D. R. &amp; Arnon, D. I. (1950). <em>The Water-Culture Method for Growing Plants without Soil</em>. Circular 347. Berkeley: California Agricultural Experiment Station.</li>
+      </ol>
+    </article>
+  </main>
+
+  <footer class="site-footer">
+    <div class="wrap">Calculations are estimates. Check the sources above before relying on a result.</div>
+  </footer>
+
+  <script src="../assets/share.js"></script>
+  <script src="../assets/units.js"></script>
+  <script src="../assets/ph-up-adjustment.js"></script>
+</body>
+</html>

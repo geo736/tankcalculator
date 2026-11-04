@@ -33,7 +33,7 @@ window.CALCULATORS = [
     icon: '<path d="M13 3 6 13h5l-1 8 7-10h-5z"/>' },
   { slug: 'ph-adjustment', name: 'pH Down Adjustment', blurb: 'Acid dose from alkalinity', cat: 'hydroponics', tags: ['hydroponics', 'aquaponics'], uses: ['water', 'plants'], status: 'live',
     icon: '<path d="M9 3h6"/><path d="M10 3v6L5 19a1.5 1.5 0 0 0 1.3 2h11.4a1.5 1.5 0 0 0 1.3-2L14 9V3"/><path d="M7.5 15h9"/>' },
-  { slug: 'ph-up-adjustment', name: 'pH Up Adjustment', blurb: 'Base dose by buffer type', cat: 'hydroponics', tags: ['hydroponics', 'aquaponics', 'aquaculture'], uses: ['water', 'plants', 'fish'], status: 'soon',
+  { slug: 'ph-up-adjustment', name: 'pH Up Adjustment', blurb: 'Base dose by buffer type', cat: 'hydroponics', tags: ['hydroponics', 'aquaponics', 'aquaculture'], uses: ['water', 'plants', 'fish'], status: 'live',
     icon: '<path d="M9 3h6M10 3v6l-5 9a2 2 0 0 0 2 3h10a2 2 0 0 0 2-3l-5-9V3"/><path d="M12 16v-4M10 14l2-2 2 2"/>' },
   { slug: 'daily-light-integral', name: 'Daily Light Integral', blurb: 'Plant light per day vs crop', cat: 'hydroponics', tags: ['hydroponics', 'aquaponics'], uses: ['lighting', 'plants'], status: 'live',
     icon: '<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/>' },
