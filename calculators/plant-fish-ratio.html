@@ -24,6 +24,9 @@
     .viz .name-text { fill: var(--text); font-size: 12px; font-weight: 600; font-family: var(--font); }
     .viz .zone-text { fill: var(--accent-strong); font-size: 11px; font-weight: 600; font-family: var(--font); }
     .viz .ratio-text { fill: var(--text); font-size: 18px; font-weight: 700; font-family: var(--font); }
+    .viz .dim-text { font-size: 13px; }
+    .viz .name-text { font-size: 13px; }
+    @media (max-width: 480px) { .stack-sm { grid-template-columns: minmax(0, 1fr); gap: 0; } }
   </style>
 </head>
 <body>
@@ -64,7 +67,7 @@
         </div>
 
         <!-- Measure mode -->
-        <div class="two-col" data-show="measure">
+        <div class="two-col stack-sm" data-show="measure">
           <div class="field">
             <label for="pgain">Plant weight gain</label>
             <div class="input-row"><input id="pgain" type="number" inputmode="decimal" min="0" step="any"><select class="unit-select" data-unit-group="mass" data-unit-for="pgain" data-unit-default="kg" aria-label="Plant gain unit"></select></div>
@@ -80,7 +83,7 @@
           <div class="input-row"><input id="feed" type="number" inputmode="decimal" min="0" step="any"><select class="unit-select" data-unit-group="mass" data-unit-for="feed" data-unit-default="kg" aria-label="Feed unit"></select></div>
           <div class="field-hint">Gives the fish FCR and the plant FCR (see the <a href="plant-fcr.html">plant FCR calculator</a>).</div>
         </div>
-        <div class="two-col" data-show="measure">
+        <div class="two-col stack-sm" data-show="measure">
           <div class="field">
             <label for="dmp">Plant dry matter (optional)</label>
             <div class="input-row"><input id="dmp" type="number" inputmode="decimal" min="0" max="100" step="any"><span class="unit">%</span></div>
@@ -91,7 +94,7 @@
           </div>
         </div>
         <div class="field-hint" data-show="measure" style="margin-top:-6px;margin-bottom:12px;">Enter both to also get a dry-weight PFRM. Use your own analysis; lettuce is about 4.4% dry matter [5].</div>
-        <div class="two-col" data-show="measure">
+        <div class="two-col stack-sm" data-show="measure">
           <div class="field">
             <label for="area">Grow area (optional)</label>
             <div class="input-row"><input id="area" type="number" inputmode="decimal" min="0" step="any"><select class="unit-select" data-unit-group="area" data-unit-for="area" data-unit-default="m2" aria-label="Grow area unit"></select></div>

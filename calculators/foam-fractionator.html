@@ -1,0 +1,387 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Foam Fractionator (Protein Skimmer) Sizing Calculator</title>
+  <meta name="description" content="Size a foam fractionator (protein skimmer) for salt-water or fresh-water recirculating aquaculture: contact volume, column diameter and height, air flow and air pump pressure, hydraulic loading, turnover and optional ozone generator size.">
+  <link rel="stylesheet" href="../assets/style.css">
+  <style>
+    .viz .bubble { fill: var(--surface); fill-opacity: .6; stroke: var(--water-top); stroke-width: 1; }
+    .viz .foam { fill: var(--surface); fill-opacity: .9; stroke: var(--tank-back); stroke-width: 1; }
+    .viz .foam-bg { fill: var(--surface-2); }
+    .viz .pipe { fill: none; stroke: var(--tank-stroke); stroke-width: 3; stroke-linecap: round; stroke-linejoin: round; }
+    .viz .air-line { fill: none; stroke: var(--accent); stroke-width: 3; stroke-linecap: round; stroke-linejoin: round; }
+    .viz .flow-arrow { fill: none; stroke: var(--water-deep); stroke-width: 2; stroke-dasharray: 5 4; }
+    .viz .arrow-head { fill: var(--water-deep); }
+    .viz .air-head { fill: var(--accent); }
+    .viz .diffuser { fill: var(--tank-stroke); }
+    .viz .viz-strong { fill: var(--text); font-size: 12px; font-weight: 700; font-family: var(--font); }
+    .viz .accent-text { fill: var(--accent-strong); font-size: 12px; font-weight: 600; font-family: var(--font); }
+    .viz .warn-text { fill: var(--warn-text); font-size: 12px; font-weight: 600; font-family: var(--font); }
+    .verdict-ok { color: var(--accent-strong); }
+    .verdict-bad { color: var(--warn-text); }
+    .result-list .v { overflow-wrap: anywhere; }
+    .result-main .sub { font-size: .85rem; color: var(--text-muted); margin-top: 2px; }
+  </style>
+</head>
+<body>
+  <header class="site-header">
+    <div class="wrap">
+      <a class="brand" href="../">
+        <span class="brand-mark" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3c3 4 6 7 6 11a6 6 0 0 1-12 0c0-4 3-7 6-11z"/></svg>
+        </span>
+        Tank Calculator
+      </a>
+      <nav><a href="../">All calculators</a></nav>
+    </div>
+  </header>
+
+  <main class="wrap">
+    <div class="crumbs"><a href="../">Home</a> / Foam Fractionator Sizing</div>
+    <h1 class="page-title">Foam Fractionator (Protein Skimmer) Sizing Calculator</h1>
+    <p class="page-lede">Size a foam fractionator (protein skimmer) for a salt-water or fresh-water recirculating system: the column volume for your contact time, its diameter and height, the air it needs and the air pump pressure, how often the system water passes through it, and an ozone generator if you add one. Or check a column you already have.</p>
+
+    <div class="calc-layout">
+      <!-- Calculator -->
+      <section class="card" aria-labelledby="calc-heading">
+        <h2 id="calc-heading">Calculator</h2>
+
+        <div class="field">
+          <span class="label" id="wtype-label">Water type</span>
+          <div class="segmented" role="group" aria-labelledby="wtype-label" id="wtype-group">
+            <button type="button" data-wtype="salt" aria-pressed="true">Salt water</button>
+            <button type="button" data-wtype="fresh" aria-pressed="false">Fresh / brackish</button>
+          </div>
+          <div class="field-hint">Switching loads that water type's starting contact time, air-to-water ratio and salinity.</div>
+        </div>
+
+        <div class="two-col">
+          <div class="field">
+            <label for="sal">Salinity</label>
+            <div class="input-row"><input id="sal" type="number" inputmode="decimal" min="0" step="any"><span class="unit">ppt</span></div>
+            <div class="field-hint">About 35 for seawater, 0 for fresh water.</div>
+          </div>
+          <div class="field">
+            <label for="vol">System water volume</label>
+            <div class="input-row"><input id="vol" type="number" inputmode="decimal" min="0" step="any"><select class="unit-select" data-unit-group="volume" data-unit-for="vol" data-unit-default="m3" aria-label="System volume unit"></select></div>
+            <div class="field-hint">All tanks, sump and filters. Used for the turnover.</div>
+          </div>
+          <div class="field">
+            <label for="feed">Daily feed</label>
+            <div class="input-row"><input id="feed" type="number" inputmode="decimal" min="0" step="any"><select class="unit-select" data-unit-group="mass" data-unit-for="feed" data-unit-default="kg" aria-label="Daily feed unit"></select></div>
+            <div class="field-hint">For the solids load and the ozone dose. See <a href="feeding-rate.html">Feeding Rate</a>.</div>
+          </div>
+        </div>
+
+        <div class="field">
+          <span class="label" id="fmode-label">Water flow through the fractionator</span>
+          <div class="segmented" role="group" aria-labelledby="fmode-label" id="fmode-group">
+            <button type="button" data-fmode="turns" aria-pressed="true">Turnovers per hour</button>
+            <button type="button" data-fmode="pct" aria-pressed="false">% of system flow</button>
+            <button type="button" data-fmode="flow" aria-pressed="false">I know the flow</button>
+          </div>
+        </div>
+
+        <div class="two-col">
+          <div class="field" data-fmode-for="turns">
+            <label for="turns">System volume through skimmer</label>
+            <div class="input-row"><input id="turns" type="number" inputmode="decimal" min="0" step="any"><span class="unit">per hour</span></div>
+          </div>
+          <div class="field" data-fmode-for="pct">
+            <label for="sysflow">Main system flow</label>
+            <div class="input-row"><input id="sysflow" type="number" inputmode="decimal" min="0" step="any"><select class="unit-select" data-unit-group="flow" data-unit-for="sysflow" data-unit-default="m3ph" aria-label="System flow unit"></select></div>
+            <div class="field-hint">See <a href="pump-turnover.html">Pump &amp; Turnover</a>.</div>
+          </div>
+          <div class="field" data-fmode-for="pct">
+            <label for="pct">Share sent to the skimmer</label>
+            <div class="input-row"><input id="pct" type="number" inputmode="decimal" min="0" max="100" step="any"><span class="unit">%</span></div>
+          </div>
+          <div class="field" data-fmode-for="flow">
+            <label for="flow">Flow through the fractionator</label>
+            <div class="input-row"><input id="flow" type="number" inputmode="decimal" min="0" step="any"><select class="unit-select" data-unit-group="flow" data-unit-for="flow" data-unit-default="m3ph" aria-label="Fractionator flow unit"></select></div>
+          </div>
+          <div class="field">
+            <label for="units">Number of fractionators</label>
+            <div class="input-row"><input id="units" type="number" inputmode="numeric" min="1" step="1"></div>
+            <div class="field-hint">Flow is split equally between them.</div>
+          </div>
+        </div>
+
+        <div class="two-col">
+          <div class="field">
+            <label for="ctime">Contact time (water in the column)</label>
+            <div class="input-row"><input id="ctime" type="number" inputmode="decimal" min="0" step="any"><select class="unit-select" data-unit-group="time" data-unit-for="ctime" data-unit-default="min" aria-label="Contact time unit"></select></div>
+            <div class="field-hint" id="ctime-hint"></div>
+          </div>
+          <div class="field">
+            <label for="ratio">Air-to-water ratio</label>
+            <div class="input-row"><input id="ratio" type="number" inputmode="decimal" min="0" step="any"><span class="unit">air : water</span></div>
+            <div class="field-hint" id="ratio-hint"></div>
+          </div>
+        </div>
+
+        <div class="field">
+          <span class="label" id="smode-label">Column size</span>
+          <div class="segmented" role="group" aria-labelledby="smode-label" id="smode-group">
+            <button type="button" data-smode="depth" aria-pressed="true">From water depth</button>
+            <button type="button" data-smode="hlr" aria-pressed="false">From hydraulic loading</button>
+            <button type="button" data-smode="check" aria-pressed="false">Check my column</button>
+          </div>
+        </div>
+
+        <div class="two-col">
+          <div class="field" data-smode-for="depth check">
+            <label for="depth">Column water depth</label>
+            <div class="input-row"><input id="depth" type="number" inputmode="decimal" min="0" step="any"><select class="unit-select" data-unit-group="length" data-unit-for="depth" data-unit-default="m" aria-label="Water depth unit"></select></div>
+            <div class="field-hint">From the water surface (foam line) down to the outlet.</div>
+          </div>
+          <div class="field" data-smode-for="hlr">
+            <label for="hlr">Hydraulic loading</label>
+            <div class="input-row"><input id="hlr" type="number" inputmode="decimal" min="0" step="any"><select class="unit-select" data-unit-group="hydload" data-unit-for="hlr" data-unit-default="m3m2h" aria-label="Hydraulic loading unit"></select></div>
+            <div class="field-hint">Water flow per m² of column cross-section, i.e. the downward water speed.</div>
+          </div>
+          <div class="field" data-smode-for="check">
+            <label for="diam">Column inside diameter</label>
+            <div class="input-row"><input id="diam" type="number" inputmode="decimal" min="0" step="any"><select class="unit-select" data-unit-group="length" data-unit-for="diam" data-unit-default="m" aria-label="Column diameter unit"></select></div>
+          </div>
+          <div class="field">
+            <label for="riser">Foam riser + collection cup</label>
+            <div class="input-row"><input id="riser" type="number" inputmode="decimal" min="0" step="any"><select class="unit-select" data-unit-group="length" data-unit-for="riser" data-unit-default="m" aria-label="Riser height unit"></select></div>
+            <div class="field-hint">Height above the water for the foam to rise and drain. Rule of thumb; follow the design you build.</div>
+          </div>
+        </div>
+
+        <div class="field">
+          <span class="label" id="inj-label">How air gets into the column</span>
+          <div class="segmented" role="group" aria-labelledby="inj-label" id="inj-group">
+            <button type="button" data-inj="diffuser" aria-pressed="true">Air stones / diffuser at base</button>
+            <button type="button" data-inj="venturi" aria-pressed="false">Venturi / injector pump</button>
+          </div>
+        </div>
+
+        <div class="two-col">
+          <div class="field" data-inj-for="diffuser">
+            <label for="adepth">Diffuser depth below water surface</label>
+            <div class="input-row"><input id="adepth" type="number" inputmode="decimal" min="0" step="any"><select class="unit-select" data-unit-group="length" data-unit-for="adepth" data-unit-default="m" aria-label="Diffuser depth unit"></select></div>
+            <div class="field-hint">Usually the full water depth of the column.</div>
+          </div>
+          <div class="field" data-inj-for="diffuser">
+            <label for="ddrop">Pressure drop across the diffuser</label>
+            <div class="input-row"><input id="ddrop" type="number" inputmode="decimal" min="0" step="any"><select class="unit-select" data-unit-group="pressure" data-unit-for="ddrop" data-unit-default="kPa" aria-label="Diffuser pressure drop unit"></select></div>
+            <div class="field-hint">Typical fine-bubble stone value; rises as stones clog.</div>
+          </div>
+          <div class="field" data-inj-for="diffuser">
+            <label for="line">Air line loss allowance</label>
+            <div class="input-row"><input id="line" type="number" inputmode="decimal" min="0" step="any"><select class="unit-select" data-unit-group="pressure" data-unit-for="line" data-unit-default="kPa" aria-label="Air line loss unit"></select></div>
+            <div class="field-hint">Rule of thumb for short tubing, valves and check valves.</div>
+          </div>
+          <div class="field" data-inj-for="diffuser">
+            <label for="pump">Air pump</label>
+            <select id="pump"></select>
+            <div class="field-hint" id="pump-hint"></div>
+          </div>
+        </div>
+
+        <div class="two-col">
+          <div class="field">
+            <label for="ozone">Ozone</label>
+            <select id="ozone">
+              <option value="off">No ozone</option>
+              <option value="on">Add ozone to the fractionator</option>
+            </select>
+          </div>
+          <div class="field" data-ozone-for="on">
+            <label for="o3dose">Ozone dose</label>
+            <div class="input-row"><input id="o3dose" type="number" inputmode="decimal" min="0" step="any"><span class="unit">g O₃/kg feed</span></div>
+            <div class="field-hint">Published RAS doses: 7–15 g/kg feed for colour; 7 and 14 g/kg tested with seawater skimmers; about 29 g/kg for full-flow disinfection. See the article.</div>
+          </div>
+        </div>
+
+        <hr class="divider">
+
+        <div class="notice" id="notice" hidden></div>
+
+        <div class="two-col">
+          <div class="field">
+            <label for="outlen">Show lengths in</label>
+            <select id="outlen" class="unit-select" data-unit-group="length" data-unit-default="m"></select>
+          </div>
+          <div class="field">
+            <label for="outvol">Show column volume in</label>
+            <select id="outvol" class="unit-select" data-unit-group="volume" data-unit-default="L"></select>
+          </div>
+          <div class="field">
+            <label for="outhlr">Show hydraulic loading in</label>
+            <select id="outhlr" class="unit-select" data-unit-group="hydload" data-unit-default="m3m2h"></select>
+          </div>
+          <div class="field">
+            <label for="outp">Show air pressure in</label>
+            <select id="outp" class="unit-select" data-unit-group="pressure" data-unit-default="kPa"></select>
+          </div>
+        </div>
+
+        <div class="result-main" aria-live="polite">
+          <div class="label" id="r-main-label">Column water volume needed (each)</div>
+          <div class="value" id="r-main">–</div>
+          <div class="sub" id="r-main-sub"></div>
+        </div>
+
+        <ul class="result-list">
+          <li><span>Flow per fractionator</span><span class="v" id="r-qunit">–</span></li>
+          <li><span>Column inside diameter</span><span class="v" id="r-diam">–</span></li>
+          <li><span>Water depth · total height with riser</span><span class="v" id="r-height">–</span></li>
+          <li><span>Contact time</span><span class="v" id="r-ctime">–</span></li>
+          <li><span>Hydraulic loading (down-flow speed)</span><span class="v" id="r-hlr">–</span></li>
+          <li><span>Air flow, all units</span><span class="v" id="r-air">–</span></li>
+          <li><span>Air flow per fractionator</span><span class="v" id="r-airunit">–</span></li>
+          <li><span>Air pressure at the pump</span><span class="v" id="r-press">–</span></li>
+          <li><span>Air pump</span><span class="v" id="r-pump">–</span></li>
+          <li><span>System water through the skimmer</span><span class="v" id="r-turn">–</span></li>
+          <li><span>Solids produced by the feed</span><span class="v" id="r-tss">–</span></li>
+          <li><span>Ozone generator output</span><span class="v" id="r-o3">–</span></li>
+        </ul>
+
+        <div class="share-bar">
+          <button class="btn btn-primary" type="button" id="btn-share">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="m8.6 13.5 6.8 4M15.4 6.5l-6.8 4"/></svg>
+            Share
+          </button>
+          <button class="btn" type="button" id="btn-link">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.5.5l3-3a5 5 0 0 0-7-7l-1.7 1.7"/><path d="M14 11a5 5 0 0 0-7.5-.5l-3 3a5 5 0 0 0 7 7l1.7-1.7"/></svg>
+            Copy link
+          </button>
+          <button class="btn" type="button" id="btn-copy">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h10a1 1 0 0 1 1 1v1"/></svg>
+            Copy results
+          </button>
+          <button class="btn" type="button" id="btn-reset">Reset</button>
+        </div>
+      </section>
+
+      <!-- Visualization -->
+      <section class="card viz-card" aria-labelledby="viz-heading">
+        <h2 id="viz-heading">Visualization</h2>
+        <svg class="viz" id="viz" viewBox="0 0 480 330" role="img" aria-label="Cross-section of one counter-current foam fractionator column: water enters near the top and leaves at the bottom, air bubbles rise from the base, foam rises up the riser into the collection cup. Labelled with diameter, water depth, flows, air and contact time."></svg>
+        <p class="viz-caption" id="viz-caption"></p>
+      </section>
+    </div>
+
+    <article class="article">
+      <h2>How the foam fractionator calculator works</h2>
+      <p>A foam fractionator (in the aquarium trade, a <strong>protein skimmer</strong>) is a column of water with a stream of fine air bubbles rising through it. Proteins, fats and other surface-active organic molecules in the water stick to the air–water surface of each bubble, and very fine particles and bacteria stick to the bubbles too. At the top the bubbles build up into a stable foam that rises up a narrow riser, spills into a collection cup and drains away as a small stream of dirty liquid (the foamate). In the usual <strong>counter-current</strong> design, water enters near the top and leaves at the bottom, so it flows down against the rising bubbles.</p>
+      <p>The calculator does what a designer does on paper:</p>
+      <ol>
+        <li>finds the <strong>water flow</strong> through the fractionator from turnovers of the system volume, a share of the main system flow, or the flow you enter, and splits it between the units;</li>
+        <li>multiplies that flow by the <strong>contact time</strong> (hydraulic retention time) to get the column water volume;</li>
+        <li>turns the volume into a <strong>column diameter and height</strong>, either from the water depth you can fit, or from a hydraulic loading (flow per m² of column), or checks a column you already have;</li>
+        <li>multiplies the water flow by the <strong>air-to-water ratio</strong> to get the air flow, and for air stones at the base works out the <strong>pressure</strong> the air pump must supply at that depth and picks a pump from the same presets as the <a href="aeration-aquaculture.html">Air Pump &amp; Stones: Fish</a> calculator;</li>
+        <li>reports how many times a day the system water passes through the skimmer, the solids the feed produces, and the <strong>ozone generator</strong> output for the dose you choose.</li>
+      </ol>
+
+      <h3>Why it matters</h3>
+      <p>Screens and settlers remove the larger solids. What they miss are the very fine particles and the dissolved organic matter that build up in recirculating water, cloud it, feed heterotrophic bacteria, use oxygen and stress the fish. A foam fractionator targets exactly that fraction. Chen and co-workers at Cornell showed that foam fractionation removes both suspended and dissolved solids, including protein, from fish culture water (Weeks et al., 1992; Chen et al., 1993), and Timmons (1994) set out the design approach for aquaculture. In a freshwater trout RAS, Gregersen et al. (2021) found that foam fractionation alone cut particle numbers by about 58%, turbidity by 62%, bacterial activity by 54% and total BOD₅ by 51%. Removing fine solids also improves UV transmittance, which helps a <a href="uv-sterilizer-sizing.html">UV sterilizer</a> work.</p>
+      <p>The column is also a gas exchanger. The air bubbles add oxygen when the water is below saturation and strip some carbon dioxide, which is a useful side effect but not a replacement for proper aeration or a CO₂ stripper. The column is also a convenient, enclosed place to add ozone (Summerfelt, 2003).</p>
+
+      <h3>Salt water versus fresh water</h3>
+      <p>Foam fractionation works best in seawater. Dissolved salts slow down the merging (coalescence) of bubbles, so seawater keeps many small bubbles with a large total surface, and its foam is more stable (Craig, Ninham &amp; Pashley, 1993). In fresh water, bubbles merge into fewer, larger ones that carry less surface and rise faster, and the foam collapses more easily, so less material is carried out. This is why foam fractionation is often seen as ineffective in fresh water (Gregersen et al., 2021). It does still work: in fresh water, Jafari et al. (2022) measured a 59% reduction in microparticles and 28% in turbidity, and adding salt to 10 ppt roughly doubled the reduction compared with 0 ppt.</p>
+      <p>Designers compensate in fresh and low-salinity water in three ways: a <strong>longer contact time</strong> (a bigger column for the same flow), <strong>more air</strong> per litre of water, and <strong>ozone</strong>. Ozone combined with foam fractionation gave the largest improvement in the Gregersen et al. (2021) trial: 89% fewer particles, 79% lower turbidity, 90% lower bacterial activity and 75% lower total BOD₅ than the control. More air is not always better, though: in seawater Barrut et al. (2013) found that raising the air flow reduced foam fractionation efficiency when feed was present, because the bubbles started to merge. The fresh-water defaults on this page (twice the contact time and twice the air ratio of the salt-water defaults) are <strong>rules of thumb</strong>, not published values; we did not find a published fresh-water design figure.</p>
+
+      <h3>Formulas</h3>
+      <p><strong>1. Water flow</strong> Q through all fractionators, and per unit for N units:</p>
+      <div class="formula">From turnovers:   Q = V<sub>system</sub> × turnovers per hour
+From system flow: Q = Q<sub>system</sub> × share ÷ 100
+Per unit:         Q<sub>u</sub> = Q ÷ N</div>
+
+      <p><strong>2. Column water volume</strong> for contact (hydraulic retention) time t:</p>
+      <div class="formula">V = Q<sub>u</sub> × t</div>
+
+      <p><strong>3. Column cross-section, diameter and depth.</strong> The hydraulic loading HL is the water flow per m² of column cross-section A, which is also the speed at which the water moves down the column. Volume, area and depth H are tied together, so any two fix the third:</p>
+      <div class="formula">A  = V ÷ H                 (from water depth)
+A  = Q<sub>u</sub> ÷ HL               (from hydraulic loading)
+H  = V ÷ A = HL × t
+HL = Q<sub>u</sub> ÷ A = H ÷ t
+D  = √(4A ÷ π)
+Total height ≈ H + riser and collection cup</div>
+      <p>To check an existing column of diameter D and water depth H: A = πD²/4, V = A × H and the contact time it gives is t = V ÷ Q<sub>u</sub>.</p>
+
+      <p><strong>4. Air flow</strong>, with the air-to-water ratio G:L (air volume flow ÷ water volume flow):</p>
+      <div class="formula">Q<sub>air</sub> = G:L × Q       (L/min, CFM = ft³/min, m³/h)</div>
+
+      <p><strong>5. Air pressure</strong> for air stones or a diffuser at depth h<sub>d</sub> (gauge pressure at the pump, same method as the aeration calculator; ρ<sub>w</sub> = 998 kg/m³ fresh to 1025 kg/m³ at 35 ppt, g = 9.80665 m/s²):</p>
+      <div class="formula">P = ρ<sub>w</sub> × g × h<sub>d</sub> + diffuser drop + air line loss</div>
+      <p>The pump suggestion uses the linear air pump curves of the aeration calculator's presets. It picks the preset with the lowest total power that delivers the air at that pressure while keeping at least 15% of the pump's maximum pressure in reserve (air stones clog and the pressure rises). A venturi or injector pump draws its own air, so there is no air pump; check the injector's air-draw curve instead.</p>
+
+      <p><strong>6. Turnover, solids and ozone</strong>, with daily feed F:</p>
+      <div class="formula">Passes per day      = Q × 24 h ÷ V<sub>system</sub>
+Solids (kg/day)     = 0.25 × F               (Timmons &amp; Ebeling design value)
+Ozone (g/h)         = dose (g O₃/kg feed) × F (kg/day) ÷ 24
+Ozone per litre     = ozone (g/h) ÷ Q (m³/h)      (g/m³ = mg/L)</div>
+
+      <h3>Starting values and rules of thumb</h3>
+      <table>
+        <thead><tr><th>Setting</th><th>Salt water</th><th>Fresh / brackish</th><th>Basis</th></tr></thead>
+        <tbody>
+          <tr><td>Contact time</td><td>2 min</td><td>4 min</td><td>Salt: Kovács et al. (2023) ran commercial seawater skimmers at 1.8 and 2.2 min. Fresh: rule of thumb (twice salt).</td></tr>
+          <tr><td>Air-to-water ratio</td><td>0.5</td><td>1.0</td><td>Rule of thumb. The page warns outside 0.2–3.</td></tr>
+          <tr><td>Hydraulic loading</td><td colspan="2">Follows from depth ÷ time (45 m/h for 1.5 m and 2 min)</td><td>Rule of thumb: the page warns above 90 m/h (2.5 cm/s) because fine bubbles get dragged down.</td></tr>
+          <tr><td>Riser and cup</td><td colspan="2">0.5 m</td><td>Rule of thumb.</td></tr>
+          <tr><td>Diffuser drop, line loss</td><td colspan="2">2 kPa, 1 kPa</td><td>Same typical values as the aeration calculator.</td></tr>
+        </tbody>
+      </table>
+      <p>Contact time is not the whole story. Peng, Oh &amp; Jo (2003) found that in a seawater foam fractionator the air rate per column area (superficial air velocity) was the dominant operating variable, and that the protein removal rate fell as the retention time increased. A longer column helps weak-foaming water, but enough fine air matters more.</p>
+
+      <h3>Ozone dose</h3>
+      <p>Ozone is dosed per kg of feed because the organic load it must oxidise comes from the feed. Published figures include 7–15 g O₃/kg feed to destroy the colour produced by the feed in a freshwater RAS (Christensen, Rusch &amp; Malone, 2000), doses of 0, 7 and 14 g O₃/kg feed tested with full-scale skimmers in a commercial seawater RAS (Kovács et al., 2023), and about 29 g O₃/kg feed to disinfect the full flow, controlled by an ORP probe, in a freshwater RAS (Summerfelt et al., 2009). The default of 10 g/kg sits inside the colour range. Ozone and the oxidants it forms in seawater are toxic to fish: dose it into the fractionator or a contact chamber, never into the tank, control it by ORP and remove any residual before the water returns (Summerfelt, 2003).</p>
+
+      <h3>Worked example (salt-water defaults)</h3>
+      <p>A seawater system of <strong>20 m³</strong> at 35 ppt, fed <strong>10 kg</strong> a day, sends its volume through one fractionator once an hour: Q = 20 × 1 = <strong>20 m³/h</strong> (333.3 L/min).</p>
+      <p>Column volume for 2 min contact: 20 m³/h × 2/60 h = <strong>0.667 m³ (667 L)</strong>. With 1.5 m of water depth, A = 0.667 ÷ 1.5 = 0.444 m², so D = √(4 × 0.444 ÷ π) = <strong>0.752 m</strong> (build 0.76 m). Hydraulic loading = 1.5 m ÷ (2/60 h) = <strong>45 m/h</strong> (1.25 cm/s). Total height with a 0.5 m riser and cup: <strong>2.0 m</strong>.</p>
+      <p>Air at 0.5 : 1: 0.5 × 20 = <strong>10 m³/h = 166.7 L/min = 5.89 CFM</strong>. Air stones at 1.5 m in 1025 kg/m³ water: 1025 × 9.80665 × 1.5 = 15.08 kPa, plus 2 kPa diffuser and 1 kPa line = <strong>18.08 kPa</strong>. The 120 L/min preset pump tops out at 17.9 kPa, so the suggestion is <strong>4 × 60 L/min linear pumps</strong> (about 51 L/min each at that pressure, 200 W in total).</p>
+      <p>The system water passes through the skimmer 20 × 24 ÷ 20 = <strong>24 times a day</strong>. The feed produces about 0.25 × 10 = <strong>2.5 kg of solids</strong> a day. With ozone at 10 g/kg feed the generator must make 10 × 10 ÷ 24 = <strong>4.17 g O₃/h</strong>, about 0.21 mg/L in the skimmer flow.</p>
+      <h3>Worked example (fresh-water defaults)</h3>
+      <p>Same system in fresh water (0 ppt), with the fresh-water starting values of 4 min and 1.0 : 1. Column volume = 20 × 4/60 = <strong>1.333 m³</strong>; at 1.5 m depth A = 0.889 m² and D = <strong>1.064 m</strong> (build 1.07 m); hydraulic loading 22.5 m/h. Air = 20 m³/h = <strong>333.3 L/min = 11.77 CFM</strong>. Pressure = 998 × 9.80665 × 1.5 = 14.68 kPa + 3 kPa = <strong>17.68 kPa</strong>. That is 98.6% of the 120 L/min pump's 17.9 kPa maximum, too close, so the page suggests <strong>7 × 60 L/min pumps</strong> (about 52 L/min each, 350 W). The fresh-water column is twice the volume and uses twice the air of the seawater one for the same flow.</p>
+
+      <h3>Limitations and assumptions</h3>
+      <ul>
+        <li><strong>Rules of thumb, not a performance model.</strong> The calculator sizes the hardware; it does not predict how much will be removed. Removal depends on bubble size, salinity, the organic load, the air rate and the foam height, and published removal figures vary widely between systems.</li>
+        <li><strong>Manufacturer data rules.</strong> Commercial skimmers are rated by their makers for a water flow, air flow and pump. Use that rating, and the injector or pump curves, for a purchase.</li>
+        <li><strong>Plug flow.</strong> Contact time is the column water volume ÷ flow. Short-circuiting, the volume taken up by bubbles and a cone or bottom fittings reduce the real time.</li>
+        <li><strong>Air volume</strong> is taken at the pump (about atmospheric pressure). Bubbles are compressed slightly at depth.</li>
+        <li><strong>Venturi units</strong> are not pressure-checked: the injector pump draws air by suction, and the air it draws depends on its model and back-pressure.</li>
+        <li><strong>Foamate</strong> (waste water leaving with the foam) is not estimated: we did not find a published typical fraction to base it on. It must be replaced with make-up water and disposed of like other sludge.</li>
+        <li><strong>Ozone</strong> sizing assumes all of the generator output is transferred. Real transfer efficiency is below 100%, so allow extra capacity and use an ORP controller.</li>
+      </ul>
+      <p>Related calculators: <a href="drum-filter-sizing.html">Drum Filter Sizing</a>, <a href="uv-sterilizer-sizing.html">UV Filtration Sizing</a>, <a href="aeration-aquaculture.html">Air Pump &amp; Stones: Fish</a>, <a href="pump-turnover.html">Pump &amp; Turnover</a>.</p>
+
+      <h2>Sources</h2>
+      <ol class="sources">
+        <li>Timmons, M. B. (1994). Use of foam fractionators in aquaculture. In M. B. Timmons &amp; T. M. Losordo (Eds.), <em>Aquaculture Water Reuse Systems: Engineering Design and Management</em> (pp. 247–277). Amsterdam: Elsevier.</li>
+        <li>Timmons, M. B. &amp; Ebeling, J. M. (2010). <em>Recirculating Aquaculture</em> (2nd ed.). Ithaca, NY: Cayuga Aqua Ventures. (Design value of 0.25 kg suspended solids per kg feed.)</li>
+        <li>Weeks, N. C., Timmons, M. B. &amp; Chen, S. (1992). Feasibility of using foam fractionation for the removal of dissolved and suspended solids from fish culture water. <em>Aquacultural Engineering</em>, 11(4), 251–265.</li>
+        <li>Chen, S., Timmons, M. B., Bisogni, J. J. &amp; Aneshansley, D. J. (1993). Protein and its removal by foam fractionation. <em>The Progressive Fish-Culturist</em>, 55(2), 76–82.</li>
+        <li>Peng, L., Oh, S. Y. &amp; Jo, J. Y. (2003). Protein removal by a foam fractionator in simulated seawater aquaculture system. <em>Ocean and Polar Research</em>, 25, 269–275.</li>
+        <li>Barrut, B., Blancheton, J.-P., Champagne, J.-Y. &amp; Grasmick, A. (2013). Foam fractionation efficiency of a vacuum airlift—Application to particulate matter removal in recirculating systems. <em>Aquacultural Engineering</em>, 54, 16–21. <a href="https://doi.org/10.1016/j.aquaeng.2012.10.003" rel="noopener" target="_blank">doi.org/10.1016/j.aquaeng.2012.10.003</a></li>
+        <li>Gregersen, K. J. J., Pedersen, L.-F., Pedersen, P. B., Syropoulou, E. &amp; Dalsgaard, J. (2021). Foam fractionation and ozonation in freshwater recirculation aquaculture systems. <em>Aquacultural Engineering</em>, 95, 102195. <a href="https://doi.org/10.1016/j.aquaeng.2021.102195" rel="noopener" target="_blank">doi.org/10.1016/j.aquaeng.2021.102195</a></li>
+        <li>Jafari, L., de Jesus Gregersen, K. J., Vadstein, O. &amp; Pedersen, L.-F. (2022). Removal of microparticles and bacterial inactivation in freshwater RAS by use of foam fractionation, H₂O₂ and NaCl. <em>Aquaculture Research</em>, 53(9), 3274–3282. <a href="https://doi.org/10.1111/are.15804" rel="noopener" target="_blank">doi.org/10.1111/are.15804</a></li>
+        <li>Kovács, B. D., de Jesus Gregersen, K. J., Rüppel, F., von Danwitz, A. &amp; Pedersen, L.-F. (2023). Evaluating protein skimmer performance in a commercial seawater recirculating aquaculture system (RAS). <em>Aquacultural Engineering</em>, 103, 102369. <a href="https://doi.org/10.1016/j.aquaeng.2023.102369" rel="noopener" target="_blank">doi.org/10.1016/j.aquaeng.2023.102369</a></li>
+        <li>Craig, V. S. J., Ninham, B. W. &amp; Pashley, R. M. (1993). The effect of electrolytes on bubble coalescence in water. <em>The Journal of Physical Chemistry</em>, 97(39), 10192–10197.</li>
+        <li>Summerfelt, S. T. (2003). Ozonation and UV irradiation—an introduction and examples of current applications. <em>Aquacultural Engineering</em>, 28(1–2), 21–36. doi:10.1016/S0144-8609(02)00069-9</li>
+        <li>Summerfelt, S. T., Sharrer, M. J., Tsukuda, S. M. &amp; Gearheart, M. (2009). Process requirements for achieving full-flow disinfection of recirculating water using ozonation and UV irradiation. <em>Aquacultural Engineering</em>, 40(1), 17–27. <a href="https://doi.org/10.1016/j.aquaeng.2008.10.002" rel="noopener" target="_blank">doi.org/10.1016/j.aquaeng.2008.10.002</a></li>
+        <li>Christensen, J. M., Rusch, K. A. &amp; Malone, R. F. (2000). Development of a model for describing accumulation of color and subsequent destruction by ozone in a freshwater recirculating aquaculture system. <em>Journal of the World Aquaculture Society</em>, 31(2). <a href="https://doi.org/10.1111/j.1749-7345.2000.tb00350.x" rel="noopener" target="_blank">doi.org/10.1111/j.1749-7345.2000.tb00350.x</a></li>
+        <li>Air pump curves and diffuser pressure drops: presets of the <a href="aeration-aquaculture.html">Air Pump &amp; Stones: Fish</a> calculator (Hiblow HP-60 / HP-120 and Eheim Air 400 specification sheets; typical diffuser values), which lists their sources.</li>
+      </ol>
+    </article>
+  </main>
+
+  <footer class="site-footer">
+    <div class="wrap">Calculations are estimates. Use the fractionator and pump manufacturers' data for final selection.</div>
+  </footer>
+
+  <script src="../assets/share.js"></script>
+  <script src="../assets/units.js"></script>
+  <script src="../assets/aeration-common.js"></script>
+  <script src="../assets/foam-fractionator.js"></script>
+</body>
+</html>

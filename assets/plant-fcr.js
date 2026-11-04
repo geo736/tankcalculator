@@ -128,7 +128,7 @@
   function getState() {
     const st = { mode: mode, crop: cropSel.value, outm: outM.value, outy: outY.value, outr: outR.value };
     MODE_FIELDS[mode].forEach(function (f) {
-      st[f] = $(f).value;
+      st[f] = $(f).value === '' ? 'none' : $(f).value; // keep cleared optional fields cleared on reload
       const u = CalcUnits.unit(f);
       if (u) st[f + '_u'] = u;
     });
@@ -168,8 +168,8 @@
     const st = $('r-status');
     if (mode === 'measure') {
       $('r-main-label').textContent = 'Plant feed conversion ratio (FCRplant)';
-      $('r-main').textContent = c.ok ? ratio(c.fcr) + ' kg feed / kg plant' : '–';
-      $('r-main-sub').textContent = c.ok ? fmt(c.perkg) + ' kg of plants (fresh) per kg of feed' : '';
+      $('r-main').textContent = c.ok ? ratio(c.fcr) : '–';
+      $('r-main-sub').textContent = c.ok ? 'kg feed per kg plant gain (fresh) · ' + fmt(c.perkg) + ' kg of plants per kg of feed' : '';
       $('r-gain').textContent = c.ok ? showM(c.G) : '–';
       $('r-perkg').textContent = c.ok ? fmt(c.perkg) + ' kg/kg' : '–';
       $('r-dry').textContent = c.ok && c.fcrDry ? ratio(c.fcrDry) + ' (dry gain ' + showM(c.Gd) + ')' : '–';

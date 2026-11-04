@@ -190,15 +190,15 @@
     const a = Math.abs(n);
     if (a === 0) return '0';
     if (a >= 1000) return n.toLocaleString(undefined, { maximumFractionDigits: 0 });
-    return n.toLocaleString(undefined, { maximumSignificantDigits: 4 });
+    return n.toLocaleString(undefined, { maximumSignificantDigits: a < 10 ? 3 : 4 });
   }
   function conc(n) { // mg/L for tables
     if (!isFinite(n)) return '–';
     const a = Math.abs(n);
     if (a === 0) return '0';
     if (a >= 100) return fixed(n, 1);
-    if (a >= 1) return fixed(n, 2);
-    return n.toLocaleString(undefined, { maximumSignificantDigits: 3 });
+    if (a >= 0.9995) return fixed(n, 2);
+    return n.toLocaleString(undefined, { maximumFractionDigits: a >= 0.01 ? 3 : 4 });
   }
   function num(id) {
     const v = parseFloat($(id).value);
@@ -433,12 +433,14 @@
     if (anyTarget && r.salts.length) {
       if (unmet.length) msgs.push('None of the ticked products supply ' + unmet.join(', ') + '. Tick a salt that contains ' + (unmet.length > 1 ? 'them' : 'it') + '.');
       if (short.length) msgs.push('Below target by more than 10%: ' + short.join(', ') + '. The ticked salts cannot supply this without overshooting other elements; tick another salt.');
+      if (short.indexOf('NO₃-N') >= 0 && r.water.hco3 > 0) msgs.push('Nitrate is usually short when the water brings calcium and magnesium: every nitrate salt also adds a cation. Growers make up the difference with the nitric acid used to neutralise bicarbonate (pH Down calculator); enter the nitrate-N that acid adds under the water analysis.');
       if (over.length) msgs.push('Above target by more than 10%: ' + over.join(', ') + ' (an unavoidable by-product of the ticked salts).');
     }
     if (already.length) msgs.push((topup ? 'The solution' : 'Your water') + ' already holds more ' + already.join(', ') + ' than the target. Nothing is added for ' + (already.length > 1 ? 'these' : 'it') + '.' +
       (topup ? ' Dilute with fresh water or replace the solution if this keeps building up.' : ''));
-    if (r.added.cl > 0.05) msgs.push('The ticked salts add ' + conc(r.added.cl) + ' mg/L chloride. Chloride is needed only in traces and builds up in recirculating systems; avoid potassium chloride for chloride-sensitive crops.');
-    if (r.added.na > 0.05) msgs.push('The ticked salts add ' + conc(r.added.na) + ' mg/L sodium, which plants hardly use and which builds up in recirculating systems.');
+    const kclUsed = r.salts.some(function (x) { return x.s.key === 'kcl' && x.mgL > 1e-9; });
+    if (kclUsed || r.added.cl > 1) msgs.push('The ticked salts add ' + conc(r.added.cl) + ' mg/L chloride' + (kclUsed ? ', mostly from potassium chloride' : '') + '. Plants need chloride only in traces, it builds up in recirculating systems, and some crops are sensitive to it. Prefer potassium nitrate, sulfate or phosphate where you can.');
+    if (r.added.na > 1) msgs.push('The ticked salts add ' + conc(r.added.na) + ' mg/L sodium, which plants hardly use and which builds up in recirculating systems.');
     const cf = r.salts.filter(function (x) { return x.s.key === 'cf'; })[0];
     if (cf && cf.frac.ca > 0 && (cf.frac.p > 0 || cf.frac.s > 0) && cf.mgL > 0) msgs.push('The custom fertilizer contains calcium together with phosphate or sulfate, so it cannot be kept safely in either concentrated stock tank. Dissolve it in the final solution.');
     if (r.ec > 5) msgs.push('The estimated EC is above 5 mS/cm, too strong for most crops; check the targets and units.');
@@ -458,7 +460,7 @@
     if (ok) {
       r.salts.forEach(function (x) {
         if (!(x.mgL > 1e-9)) return;
-        addRow(tb, [x.s.name, x.s.tank, r.vol > 0 ? massOut(x.mgL * r.vol / 1000) : '–', massOut(x.mgL * 100 / 1000), massOut(x.mgL * 100 * L_PER_GAL / 1000)]);
+        addRow(tb, [shortName(x.s), r.vol > 0 ? massOut(x.mgL * r.vol / 1000) : '–', massOut(x.mgL * 100 / 1000), massOut(x.mgL * 100 * L_PER_GAL / 1000)]);
       });
       const unused = r.salts.filter(function (x) { return !(x.mgL > 1e-9); }).map(function (x) { return x.s.name; });
       $('unused').textContent = unused.length ? 'Not needed with these targets: ' + unused.join(', ') + '.' : '';
@@ -472,9 +474,9 @@
       if (!(t > 0) && !(r.total[e.id] > 0)) return;
       const diff = t > 0 ? (r.total[e.id] - t) / t * 100 : NaN;
       addRow(et, [e.sym, conc(r.water[e.id]), conc(r.added[e.id]), conc(r.total[e.id]), t > 0 ? conc(t) : '–',
-        t > 0 ? (diff >= 0 ? '+' : '') + fixed(diff, 1) + '%' : 'no target'], t > 0 && Math.abs(diff) > TOL * 100 ? 'off' : '');
+        t > 0 ? (Math.abs(diff) < 0.05 ? '0.0' : (diff > 0 ? '+' : '') + fixed(diff, 1)) + '%' : '–'], t > 0 && Math.abs(diff) > TOL * 100 ? 'off' : '');
     });
-    if (r.water.hco3 > 0) addRow(et, ['HCO₃', conc(r.water.hco3), '0', conc(r.water.hco3), '–', 'from water']);
+    if (r.water.hco3 > 0) addRow(et, ['HCO₃', conc(r.water.hco3), '0', conc(r.water.hco3), '–', '–']);
 
     // results list
     const macros = EL.filter(function (e) { return !e.micro && r.target[e.id] > 0; });
@@ -514,7 +516,7 @@
         const gL = x.mgL * dil / 1000; // g per L of stock
         if (x.s.tank === 'A') sumA += gL; else sumB += gL;
         if (x.s.key === 'sop') k2so4 = gL / (num('pct_sop') / 100 || 1);
-        addRow(tb, [x.s.name, x.s.tank, sig(gL) + ' g/L', sv > 0 ? massOut(gL * sv) : '–']);
+        addRow(tb, [shortName(x.s), x.s.tank, sig(gL) + ' g/L', sv > 0 ? massOut(gL * sv) : '–']);
       });
     }
     if (sumA > 0 || sumB > 0) {
@@ -594,7 +596,7 @@
         text(VW - 8, y + 13, conc(r.total[e.id]) + ' / ' + conc(t), 'end', off ? { fill: 'var(--warn-text)', 'font-weight': 700 } : undefined);
       } else {
         text(x0 + 6, y + 13, 'no target', 'start');
-        text(VW - 8, y + 13, conc(r.total[e.id]) + ' mg/L', 'end', r.added[e.id] > 0.05 ? { fill: 'var(--warn-text)', 'font-weight': 700 } : undefined);
+        text(VW - 8, y + 13, conc(r.total[e.id]) + ' mg/L', 'end', r.added[e.id] > 1 ? { fill: 'var(--warn-text)', 'font-weight': 700 } : undefined);
       }
     });
     const yEnd = top + rows.length * rh;
@@ -611,7 +613,7 @@
     // salt mass stacked bar
     const sTop = yEnd + (rows.length ? 40 : 60);
     const used = ok ? r.salts.filter(function (x) { return x.mgL > 1e-9; }) : [];
-    text(8, sTop, 'Product mass per litre of final solution', 'start', { 'font-weight': 600 });
+    text(8, sTop, 'Product per litre of final solution (mg/L)', 'start', { 'font-weight': 600 });
     text(VW - 8, sTop, ok ? sig(r.totalMgL) + ' mg/L' : '', 'end');
     const by = sTop + 8, bh = 26, bw = VW - 16;
     el('rect', { x: 8, y: by, width: bw, height: bh, rx: 6, fill: 'var(--surface-2)' });

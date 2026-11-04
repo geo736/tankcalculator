@@ -12,9 +12,10 @@
     details.more summary { cursor: pointer; font-weight: 600; font-size: .9rem; }
     details.more[open] summary { margin-bottom: 12px; }
     .table-scroll { overflow-x: auto; }
-    .calc-table { width: 100%; border-collapse: collapse; font-size: .8rem; font-variant-numeric: tabular-nums; margin: 6px 0 10px; }
-    .calc-table th, .calc-table td { padding: 5px 4px; border-bottom: 1px solid var(--border); text-align: right; }
-    .calc-table th:first-child, .calc-table td:first-child { text-align: left; }
+    .calc-table { width: 100%; border-collapse: collapse; font-size: .78rem; font-variant-numeric: tabular-nums; margin: 6px 0 10px; }
+    .calc-table th, .calc-table td { padding: 5px 3px; border-bottom: 1px solid var(--border); text-align: right; }
+    .calc-table th:first-child, .calc-table td:first-child { text-align: left; white-space: normal; }
+    .calc-table td, .calc-table th { white-space: nowrap; }
     .calc-table th { color: var(--text-muted); font-weight: 600; }
     .calc-table tr.off td { color: var(--warn-text); font-weight: 600; }
     .salt-row { display: grid; grid-template-columns: minmax(0, 1fr) 118px; gap: 8px; align-items: center; padding: 7px 0; border-bottom: 1px dashed var(--border); }
@@ -306,10 +307,11 @@
 
         <div class="table-scroll">
           <table class="calc-table">
-            <thead><tr><th>Product</th><th>Tank</th><th>Batch</th><th>/100 L</th><th>/100 gal</th></tr></thead>
+            <thead><tr><th>Product</th><th>Batch</th><th>/100 L</th><th>/100 US gal</th></tr></thead>
             <tbody id="salt-table"></tbody>
           </table>
         </div>
+        <p class="muted-note">Products are shown by formula. The A/B section above splits them into two concentrate tanks.</p>
         <p class="muted-note" id="unused"></p>
 
         <ul class="result-list">
@@ -430,8 +432,8 @@ HCO₃ = alkalinity as CaCO₃ × 1.2193</div>
 K   234.6 mg/L ÷ 39.098 = 6.000 mmol/L KNO₃           × 101.10 = 606.6 mg/L
 P    31.0 mg/L ÷ 30.974 = 1.001 mmol/L NH₄H₂PO₄       × 115.03 = 115.1 mg/L
 Mg   48.6 mg/L ÷ 24.305 = 2.000 mmol/L MgSO₄·7H₂O     × 246.47 = 492.8 mg/L</div>
-      <p>These salts then also supply NO₃-N = (2 × 4.000 + 6.000) × 14.007 = 196.1 mg/L, NH₄-N = 14.0 mg/L and S = 64.1 mg/L, exactly the remaining targets. For 100 L that is <strong>94.45 g</strong> calcium nitrate, <strong>60.66 g</strong> potassium nitrate, <strong>11.51 g</strong> MAP and <strong>49.28 g</strong> magnesium sulfate (357.5, 229.6, 43.6 and 186.6 g per 100 US gallons). The micronutrients add 0.909 g Fe-DTPA (1 mg/L Fe at 11%), 0.286 g boric acid, 0.180 g manganese chloride, 0.022 g zinc sulfate, 0.0079 g copper sulfate and 0.0025 g sodium molybdate: the same amounts as Hoagland's micronutrient stock. In total, 217.3 g of product.</p>
-      <p>The estimated EC is <strong>2.30 mS/cm</strong>, the same as the Nutrient EC calculator gives for this recipe: the manganese chloride adds 0.65 mg/L chloride and the molybdate 0.005 mg/L sodium. At 1:100 each 10 L stock tank holds 94.45 g/L calcium nitrate and 0.909 g/L Fe-DTPA in A, and 60.66 g/L KNO₃, 11.51 g/L MAP and 49.28 g/L MgSO₄·7H₂O plus micronutrients in B, enough for 1,000 L.</p>
+      <p>These salts then also supply NO₃-N = (2 × 4.000 + 6.000) × 14.007 = 196.1 mg/L, NH₄-N = 14.0 mg/L and S = 64.1 mg/L, exactly the remaining targets. For 100 L that is <strong>94.45 g</strong> calcium nitrate, <strong>60.66 g</strong> potassium nitrate, <strong>11.51 g</strong> MAP and <strong>49.27 g</strong> magnesium sulfate (357.5, 229.6, 43.6 and 186.5 g per 100 US gallons). By hand the magnesium sulfate comes to 49.28 g; the solver trims it by 0.01 g because the zinc and copper sulfates also add 0.03 mg/L sulfur. The micronutrients add 0.909 g Fe-DTPA (1 mg/L Fe at 11%), 0.286 g boric acid, 0.180 g manganese chloride, 0.022 g zinc sulfate, 0.0079 g copper sulfate and 0.0025 g sodium molybdate: the same amounts as Hoagland's micronutrient stock. In total, 217.3 g of product.</p>
+      <p>The estimated EC is <strong>2.30 mS/cm</strong>, the same as the Nutrient EC calculator gives for this recipe: the manganese chloride adds 0.65 mg/L chloride and the molybdate 0.005 mg/L sodium. At 1:100 each 10 L stock tank holds 94.45 g/L calcium nitrate and 0.909 g/L Fe-DTPA in A, and 60.66 g/L KNO₃, 11.51 g/L MAP and 49.27 g/L MgSO₄·7H₂O plus micronutrients in B, enough for 1,000 L.</p>
 
       <h3>Source water and top-ups</h3>
       <p>Enter your water report in mg/L. Calcium, magnesium, sulfate and nitrate in the water count towards the targets. Sodium, chloride and bicarbonate count towards EC. Bicarbonate is not removed by fertilizer salts: water with high alkalinity drives the pH up, so neutralise it with acid (see the <a href="ph-adjustment.html">pH Down calculator</a>). Nitric, phosphoric or sulfuric acid then add nitrogen, phosphorus or sulfur; you can enter those amounts as part of the water analysis so the calculator adds less fertilizer. If the pH is too low, the <a href="ph-up-adjustment.html">pH Up calculator</a> works out a potassium or calcium base.</p>

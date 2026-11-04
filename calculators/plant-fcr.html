@@ -22,6 +22,9 @@
     .viz .marker-text { fill: var(--text); font-size: 12px; font-weight: 700; font-family: var(--font); }
     .viz .name-text { fill: var(--text); font-size: 12px; font-weight: 600; font-family: var(--font); }
     .viz .zone-text { fill: var(--accent-strong); font-size: 11px; font-weight: 600; font-family: var(--font); }
+    .viz .dim-text { font-size: 13px; }
+    .viz .name-text { font-size: 13px; }
+    @media (max-width: 480px) { .stack-sm { grid-template-columns: minmax(0, 1fr); gap: 0; } }
   </style>
 </head>
 <body>
@@ -67,7 +70,7 @@
           <div class="input-row"><input id="feed" type="number" inputmode="decimal" min="0" step="any"><select class="unit-select" data-unit-group="mass" data-unit-for="feed" data-unit-default="kg" aria-label="Feed unit"></select></div>
           <div class="field-hint">Total feed given to all fish (as fed) during the plant growing period.</div>
         </div>
-        <div class="two-col" data-show="measure">
+        <div class="two-col stack-sm" data-show="measure">
           <div class="field">
             <label for="harv">Plant harvest (fresh)</label>
             <div class="input-row"><input id="harv" type="number" inputmode="decimal" min="0" step="any"><select class="unit-select" data-unit-group="mass" data-unit-for="harv" data-unit-default="kg" aria-label="Harvest unit"></select></div>
@@ -101,7 +104,7 @@
         </div>
 
         <!-- Both modes -->
-        <div class="two-col">
+        <div class="two-col stack-sm">
           <div class="field">
             <label for="period">Period</label>
             <div class="input-row"><input id="period" type="number" inputmode="decimal" min="0" step="any"><select class="unit-select" data-unit-group="time" data-unit-for="period" data-unit-default="d" aria-label="Period unit"></select></div>
@@ -226,7 +229,7 @@ PFRM              = G<sub>plant</sub> ÷ G<sub>fish</sub>  = FCR<sub>fish</sub> 
       <p>Plan mode turns the first formula around: <strong>feed needed = target plant gain × FCR<sub>plant</sub></strong>, feed per day = feed ÷ T, and the grow area that feed fits at the guideline ratio R is feed per day ÷ R. The last line is our own algebra: because both FCRs use the same feed, dividing them cancels the feed and leaves the plant-to-fish gain ratio.</p>
 
       <h3>Example</h3>
-      <p>A 10 m² lettuce raft is fed from a fish tank for <strong>35 days</strong>. The fish get <strong>15.75 kg</strong> of feed in that time (450 g a day, which is 45 g/m²/day). You planted <strong>1 kg</strong> of seedlings and harvested <strong>36 kg</strong> of lettuce, so the plants gained 35 kg. FCR<sub>plant</sub> = 15.75 ÷ 35 = <strong>0.45 kg feed per kg lettuce</strong>, or 35 ÷ 15.75 = 2.22 kg of lettuce per kg of feed. At 4.4% dry matter the dry gain is 35 × 0.044 = 1.54 kg, so the dry-weight FCR<sub>plant</sub> is 15.75 ÷ 1.54 = 10.23. The plants gained 35 ÷ 10 = 3.5 kg/m². The loading rate is 15 750 g ÷ 10 m² ÷ 35 days = 45 g/m²/day, inside the FAO leafy-green range of 40–50. The fish gained <strong>10.5 kg</strong>, so their FCR is 15.75 ÷ 10.5 = 1.5, the system made (35 + 10.5) ÷ 15.75 = 2.89 kg of food per kg of feed, and the plant-fish mass ratio is 35 ÷ 10.5 = 3.33 (= 1.5 ÷ 0.45).</p>
+      <p>A 10 m² lettuce raft is fed from a fish tank for <strong>35 days</strong>. The fish get <strong>15.75 kg</strong> of feed in that time (450 g a day, which is 45 g/m²/day). You planted <strong>1 kg</strong> of seedlings and harvested <strong>36 kg</strong> of lettuce, so the plants gained 35 kg. FCR<sub>plant</sub> = 15.75 ÷ 35 = <strong>0.45 kg feed per kg lettuce</strong>, or 35 ÷ 15.75 = 2.22 kg of lettuce per kg of feed. At 4.4% dry matter the dry gain is 35 × 0.044 = 1.54 kg, so the dry-weight FCR<sub>plant</sub> is 15.75 ÷ 1.54 ≈ 10.2. The plants gained 35 ÷ 10 = 3.5 kg/m². The loading rate is 15 750 g ÷ 10 m² ÷ 35 days = 45 g/m²/day, inside the FAO leafy-green range of 40–50. The fish gained <strong>10.5 kg</strong>, so their FCR is 15.75 ÷ 10.5 = 1.5, the system made (35 + 10.5) ÷ 15.75 = 2.89 kg of food per kg of feed, and the plant-fish mass ratio is 35 ÷ 10.5 = 3.33 (= 1.5 ÷ 0.45).</p>
       <p>Plan mode turns this around. To grow <strong>35 kg</strong> of lettuce in 35 days at an FCR<sub>plant</sub> of 0.45 you need 35 × 0.45 = <strong>15.75 kg of feed</strong>, or 450 g/day. At 40–50 g/m²/day that feed fits 450 ÷ 50 = 9.0 to 450 ÷ 40 = 11.25 m² of grow area; on 10 m² the loading rate is 45 g/m²/day and the plants give 3.5 kg/m². At a fish FCR of 1.5 the fish gain 15.75 ÷ 1.5 = 10.5 kg.</p>
 
       <h3>Limitations and assumptions</h3>
