@@ -1,0 +1,363 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Air Pump &amp; Air Stone Sizing (Hydroponic Systems)</title>
+  <meta name="description" content="Size the air pump and air stones for hydroponics: DWC canals, shallow water culture troughs, and the reservoir or sump of NFT and media-bed systems. Air flow from aeration intensity, stones by flow and spacing, pump pressure at depth and power use.">
+  <link rel="stylesheet" href="../assets/style.css">
+  <style>
+    .viz .pump-box { fill: var(--surface-2); stroke: var(--tank-stroke); stroke-width: 1.5; }
+    .viz .viz-strong { fill: var(--text); font-size: 12px; font-weight: 700; font-family: var(--font); }
+    .viz .air-line { fill: none; stroke: var(--accent); stroke-width: 3; stroke-linejoin: round; stroke-linecap: round; }
+    .viz .air-text { fill: var(--accent-strong); font-size: 12px; font-weight: 600; font-family: var(--font); }
+    .viz .stone { fill: var(--tank-stroke); }
+    .viz .plume { fill: var(--water-top); fill-opacity: .35; }
+    .viz .bubble { fill: var(--surface); fill-opacity: .55; stroke: var(--water-top); stroke-width: 1; }
+    .viz .axis-title { fill: var(--text-muted); font-size: 11px; font-family: var(--font); }
+    .viz .gauge-frame { fill: none; stroke: var(--tank-stroke); stroke-width: 1.5; }
+    .viz .p-water { fill: var(--water); fill-opacity: .85; }
+    .viz .p-diff { fill: var(--tank-back); }
+    .viz .p-line { fill: var(--accent); fill-opacity: .6; }
+    .viz .raft { fill: var(--surface); stroke: var(--tank-stroke); stroke-width: 1.2; }
+    .viz .netpot { fill: var(--surface-2); stroke: var(--tank-stroke); stroke-width: 1; }
+    .viz .leaf { fill: var(--c-hydroponics); fill-opacity: .85; }
+    .viz .root { fill: none; stroke: var(--c-hydroponics); stroke-width: 1.2; stroke-linecap: round; }
+    .viz .gravel { fill: var(--tank-back); fill-opacity: .7; stroke: var(--tank-stroke); stroke-width: .8; }
+    .viz .pipe { fill: none; stroke: var(--water-deep); stroke-width: 3; stroke-dasharray: 6 4; stroke-linecap: round; }
+    .viz .note-text { fill: var(--text-muted); font-size: 11px; font-style: italic; font-family: var(--font); }
+    .result-list .v { overflow-wrap: anywhere; }
+  </style>
+</head>
+<body>
+  <header class="site-header">
+    <div class="wrap">
+      <a class="brand" href="../">
+        <span class="brand-mark" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3c3 4 6 7 6 11a6 6 0 0 1-12 0c0-4 3-7 6-11z"/></svg>
+        </span>
+        Tank Calculator
+      </a>
+      <nav><a href="../">All calculators</a></nav>
+    </div>
+  </header>
+
+  <main class="wrap">
+    <div class="crumbs"><a href="../">Home</a> / Air Pump &amp; Air Stone Sizing (Hydroponic Systems)</div>
+    <h1 class="page-title">Air Pump &amp; Air Stone Sizing (Hydroponic Systems)</h1>
+    <p class="page-lede">Work out how much air a hydroponic system needs, how many air stones to use and where, what pressure the pump must push against at the depth of the stones, and which pump and how much power that takes. Works for deep water culture (DWC), shallow water culture (SWC), NFT, media beds and plain reservoirs.</p>
+
+    <div class="calc-layout">
+      <!-- Calculator -->
+      <section class="card" aria-labelledby="calc-heading">
+        <h2 id="calc-heading">Calculator</h2>
+
+        <div class="field">
+          <label for="sys">System type</label>
+          <select id="sys">
+            <option value="dwc">DWC: deep water culture (raft canals)</option>
+            <option value="swc">SWC: shallow water culture (troughs up to ~15 cm)</option>
+            <option value="nft">NFT: aerate the reservoir</option>
+            <option value="media">Media bed / flood-and-drain: aerate the sump</option>
+            <option value="res">Reservoir only (drip, Dutch bucket, separate sump)</option>
+          </select>
+          <div class="field-hint" id="sys-hint"></div>
+        </div>
+
+        <div class="two-col" data-geo="canal">
+          <div class="field">
+            <label for="cl" id="lab-cl">Canal length</label>
+            <div class="input-row"><input id="cl" type="number" inputmode="decimal" min="0" step="any"><select class="unit-select" data-unit-group="length" data-unit-for="cl" data-unit-default="m" aria-label="Length unit"></select></div>
+          </div>
+          <div class="field">
+            <label for="cwid" id="lab-cwid">Canal width</label>
+            <div class="input-row"><input id="cwid" type="number" inputmode="decimal" min="0" step="any"><select class="unit-select" data-unit-group="length" data-unit-for="cwid" data-unit-default="m" aria-label="Width unit"></select></div>
+          </div>
+          <div class="field">
+            <label for="cd" id="lab-cd">Solution depth in the canal</label>
+            <div class="input-row"><input id="cd" type="number" inputmode="decimal" min="0" step="any"><select class="unit-select" data-unit-group="length" data-unit-for="cd" data-unit-default="cm" aria-label="Solution depth unit"></select></div>
+            <div class="field-hint">Depth of solution under the raft. See <a href="grow-bed-volume.html">Grow Bed Volume</a>.</div>
+          </div>
+          <div class="field">
+            <label for="cn" id="lab-cn">Number of canals</label>
+            <div class="input-row"><input id="cn" type="number" inputmode="numeric" min="1" step="1"></div>
+          </div>
+        </div>
+
+        <div class="two-col" data-geo="res" hidden>
+          <div class="field">
+            <label for="rvol" id="lab-rvol">Solution volume in the reservoir</label>
+            <div class="input-row"><input id="rvol" type="number" inputmode="decimal" min="0" step="any"><select class="unit-select" data-unit-group="volume" data-unit-for="rvol" data-unit-default="L" aria-label="Reservoir volume unit"></select></div>
+            <div class="field-hint">The solution in the tank while the system runs.</div>
+          </div>
+          <div class="field">
+            <label for="rdepth" id="lab-rdepth">Solution depth in the reservoir</label>
+            <div class="input-row"><input id="rdepth" type="number" inputmode="decimal" min="0" step="any"><select class="unit-select" data-unit-group="length" data-unit-for="rdepth" data-unit-default="cm" aria-label="Reservoir depth unit"></select></div>
+            <div class="field-hint">Sets the floor area (volume ÷ depth) for stone spacing.</div>
+          </div>
+        </div>
+
+        <div class="two-col">
+          <div class="field">
+            <label for="sdepth">Depth of air stones</label>
+            <div class="input-row"><input id="sdepth" type="number" inputmode="decimal" min="0" step="any"><select class="unit-select" data-unit-group="length" data-unit-for="sdepth" data-unit-default="cm" aria-label="Stone depth unit"></select></div>
+            <div class="field-hint">From the solution surface down to the stones. Stones usually lie on the floor.</div>
+          </div>
+          <div class="field">
+            <label for="temp">Solution temperature</label>
+            <div class="input-row"><input id="temp" type="number" inputmode="decimal" step="any"><select class="unit-select" data-unit-group="temperature" data-unit-for="temp" data-unit-default="C" aria-label="Temperature unit"></select></div>
+            <div class="field-hint">Warmer solution holds less oxygen. About 24 °C is a reasonable root-zone compromise (Carotti et al., 2021).</div>
+          </div>
+          <div class="field">
+            <label for="elev">Site elevation</label>
+            <div class="input-row"><input id="elev" type="number" inputmode="decimal" step="any"><select class="unit-select" data-unit-group="length" data-unit-for="elev" data-unit-default="m" aria-label="Elevation unit"></select></div>
+          </div>
+          <div class="field">
+            <label for="dotarget">Minimum DO to keep</label>
+            <div class="input-row"><input id="dotarget" type="number" inputmode="decimal" min="0" step="any"><select class="unit-select" data-unit-group="concentration" data-unit-for="dotarget" data-unit-default="mgL" aria-label="Dissolved oxygen unit"></select></div>
+            <div class="field-hint">Rule of thumb: more than 3 mg/L for plants (FAO TP 589, <a href="dissolved-oxygen.html">Dissolved Oxygen</a>). Many growers aim higher.</div>
+          </div>
+          <div class="field">
+            <label for="aint">Aeration intensity</label>
+            <div class="input-row"><input id="aint" type="number" inputmode="decimal" min="0" step="any"><select class="unit-select" data-unit-group="aerint" data-unit-for="aint" data-unit-default="LLmin" aria-label="Aeration intensity unit"></select></div>
+            <div class="field-hint">Example value 0.07: the lowest intensity Baiyin et al. (2021) tested (0.07–0.15 L/L/min improved growth; little extra benefit up to 1.18; less above). Their tests were small containers, so treat it as a starting point and check with a DO meter.</div>
+          </div>
+          <div class="field">
+            <label for="sf">Safety factor</label>
+            <div class="input-row"><input id="sf" type="number" inputmode="decimal" min="1" step="any"><span class="unit">×</span></div>
+            <div class="field-hint">Extra air for warm spells and clogging stones. Your choice; 1.5 is used here (as the fish-system calculator).</div>
+          </div>
+        </div>
+
+        <div class="field">
+          <label for="diffuser">Air stone / diffuser type</label>
+          <select id="diffuser"></select>
+          <div class="field-hint" id="diffuser-hint"></div>
+        </div>
+
+        <div class="two-col">
+          <div class="field" id="f-dq">
+            <label for="dq">Air flow per stone</label>
+            <div class="input-row"><input id="dq" type="number" inputmode="decimal" min="0" step="any"><select class="unit-select" data-unit-group="airflow" data-unit-for="dq" data-unit-default="Lpm" aria-label="Air flow unit"></select></div>
+            <div class="field-hint">Typical working flow, from the maker if you have it.</div>
+          </div>
+          <div class="field" id="f-dql" hidden>
+            <label for="dql">Air flow per length of tube</label>
+            <div class="input-row"><input id="dql" type="number" inputmode="decimal" min="0" step="any"><select class="unit-select" data-unit-group="airflowlen" data-unit-for="dql" data-unit-default="Lpm_m" aria-label="Air flow per length unit"></select></div>
+          </div>
+          <div class="field">
+            <label for="spacing">Largest stone spacing</label>
+            <div class="input-row"><input id="spacing" type="number" inputmode="decimal" min="0" step="any"><select class="unit-select" data-unit-group="length" data-unit-for="spacing" data-unit-default="m" aria-label="Spacing unit"></select></div>
+            <div class="field-hint" id="spacing-hint"></div>
+          </div>
+          <div class="field">
+            <label for="ddrop">Pressure drop across the stone</label>
+            <div class="input-row"><input id="ddrop" type="number" inputmode="decimal" min="0" step="any"><select class="unit-select" data-unit-group="pressure" data-unit-for="ddrop" data-unit-default="kPa" aria-label="Pressure drop unit"></select></div>
+            <div class="field-hint">Typical value; rises as stones clog.</div>
+          </div>
+          <div class="field">
+            <label for="sote">Oxygen transfer (SOTE) per depth</label>
+            <div class="input-row"><input id="sote" type="number" inputmode="decimal" min="0" step="any"><select class="unit-select" data-unit-group="sotedepth" data-unit-for="sote" data-unit-default="pct_m" aria-label="SOTE unit"></select></div>
+            <div class="field-hint">Rule of thumb from the stone preset. Only used for the oxygen estimate, not for sizing.</div>
+          </div>
+          <div class="field">
+            <label for="line">Air line loss allowance</label>
+            <div class="input-row"><input id="line" type="number" inputmode="decimal" min="0" step="any"><select class="unit-select" data-unit-group="pressure" data-unit-for="line" data-unit-default="kPa" aria-label="Line loss unit"></select></div>
+            <div class="field-hint">Rule of thumb for short tubing, a gang valve and a check valve. Increase for long or narrow lines.</div>
+          </div>
+        </div>
+
+        <div class="field">
+          <label for="pump">Air pump</label>
+          <select id="pump"></select>
+          <div class="field-hint" id="pump-hint"></div>
+        </div>
+        <div class="two-col">
+          <div class="field" data-pump="custom" hidden>
+            <label for="pq">Pump flow at the pressure needed</label>
+            <div class="input-row"><input id="pq" type="number" inputmode="decimal" min="0" step="any"><select class="unit-select" data-unit-group="airflow" data-unit-for="pq" data-unit-default="Lpm" aria-label="Pump flow unit"></select></div>
+            <div class="field-hint">Read it from the pump’s curve at the pressure shown in the results.</div>
+          </div>
+          <div class="field" data-pump="custom" hidden>
+            <label for="ppmax">Pump maximum pressure</label>
+            <div class="input-row"><input id="ppmax" type="number" inputmode="decimal" min="0" step="any"><select class="unit-select" data-unit-group="pressure" data-unit-for="ppmax" data-unit-default="kPa" aria-label="Pump pressure unit"></select></div>
+          </div>
+          <div class="field" data-pump="custom" hidden>
+            <label for="pw">Pump power</label>
+            <div class="input-row"><input id="pw" type="number" inputmode="decimal" min="0" step="any"><select class="unit-select" data-unit-group="power" data-unit-for="pw" data-unit-default="W" aria-label="Pump power unit"></select></div>
+          </div>
+        </div>
+
+        <hr class="divider">
+
+        <div class="notice" id="notice" hidden></div>
+
+        <div class="two-col">
+          <div class="field">
+            <label for="outflow">Show air flow in</label>
+            <select id="outflow" data-unit-group="airflow" data-unit-default="Lpm"></select>
+          </div>
+          <div class="field">
+            <label for="outp">Show pressure in</label>
+            <select id="outp" data-unit-group="pressure" data-unit-default="kPa"></select>
+          </div>
+        </div>
+
+        <div class="result-main" aria-live="polite">
+          <div class="label">Air flow required (all aerated solution)</div>
+          <div class="value" id="r-air">–</div>
+        </div>
+
+        <ul class="result-list">
+          <li><span>Air flow in L/min, CFM, m³/h</span><span class="v" id="r-air-alt">–</span></li>
+          <li><span>Aerated solution</span><span class="v" id="r-vol">–</span></li>
+          <li><span>Design aeration intensity</span><span class="v" id="r-int">–</span></li>
+          <li><span>Air flow per canal / reservoir</span><span class="v" id="r-per">–</span></li>
+          <li><span>Stones by flow rating</span><span class="v" id="r-sflow">–</span></li>
+          <li><span>Stones by spacing</span><span class="v" id="r-sspace">–</span></li>
+          <li><span>Air stones to fit</span><span class="v" id="r-units">–</span></li>
+          <li><span>Pressure the pump must supply</span><span class="v" id="r-press">–</span></li>
+          <li><span>Made up of</span><span class="v" id="r-press-parts">–</span></li>
+          <li><span>Suggested pump</span><span class="v" id="r-pump">–</span></li>
+          <li><span>Pressure check</span><span class="v" id="r-pcheck">–</span></li>
+          <li><span>Pump options (presets)</span><span class="v" id="r-options">–</span></li>
+          <li><span>Electrical power and energy</span><span class="v" id="r-power">–</span></li>
+          <li><span>DO at saturation</span><span class="v" id="r-sat">–</span></li>
+          <li><span>Oxygen this air can dissolve</span><span class="v" id="r-o2">–</span></li>
+          <li><span>Root-zone oxygen</span><span class="v" id="r-root">–</span></li>
+        </ul>
+
+        <div class="share-bar">
+          <button class="btn btn-primary" type="button" id="btn-share">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="m8.6 13.5 6.8 4M15.4 6.5l-6.8 4"/></svg>
+            Share
+          </button>
+          <button class="btn" type="button" id="btn-link">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.5.5l3-3a5 5 0 0 0-7-7l-1.7 1.7"/><path d="M14 11a5 5 0 0 0-7.5-.5l-3 3a5 5 0 0 0 7 7l1.7-1.7"/></svg>
+            Copy link
+          </button>
+          <button class="btn" type="button" id="btn-copy">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h10a1 1 0 0 1 1 1v1"/></svg>
+            Copy results
+          </button>
+          <button class="btn" type="button" id="btn-reset">Reset</button>
+        </div>
+      </section>
+
+      <!-- Visualization -->
+      <section class="card viz-card" aria-labelledby="viz-heading">
+        <h2 id="viz-heading">Visualization</h2>
+        <svg class="viz" id="viz" viewBox="0 0 480 300" role="img" aria-label="Cross-section of the hydroponic system with the aerated canal or reservoir, air stones and bubbles, the air pump and line, and a bar showing the parts of the pump pressure"></svg>
+        <p class="viz-caption" id="viz-caption"></p>
+      </section>
+    </div>
+
+    <article class="article">
+      <h2>How the hydroponic air pump and air stone calculator works</h2>
+      <p>Plant roots respire: they take in oxygen dissolved in the nutrient solution. Where roots sit in solution all the time, an air pump pushes air to air stones (diffusers) on the floor, and the rising bubbles dissolve oxygen and stir the solution. The calculator sizes that air in five steps:</p>
+      <ol>
+        <li><strong>Which solution is aerated.</strong> The system type decides. In <strong>DWC</strong> (deep water culture, raft canals) and <strong>SWC</strong> the roots hang in the canals or troughs, so those are aerated. In <strong>NFT</strong>, <strong>media beds</strong> and other recirculating systems only the reservoir or sump is aerated.</li>
+        <li><strong>Air flow.</strong> Aeration intensity (litres of air per litre of solution per minute) × solution volume × safety factor.</li>
+        <li><strong>Number of stones.</strong> Two counts: enough stones to pass the air at their rated flow, and enough to keep within the largest spacing you set. The larger count is used, and the page says which one decided it.</li>
+        <li><strong>Pressure.</strong> The pump must push air down to the stones against the solution above them, plus the pressure drop across the stone and the losses in the air line.</li>
+        <li><strong>Pump and power.</strong> The preset pump (or yours) that gives enough air <em>at that pressure</em>, from its curve, and the electricity it uses.</li>
+      </ol>
+      <p>The physics, stone presets and pump curves are shared with the <a href="aeration-aquaculture.html">fish-system air pump calculator</a>, so the two pages give the same pressure and pump results for the same stones and depth.</p>
+
+      <h3>Why root-zone oxygen matters</h3>
+      <p>Roots that run short of oxygen take up less water and nutrients, grow slowly and are more open to root rot. The FAO aquaponics manual lists more than 3 mg/L of dissolved oxygen as the requirement for plants (Somerville et al., 2014, Table 3.1), and the <a href="dissolved-oxygen.html">Dissolved Oxygen</a> calculator uses that figure. Warm solution makes it harder in two ways: it holds less oxygen (8.3 mg/L at 25 °C against 9.1 mg/L at 20 °C at sea level), and roots respire faster. In a deep-water lettuce trial, Carotti et al. (2021) found about 28 °C best for growth but called 24 °C for both air and roots a reasonable compromise that avoids heating the solution. The page warns above 26 °C, the same flag as the <a href="../guides/hydroponic-design.html">Design a hydroponic system</a> guide.</p>
+      <p><strong>How each system gets oxygen to the roots:</strong></p>
+      <ul>
+        <li><strong>DWC (deep water culture).</strong> Rafts float on canals usually 20–40 cm deep and the roots are submerged all the time, so the air stones in the canals are the main oxygen supply. FAO TP 589 describes DWC canals aerated with air stones (Somerville et al., 2014). If the air pump stops, oxygen in the canals falls; plan backup power with the <a href="battery-life.html">Battery Life</a> calculator.</li>
+        <li><strong>SWC (shallow water culture).</strong> On this page, SWC means shallow troughs or rafts with a few cm up to about 15 cm of solution (a rule of thumb used here to separate it from DWC). The maths is the same as DWC, but the stones are very shallow, so the pump needs little pressure and each litre of air dissolves less oxygen.</li>
+        <li><strong>NFT (nutrient film technique).</strong> A thin film of solution, a few millimetres deep, runs along the floor of each channel. The roots form a mat: the bottom of the mat sits in the moving film, the top is in the moist air of the channel, so roots take oxygen from that air gap (Cooper, 1979; Maucieri et al., 2019). The channels themselves are not aerated. An air stone in the reservoir keeps the solution that returns to the channels close to saturation and keeps the reservoir mixed.</li>
+        <li><strong>Media bed / flood-and-drain.</strong> Each time the bed drains, air is drawn down into the media around the roots (Somerville et al., 2014). The beds are not aerated; a stone in the sump keeps the stored solution oxygenated between floods.</li>
+        <li><strong>Reservoir only.</strong> Drip and Dutch-bucket systems, a separate DWC sump or a mixing tank: only the tank is aerated.</li>
+      </ul>
+
+      <h3>Why aeration intensity, not oxygen demand</h3>
+      <p>The <a href="aeration-aquaculture.html">fish-system calculator</a> works from oxygen demand, because fish oxygen use per kg of fish or feed is well published. For plants there is no comparable planning figure. Root respiration has been measured, for example in lettuce at 23 °C by Chun &amp; Takakura (1994), but per millilitre of root volume, and root volume per plant changes from day to day as the crop grows and is rarely known. Turning that into air flow would also need the oxygen transfer of the stones in nutrient solution, which is not published for small air stones. So this page sizes air from <strong>aeration intensity</strong>: Baiyin et al. (2021) grew plants hydroponically at different intensities and found that growth rose between 0.07 and 0.15 L of air per L of solution per minute, changed little from 0.15 to 1.18, and fell from 1.18 to 2.35. More air is not always better, and it costs electricity. Their tests were in small containers, so treat the result as a starting point and check with a DO meter.</p>
+      <p>As a check, the page also estimates how much oxygen the chosen air flow can dissolve (in clean water, see Formulas). It is an upper estimate, not a sizing figure.</p>
+
+      <h3>Formulas</h3>
+      <p><strong>1. Aerated solution volume</strong> (L):</p>
+      <div class="formula">Canals / troughs:  V = length × width × solution depth × number    (m³ × 1000)
+Reservoir / sump:  V = reservoir volume;  floor area = V ÷ solution depth</div>
+      <p><strong>2. Air flow</strong> (L/min):</p>
+      <div class="formula">Design intensity  i = intensity × safety factor        (L air per L per min)
+Air (L/min)       = i × V
+Per canal         = Air ÷ number of canals
+1 CFM = 28.317 L/min;  1 m³/h = 16.667 L/min</div>
+      <p><strong>3. Stones</strong> (s = largest spacing):</p>
+      <div class="formula">By flow:     N<sub>flow</sub>  = round up (air per canal ÷ flow per stone)
+By spacing:  canal:     N<sub>space</sub> = round up (L ÷ s) × round up (W ÷ s)
+             reservoir: N<sub>space</sub> = round up (floor area ÷ s²)
+Stones       = the larger of N<sub>flow</sub> and N<sub>space</sub>
+(porous tube: metres = round up (air ÷ flow per m), or runs s apart × length)</div>
+      <p><strong>4. Pressure at the pump</strong> (gauge; ρ = 998 kg/m³, g = 9.80665 m/s²):</p>
+      <div class="formula">P = ρ × g × stone depth  +  stone drop  +  line allowance
+1 kPa = 0.145 psi = 4.01 in H₂O = 10.2 cm H₂O</div>
+      <p><strong>5. Pump and energy.</strong> Each preset pump’s curve is a straight line from its free-air flow through its rated point, cut off at its maximum pressure. Pumps needed = round up (air ÷ flow per pump at P). The suggestion is the preset with the lowest total power. Energy = watts × 24 h per day, × 365 per year.</p>
+      <p><strong>6. Saturation and oxygen check.</strong> C<sub>sat</sub> is the DO saturation of fresh water at the solution temperature and the site’s air pressure (Benson &amp; Krause, 1984; USGS, 2011; U.S. Standard Atmosphere for pressure), as in the Dissolved Oxygen calculator. The oxygen the air can dissolve uses the same standard-to-field conversion as the fish-system page, with α = 1 (clean water):</p>
+      <div class="formula">OTE  = SOTE per m × stone depth × 1.024<sup>(T − 20)</sup> × (C<sub>sat</sub> − C) ÷ 9.09
+O₂ (g/h) = Air (L/min) × 60 × 0.2787 g O₂ per L of air × OTE</div>
+
+      <h3>Example (the default inputs, DWC)</h3>
+      <p>Two raft canals, each 2.4 m × 1.2 m with 30 cm of solution, at 20 °C and sea level, minimum DO 3 mg/L. Intensity 0.07 L/L/min, safety factor 1.5, fine-bubble 10 cm stones (10 L/min, 2 kPa drop, 5%/m) on the floor, largest spacing 1.2 m, 1 kPa line allowance.</p>
+      <ul>
+        <li>Volume: 2.4 × 1.2 × 0.30 = 0.864 m³ = 864 L per canal, <strong>1,728 L</strong> in all.</li>
+        <li>Design intensity 0.07 × 1.5 = 0.105 L/L/min, inside the 0.07–0.15 range. Air = 0.105 × 1,728 = <strong>181.4 L/min</strong> (6.41 CFM, 10.89 m³/h), or 90.7 L/min per canal.</li>
+        <li>Stones by flow: 90.7 ÷ 10 = 9.07 → 10 per canal. By spacing: 2.4 ÷ 1.2 = 2 along × 1.2 ÷ 1.2 = 1 across = 2. Flow governs: <strong>10 stones per canal, 20 in all</strong>, each at 9.07 L/min.</li>
+        <li>Pressure: 998 × 9.80665 × 0.30 = 2.94 kPa of water + 2 kPa stone + 1 kPa line = <strong>5.94 kPa</strong> (0.86 psi, 23.8 in H₂O, 60.5 cm H₂O).</li>
+        <li>At 5.94 kPa a 60 L/min linear pump gives about 83.3 L/min, so <strong>3 pumps, 150 W</strong> (3.6 kWh/day, 1,314 kWh/year). Two 120 L/min pumps would need 220 W; aquarium pumps would need 40 (160 W).</li>
+        <li>Saturation at 20 °C: 9.09 mg/L; 3 mg/L is 33% of it. Oxygen check: SOTE 5% × 0.3 m = 1.5%; × (9.09 − 3) ÷ 9.09 = 1.0%; 181.4 × 60 × 0.2787 × 0.0100 ≈ 30.5 g/h (≈ 731 g/day, 17.6 mg/L per hour of solution) in clean water.</li>
+      </ul>
+      <p>The other system types start from these defaults when you pick them: <strong>SWC</strong> two 2.4 × 1.2 m troughs with 10 cm of solution (576 L → 60.5 L/min, 4 stones per trough, 3.98 kPa); <strong>NFT</strong> a 200 L reservoir 50 cm deep (21 L/min, 3 stones, 7.89 kPa); <strong>media bed</strong> a 300 L sump 50 cm deep (31.5 L/min, 4 stones, 7.89 kPa); <strong>reservoir only</strong> 100 L, 40 cm deep (10.5 L/min, 2 stones, 6.91 kPa).</p>
+
+      <h3>Stone spacing (rule of thumb)</h3>
+      <p>There is no published standard for how far apart air stones in a raft canal should be. The default of 1.2 m comes from one well-documented design: in the University of the Virgin Islands (UVI) commercial aquaponic system, each raft tank had 24 air diffusers of 10 L/min, placed every 1.2 m along the centre of the tank (Rakocy et al., 2004). Wider canals get more than one row on this page (one row per 1.2 m of width), which is this page’s own extension. For a reservoir, the page allows one stone per 1.2 m × 1.2 m of floor. Small stones in big canals leave dead corners; if spacing governs, consider porous tubing along the canal instead of many stones.</p>
+
+      <h3>Typical stone values and pump presets</h3>
+      <p>The stone and pump presets are the same as on the <a href="aeration-aquaculture.html">fish-system calculator</a>, which explains where each comes from. They are typical, illustrative values: replace them with your stone’s and pump’s data. Small air pumps lose flow quickly as pressure rises, so always read the pump’s curve at the pressure shown here, not its free-air rating. Where the lowest-power suggestion means many small pumps, the “Pump options” line shows the alternatives.</p>
+
+      <h3>Limitations and assumptions</h3>
+      <ul>
+        <li><strong>Intensity is a growth trial result, not a design standard.</strong> Baiyin et al. (2021) worked with small containers; long canals with many plants, warm solution or dense roots may need more. Measure DO in the root zone, especially at the far end of long canals and in warm weather.</li>
+        <li><strong>NFT and media beds.</strong> The intensity is applied to the reservoir or sump only. It keeps the stored solution oxygenated; the roots themselves get most of their oxygen from air in the channel or media.</li>
+        <li><strong>Oxygen estimate.</strong> It assumes clean water (α = 1) and the stone preset’s SOTE per metre, which is a rule of thumb; real nutrient solution and very shallow stones will transfer less. It does not include oxygen entering at the surface or used by the roots.</li>
+        <li><strong>Spacing</strong> is a rule of thumb from one design; layout, canal shape and the flow of solution along the canal all change mixing.</li>
+        <li><strong>Pressure.</strong> Long, narrow or many-branched air lines can lose more than the allowance; gang valves and check valves add drop.</li>
+        <li><strong>Air conditions.</strong> Saturation uses the site’s average pressure. Pump ratings are usually at sea level.</li>
+        <li><strong>Fish.</strong> In aquaponics the fish tanks need their own air, sized from oxygen demand with the <a href="aeration-aquaculture.html">fish-system calculator</a>.</li>
+      </ul>
+
+      <h2>Sources</h2>
+      <ol class="sources">
+        <li>Baiyin, B., Tagawa, K., Yamada, M., Wang, X., Yamada, S., Yamamoto, S. &amp; Ibaraki, Y. (2021). Study on plant growth and nutrient uptake under different aeration intensity in hydroponics with the application of particle image velocimetry. <em>Agriculture</em>, 11(11), 1140. <a href="https://doi.org/10.3390/agriculture11111140" rel="noopener" target="_blank">doi:10.3390/agriculture11111140</a></li>
+        <li>Carotti, L., et al. (2021). Plant factories are heating up: hunting for the best combination of light intensity, air temperature and root-zone temperature in lettuce production. <em>Frontiers in Plant Science</em>, 11, 592171. <a href="https://doi.org/10.3389/fpls.2020.592171" rel="noopener" target="_blank">doi:10.3389/fpls.2020.592171</a></li>
+        <li>Chun, C. &amp; Takakura, T. (1994). Rate of root respiration of lettuce under various dissolved oxygen concentrations in hydroponics. <em>Environment Control in Biology</em>, 32(2), 125–135. <a href="https://doi.org/10.2525/ecb1963.32.125" rel="noopener" target="_blank">doi:10.2525/ecb1963.32.125</a></li>
+        <li>Rakocy, J. E., Bailey, D. S., Shultz, R. C. &amp; Thoman, E. S. (2004). Update on tilapia and vegetable production in the UVI aquaponic system. In <em>New Dimensions on Farmed Tilapia: Proceedings of the Sixth International Symposium on Tilapia in Aquaculture</em> (ISTA 6), Manila, Philippines.</li>
+        <li>Somerville, C., Cohen, M., Pantanella, E., Stankus, A. &amp; Lovatelli, A. (2014). <em>Small-scale aquaponic food production: Integrated fish and plant farming</em>. FAO Fisheries and Aquaculture Technical Paper No. 589. Rome: FAO. Table 3.1 (dissolved oxygen) and Chapter 4 (media bed, NFT and DWC units). <a href="https://www.fao.org/3/i4021e/i4021e.pdf" rel="noopener" target="_blank">fao.org</a></li>
+        <li>Maucieri, C., Nicoletto, C., van Os, E., Anseeuw, D., Van Havermaet, R. &amp; Junge, R. (2019). Hydroponic technologies. In S. Goddek, A. Joyce, B. Kotzen &amp; G. M. Burnell (Eds.), <em>Aquaponics Food Production Systems</em> (pp. 77–110). Cham: Springer (open access). <a href="https://doi.org/10.1007/978-3-030-15943-6_4" rel="noopener" target="_blank">doi:10.1007/978-3-030-15943-6_4</a></li>
+        <li>Cooper, A. J. (1979). <em>The ABC of NFT: Nutrient Film Technique</em>. London: Grower Books.</li>
+        <li>American Society of Civil Engineers (2007). <em>Measurement of Oxygen Transfer in Clean Water</em>. ASCE/EWRI 2-06. Reston, VA: ASCE.</li>
+        <li>Boyd, C. E. (1998). Pond water aeration systems. <em>Aquacultural Engineering</em>, 18(1), 9–40. <a href="https://doi.org/10.1016/S0144-8609(98)00019-3" rel="noopener" target="_blank">doi.org</a></li>
+        <li>Benson, B. B. &amp; Krause, D., Jr. (1984). The concentration and isotopic fractionation of oxygen dissolved in freshwater and seawater in equilibrium with the atmosphere. <em>Limnology and Oceanography</em>, 29(3), 620–632.</li>
+        <li>U.S. Geological Survey (2011). <em>Change to solubility equations for oxygen in water</em>. Office of Water Quality Technical Memorandum 2011.03. <a href="https://water.usgs.gov/admin/memo/QW/qw11.03.pdf" rel="noopener" target="_blank">water.usgs.gov</a></li>
+        <li>National Oceanic and Atmospheric Administration, National Aeronautics and Space Administration &amp; U.S. Air Force (1976). <em>U.S. Standard Atmosphere, 1976</em>. Washington, DC: U.S. Government Printing Office.</li>
+        <li>Hiblow. HP-60 and HP-120 linear air pump specification sheets (rated flow and pressure, maximum continuous pressure), as published by distributors.</li>
+        <li>Eheim. Air 400 aquarium air pump, retail product listings (400 L/h, about 2 m maximum depth, 4 W).</li>
+      </ol>
+    </article>
+  </main>
+
+  <footer class="site-footer">
+    <div class="wrap">Calculations are estimates. Check the sources above before relying on a result.</div>
+  </footer>
+
+  <script src="../assets/share.js"></script>
+  <script src="../assets/units.js"></script>
+  <script src="../assets/aeration-common.js"></script>
+  <script src="../assets/aeration-hydroponic.js"></script>
+</body>
+</html>
