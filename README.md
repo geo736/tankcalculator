@@ -57,7 +57,7 @@ Every input that has a unit gets its **own** unit dropdown – never one shared 
 - [x] Hydroponic Nutrient Additions – `calculators/nutrient-additions.html`
 - [x] Plant Feed Conversion Ratio (FCRplant)
 - [x] Plant-Fish Mass Ratio (PFRM)
-- [ ] Foam Fractionator Sizing
+- [x] Foam Fractionator Sizing – `calculators/foam-fractionator.html`
 - [x] Daily Light Integral – `calculators/daily-light-integral.html`
 - [x] Dissolved Oxygen – `calculators/dissolved-oxygen.html`
 - [x] Hydrostatic Pressure – `calculators/hydrostatic-pressure.html`

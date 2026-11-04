@@ -477,15 +477,15 @@
       const yInj = yBottom - Math.min(40, hBody * 0.3);
       el('path', { class: 'pipe', d: 'M' + (cx - w * 0.25) + ',' + yBottom + ' V' + (yBottom + 14) + ' H' + (xL - 22) + ' V' + yInj + ' H' + xL });
       el('rect', { class: 'diffuser', x: xL - 28, y: yInj - 6, width: 12, height: 12, rx: 3 });
-      el('path', { class: 'air-line', d: 'M8,' + (yInj - 22) + ' H' + (xL - 22) + ' V' + (yInj - 6) });
-      label(8, yInj - 28, 'air → venturi', 'start', 'accent-text');
+      el('path', { class: 'air-line', d: 'M26,' + (yInj - 22) + ' H' + (xL - 22) + ' V' + (yInj - 6) });
+      label(26, yInj - 28, 'air', 'start', 'accent-text');
     }
 
     // dimensions: D under the column, H on the left
     const yD = yBottom + 22;
     el('path', { class: 'dim', d: 'M' + xL + ',' + (yD + 6) + ' H' + xR + ' M' + xL + ',' + (yD + 1) + ' v10 M' + xR + ',' + (yD + 1) + ' v10' });
     label(cx, yD + 24, ok ? 'D ' + len(r.D) : 'D –', 'middle', 'viz-strong');
-    const xH = xL - 4 - (mode.inj === 'diffuser' || !ok ? 14 : 30);
+    const xH = mode.inj === 'diffuser' || !ok ? xL - 18 : 16;
     el('path', { class: 'dim', d: 'M' + xH + ',' + yTop + ' V' + yBottom + ' M' + (xH - 4) + ',' + yTop + ' h8 M' + (xH - 4) + ',' + yBottom + ' h8' });
     el('text', { class: 'depth-text', x: xH - 6, y: (yTop + yBottom) / 2, 'text-anchor': 'middle', transform: 'rotate(-90 ' + (xH - 6) + ' ' + ((yTop + yBottom) / 2) + ')' },
       ok ? 'H ' + len(r.H) : 'H –');
@@ -494,7 +494,7 @@
     const px = Math.max(xP + 8, 226);
     label(xP + 4, yIn + 4, 'in', 'start', 'depth-text');
     label(xP + 4, yBottom + 12, 'out', 'start', 'depth-text');
-    label(xP + 4, yCupBot, 'foamate', 'start', 'accent-text');
+    label(cR + 4, yCupBot - 10, 'foamate', 'start', 'accent-text');
     const lines = [];
     if (ok) {
       lines.push(['Water ' + wflow(r.Qu), 'viz-strong']);
@@ -510,7 +510,7 @@
       lines.push(['Enter the inputs', 'dim-text']);
     }
     let y = 30;
-    const panelX = Math.max(px, xP + 52);
+    const panelX = Math.max(px, xP + 56);
     lines.forEach(function (l) { label(panelX, y, l[0], 'start', l[1]); y += 19; });
   }
 
@@ -565,7 +565,7 @@
     const p = CalcShare.readParams();
     applyDefaults();
     Object.keys(MODES).forEach(function (m) {
-      if (p[m] && document.querySelector('#' + m + '-group button[data-' + m + '="' + p[m] + '"]')) setMode(m, p[m]);
+      if (p[m] && Array.prototype.some.call(document.querySelectorAll('#' + m + '-group button'), function (b) { return b.dataset[m] === p[m]; })) setMode(m, p[m]);
     });
     // a fresh-water link without explicit values still gets fresh-water starting values
     if (mode.wtype !== 'salt') loadType(mode.wtype);

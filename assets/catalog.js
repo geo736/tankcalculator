@@ -93,7 +93,7 @@ window.CALCULATORS = [
     icon: '<path d="M12 11c0-3 2-5 5-5 0 3-2 5-5 5zM12 11c0-3-2-5-5-5 0 3 2 5 5 5z"/><path d="M12 11v3"/><path d="M3 14h18v7H3z"/><circle cx="8" cy="18" r="1"/><circle cx="12" cy="17" r="1"/><circle cx="16" cy="18.5" r="1"/>' },
   { slug: 'battery-life', name: 'Battery Life Estimator', group: 'business', blurb: 'Backup runtime for pumps', cat: 'aquaculture', tags: ['aquaculture', 'aquaponics', 'hydroponics'], uses: ['power'], status: 'live',
     icon: '<rect x="3" y="7" width="16" height="10" rx="2"/><path d="M21 11v2"/><path d="M7 10v4M10 10v4"/>' },
-  { slug: 'foam-fractionator', name: 'Foam Fractionator', group: 'equipment', blurb: 'Skimmer size, contact time and air', cat: 'aquaculture', tags: ['aquaculture', 'aquaponics'], uses: ['filtration', 'water', 'design'], status: 'soon',
+  { slug: 'foam-fractionator', name: 'Foam Fractionator', group: 'equipment', blurb: 'Skimmer size, contact time and air', cat: 'aquaculture', tags: ['aquaculture', 'aquaponics'], uses: ['filtration', 'water', 'design'], status: 'live',
     icon: '<rect x="8" y="6" width="8" height="15" rx="1"/><path d="M8 6c0-2 2-3 4-3s4 1 4 3"/><circle cx="11" cy="16" r=".9"/><circle cx="13" cy="13" r=".9"/><circle cx="11" cy="10" r=".9"/>' },
   { slug: 'uv-sterilizer-sizing', name: 'UV Filtration Sizing', group: 'equipment', blurb: 'UV-C dose for target pathogens', cat: 'aquaculture', tags: ['aquaculture', 'aquaponics', 'hydroponics'], uses: ['filtration', 'water', 'fish'], status: 'live',
     icon: '<rect x="3" y="9" width="18" height="6" rx="3"/><path d="M8 5v2M12 4v3M16 5v2M8 17v2M12 17v3M16 17v2"/>' },
