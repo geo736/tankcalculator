@@ -1,0 +1,482 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Hydroponic Nutrient Additions Calculator</title>
+  <meta name="description" content="Work out how many grams of each fertilizer salt to dissolve for a hydroponic nutrient recipe such as Hoagland's, after subtracting what your source water already holds, with A/B stock tanks and an EC estimate.">
+  <link rel="stylesheet" href="../assets/style.css">
+  <style>
+    .ion-group { margin: 4px 0 10px; font-size: .8rem; font-weight: 600; text-transform: uppercase; letter-spacing: .05em; color: var(--text-muted); }
+    details.more { border: 1px solid var(--border); border-radius: 10px; padding: 8px 12px; margin-bottom: 14px; background: var(--surface); }
+    details.more summary { cursor: pointer; font-weight: 600; font-size: .9rem; }
+    details.more[open] summary { margin-bottom: 12px; }
+    .table-scroll { overflow-x: auto; }
+    .calc-table { width: 100%; border-collapse: collapse; font-size: .8rem; font-variant-numeric: tabular-nums; margin: 6px 0 10px; }
+    .calc-table th, .calc-table td { padding: 5px 4px; border-bottom: 1px solid var(--border); text-align: right; }
+    .calc-table th:first-child, .calc-table td:first-child { text-align: left; }
+    .calc-table th { color: var(--text-muted); font-weight: 600; }
+    .calc-table tr.off td { color: var(--warn-text); font-weight: 600; }
+    .salt-row { display: grid; grid-template-columns: minmax(0, 1fr) 118px; gap: 8px; align-items: center; padding: 7px 0; border-bottom: 1px dashed var(--border); }
+    .salt-check { display: flex; gap: 8px; align-items: flex-start; font-size: .9rem; font-weight: 600; cursor: pointer; min-width: 0; }
+    .salt-check input { margin-top: 3px; flex: none; width: 17px; height: 17px; accent-color: var(--accent); }
+    .salt-name { min-width: 0; overflow-wrap: anywhere; }
+    .salt-an { display: block; font-size: .75rem; font-weight: 400; color: var(--text-muted); }
+    .salt-pct input { padding: 6px 8px; }
+    .salt-pct .unit { padding: 0 6px; font-size: .75rem; white-space: nowrap; }
+    .sub-box { background: var(--surface-2); border-radius: 10px; padding: 10px 10px 0; margin: 6px 0 4px; }
+    .sub-box .field { margin-bottom: 10px; }
+    .sub-box .field label { font-size: .8rem; }
+    .sub-box .input-row input { padding: 7px 8px; }
+    .three-col { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+    .result-main .sub { font-size: .85rem; color: var(--text-muted); }
+    .table-head { font-size: .85rem; font-weight: 600; margin: 14px 0 0; }
+    .muted-note { font-size: .8rem; color: var(--text-muted); margin: 0 0 8px; }
+    @media (max-width: 480px) {
+      .two-col.stack { grid-template-columns: minmax(0, 1fr); gap: 0; }
+      .three-col { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    }
+  </style>
+</head>
+<body>
+  <header class="site-header">
+    <div class="wrap">
+      <a class="brand" href="../">
+        <span class="brand-mark" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3c3 4 6 7 6 11a6 6 0 0 1-12 0c0-4 3-7 6-11z"/></svg>
+        </span>
+        Tank Calculator
+      </a>
+      <nav><a href="../">All calculators</a></nav>
+    </div>
+  </header>
+
+  <main class="wrap">
+    <div class="crumbs"><a href="../">Home</a> / Nutrient Additions</div>
+    <h1 class="page-title">Hydroponic Nutrient Additions Calculator</h1>
+    <p class="page-lede">Work out how many grams of each fertilizer salt to dissolve to reach a nutrient recipe, after taking off what your source water already contains, or what to add to bring a tested solution back to target. Optionally split the salts into A and B concentrate tanks, and check the expected EC.</p>
+
+    <div class="calc-layout">
+      <!-- Calculator -->
+      <section class="card" aria-labelledby="calc-heading">
+        <h2 id="calc-heading">Calculator</h2>
+
+        <div class="two-col stack">
+          <div class="field">
+            <label for="mode">What are you mixing?</label>
+            <select id="mode">
+              <option value="new">New batch from water</option>
+              <option value="topup">Top up a tested solution</option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="vol">Batch volume</label>
+            <div class="input-row"><input id="vol" type="number" inputmode="decimal" min="0" step="any"><select class="unit-select" data-unit-group="volume" data-unit-for="vol" data-unit-default="L" aria-label="Batch volume unit"></select></div>
+          </div>
+        </div>
+
+        <div class="ion-group">Target solution</div>
+        <div class="field">
+          <label for="preset">Recipe</label>
+          <select id="preset">
+            <option value="hoagland2">Hoagland &amp; Arnon No. 2</option>
+            <option value="half2">Half-strength Hoagland No. 2</option>
+            <option value="hoagland1">Hoagland &amp; Arnon No. 1 (nitrate only)</option>
+            <option value="custom">Custom</option>
+          </select>
+        </div>
+        <div class="two-col">
+          <div class="field">
+            <label for="t_no3">Nitrate-N (NO₃-N)</label>
+            <div class="input-row"><input id="t_no3" type="number" inputmode="decimal" min="0" step="any"><select class="unit-select" data-unit-group="concentration" data-unit-for="t_no3" data-unit-default="mgL" aria-label="Target nitrate-n unit"></select></div>
+          </div>
+          <div class="field">
+            <label for="t_nh4">Ammonium-N (NH₄-N)</label>
+            <div class="input-row"><input id="t_nh4" type="number" inputmode="decimal" min="0" step="any"><select class="unit-select" data-unit-group="concentration" data-unit-for="t_nh4" data-unit-default="mgL" aria-label="Target ammonium-n unit"></select></div>
+          </div>
+          <div class="field">
+            <label for="t_p">Phosphorus (P)</label>
+            <div class="input-row"><input id="t_p" type="number" inputmode="decimal" min="0" step="any"><select class="unit-select" data-unit-group="concentration" data-unit-for="t_p" data-unit-default="mgL" aria-label="Target phosphorus unit"></select></div>
+          </div>
+          <div class="field">
+            <label for="t_k">Potassium (K)</label>
+            <div class="input-row"><input id="t_k" type="number" inputmode="decimal" min="0" step="any"><select class="unit-select" data-unit-group="concentration" data-unit-for="t_k" data-unit-default="mgL" aria-label="Target potassium unit"></select></div>
+          </div>
+          <div class="field">
+            <label for="t_ca">Calcium (Ca)</label>
+            <div class="input-row"><input id="t_ca" type="number" inputmode="decimal" min="0" step="any"><select class="unit-select" data-unit-group="concentration" data-unit-for="t_ca" data-unit-default="mgL" aria-label="Target calcium unit"></select></div>
+          </div>
+          <div class="field">
+            <label for="t_mg">Magnesium (Mg)</label>
+            <div class="input-row"><input id="t_mg" type="number" inputmode="decimal" min="0" step="any"><select class="unit-select" data-unit-group="concentration" data-unit-for="t_mg" data-unit-default="mgL" aria-label="Target magnesium unit"></select></div>
+          </div>
+          <div class="field">
+            <label for="t_s">Sulfur (S)</label>
+            <div class="input-row"><input id="t_s" type="number" inputmode="decimal" min="0" step="any"><select class="unit-select" data-unit-group="concentration" data-unit-for="t_s" data-unit-default="mgL" aria-label="Target sulfur unit"></select></div>
+          </div>
+        </div>
+        <details class="more">
+          <summary>Micronutrient targets</summary>
+          <div class="two-col">
+          <div class="field">
+            <label for="t_fe">Iron (Fe)</label>
+            <div class="input-row"><input id="t_fe" type="number" inputmode="decimal" min="0" step="any"><select class="unit-select" data-unit-group="concentration" data-unit-for="t_fe" data-unit-default="mgL" aria-label="Target iron unit"></select></div>
+          </div>
+          <div class="field">
+            <label for="t_mn">Manganese (Mn)</label>
+            <div class="input-row"><input id="t_mn" type="number" inputmode="decimal" min="0" step="any"><select class="unit-select" data-unit-group="concentration" data-unit-for="t_mn" data-unit-default="mgL" aria-label="Target manganese unit"></select></div>
+          </div>
+          <div class="field">
+            <label for="t_zn">Zinc (Zn)</label>
+            <div class="input-row"><input id="t_zn" type="number" inputmode="decimal" min="0" step="any"><select class="unit-select" data-unit-group="concentration" data-unit-for="t_zn" data-unit-default="mgL" aria-label="Target zinc unit"></select></div>
+          </div>
+          <div class="field">
+            <label for="t_cu">Copper (Cu)</label>
+            <div class="input-row"><input id="t_cu" type="number" inputmode="decimal" min="0" step="any"><select class="unit-select" data-unit-group="concentration" data-unit-for="t_cu" data-unit-default="mgL" aria-label="Target copper unit"></select></div>
+          </div>
+          <div class="field">
+            <label for="t_b">Boron (B)</label>
+            <div class="input-row"><input id="t_b" type="number" inputmode="decimal" min="0" step="any"><select class="unit-select" data-unit-group="concentration" data-unit-for="t_b" data-unit-default="mgL" aria-label="Target boron unit"></select></div>
+          </div>
+          <div class="field">
+            <label for="t_mo">Molybdenum (Mo)</label>
+            <div class="input-row"><input id="t_mo" type="number" inputmode="decimal" min="0" step="any"><select class="unit-select" data-unit-group="concentration" data-unit-for="t_mo" data-unit-default="mgL" aria-label="Target molybdenum unit"></select></div>
+          </div>
+          </div>
+          <div class="field-hint">Set a micronutrient to 0 to leave it out.</div>
+        </details>
+
+        <div class="ion-group" id="water-head">Source water analysis</div>
+        <div class="field-hint" id="water-hint" style="margin:-6px 0 10px"></div>
+        <div class="two-col">
+          <div class="field">
+            <label for="w_no3">Nitrate-N (NO₃-N)</label>
+            <div class="input-row"><input id="w_no3" type="number" inputmode="decimal" min="0" step="any"><select class="unit-select" data-unit-group="concentration" data-unit-for="w_no3" data-unit-default="mgL" aria-label="Water nitrate-n unit"></select></div>
+          </div>
+          <div class="field">
+            <label for="w_nh4">Ammonium-N (NH₄-N)</label>
+            <div class="input-row"><input id="w_nh4" type="number" inputmode="decimal" min="0" step="any"><select class="unit-select" data-unit-group="concentration" data-unit-for="w_nh4" data-unit-default="mgL" aria-label="Water ammonium-n unit"></select></div>
+          </div>
+          <div class="field">
+            <label for="w_p">Phosphorus (P)</label>
+            <div class="input-row"><input id="w_p" type="number" inputmode="decimal" min="0" step="any"><select class="unit-select" data-unit-group="concentration" data-unit-for="w_p" data-unit-default="mgL" aria-label="Water phosphorus unit"></select></div>
+          </div>
+          <div class="field">
+            <label for="w_k">Potassium (K)</label>
+            <div class="input-row"><input id="w_k" type="number" inputmode="decimal" min="0" step="any"><select class="unit-select" data-unit-group="concentration" data-unit-for="w_k" data-unit-default="mgL" aria-label="Water potassium unit"></select></div>
+          </div>
+          <div class="field">
+            <label for="w_ca">Calcium (Ca)</label>
+            <div class="input-row"><input id="w_ca" type="number" inputmode="decimal" min="0" step="any"><select class="unit-select" data-unit-group="concentration" data-unit-for="w_ca" data-unit-default="mgL" aria-label="Water calcium unit"></select></div>
+          </div>
+          <div class="field">
+            <label for="w_mg">Magnesium (Mg)</label>
+            <div class="input-row"><input id="w_mg" type="number" inputmode="decimal" min="0" step="any"><select class="unit-select" data-unit-group="concentration" data-unit-for="w_mg" data-unit-default="mgL" aria-label="Water magnesium unit"></select></div>
+          </div>
+          <div class="field">
+            <label for="w_s">Sulfur (S)</label>
+            <div class="input-row"><input id="w_s" type="number" inputmode="decimal" min="0" step="any"><select class="unit-select" data-unit-group="concentration" data-unit-for="w_s" data-unit-default="mgL" aria-label="Water sulfur unit"></select></div>
+          </div>
+          <div class="field">
+            <label for="w_na">Sodium (Na)</label>
+            <div class="input-row"><input id="w_na" type="number" inputmode="decimal" min="0" step="any"><select class="unit-select" data-unit-group="concentration" data-unit-for="w_na" data-unit-default="mgL" aria-label="Water sodium unit"></select></div>
+          </div>
+          <div class="field">
+            <label for="w_cl">Chloride (Cl)</label>
+            <div class="input-row"><input id="w_cl" type="number" inputmode="decimal" min="0" step="any"><select class="unit-select" data-unit-group="concentration" data-unit-for="w_cl" data-unit-default="mgL" aria-label="Water chloride unit"></select></div>
+          </div>
+          <div class="field">
+            <label for="w_hco3">Bicarbonate / alkalinity</label>
+            <div class="input-row"><input id="w_hco3" type="number" inputmode="decimal" min="0" step="any"><select class="unit-select" data-unit-group="concentration" data-unit-for="w_hco3" data-unit-default="mgL" aria-label="Water bicarbonate unit"></select></div>
+          </div>
+        </div>
+        <div class="field">
+          <label for="alk">Bicarbonate entered as</label>
+          <select id="alk">
+            <option value="hco3">HCO₃ (bicarbonate)</option>
+            <option value="caco3">Alkalinity as CaCO₃</option>
+          </select>
+        </div>
+        <details class="more">
+          <summary>Micronutrients in the water</summary>
+          <div class="two-col">
+          <div class="field">
+            <label for="w_fe">Iron (Fe)</label>
+            <div class="input-row"><input id="w_fe" type="number" inputmode="decimal" min="0" step="any"><select class="unit-select" data-unit-group="concentration" data-unit-for="w_fe" data-unit-default="mgL" aria-label="Water iron unit"></select></div>
+          </div>
+          <div class="field">
+            <label for="w_mn">Manganese (Mn)</label>
+            <div class="input-row"><input id="w_mn" type="number" inputmode="decimal" min="0" step="any"><select class="unit-select" data-unit-group="concentration" data-unit-for="w_mn" data-unit-default="mgL" aria-label="Water manganese unit"></select></div>
+          </div>
+          <div class="field">
+            <label for="w_zn">Zinc (Zn)</label>
+            <div class="input-row"><input id="w_zn" type="number" inputmode="decimal" min="0" step="any"><select class="unit-select" data-unit-group="concentration" data-unit-for="w_zn" data-unit-default="mgL" aria-label="Water zinc unit"></select></div>
+          </div>
+          <div class="field">
+            <label for="w_cu">Copper (Cu)</label>
+            <div class="input-row"><input id="w_cu" type="number" inputmode="decimal" min="0" step="any"><select class="unit-select" data-unit-group="concentration" data-unit-for="w_cu" data-unit-default="mgL" aria-label="Water copper unit"></select></div>
+          </div>
+          <div class="field">
+            <label for="w_b">Boron (B)</label>
+            <div class="input-row"><input id="w_b" type="number" inputmode="decimal" min="0" step="any"><select class="unit-select" data-unit-group="concentration" data-unit-for="w_b" data-unit-default="mgL" aria-label="Water boron unit"></select></div>
+          </div>
+          <div class="field">
+            <label for="w_mo">Molybdenum (Mo)</label>
+            <div class="input-row"><input id="w_mo" type="number" inputmode="decimal" min="0" step="any"><select class="unit-select" data-unit-group="concentration" data-unit-for="w_mo" data-unit-default="mgL" aria-label="Water molybdenum unit"></select></div>
+          </div>
+          </div>
+        </details>
+
+        <div class="ion-group">Fertilizers you have</div>
+        <p class="muted-note">Tick the products to use. Purity and analysis are editable: 100% means the pure compound; use the assay or guaranteed analysis on your bag.</p>
+        <div id="salt-list"></div>
+
+        <div class="sub-box" id="cn-box">
+          <div class="three-col">
+            <div class="field"><label for="cn_no3">NO₃-N</label><div class="input-row"><input id="cn_no3" type="number" inputmode="decimal" min="0" max="100" step="any"><span class="unit">%</span></div></div>
+            <div class="field"><label for="cn_nh4">NH₄-N</label><div class="input-row"><input id="cn_nh4" type="number" inputmode="decimal" min="0" max="100" step="any"><span class="unit">%</span></div></div>
+            <div class="field"><label for="cn_ca">Ca</label><div class="input-row"><input id="cn_ca" type="number" inputmode="decimal" min="0" max="100" step="any"><span class="unit">%</span></div></div>
+          </div>
+          <div class="field-hint" style="margin:-4px 0 10px">Typical label analysis of greenhouse-grade calcium nitrate (15.5% N, 19% Ca); the nitrate/ammonium split differs by brand and market. Check your bag.</div>
+        </div>
+
+        <div class="sub-box" id="cf-box">
+          <div class="three-col">
+            <div class="field"><label for="cf_no3">NO₃-N</label><div class="input-row"><input id="cf_no3" type="number" inputmode="decimal" min="0" max="100" step="any"><span class="unit">%</span></div></div>
+            <div class="field"><label for="cf_nh4">NH₄-N</label><div class="input-row"><input id="cf_nh4" type="number" inputmode="decimal" min="0" max="100" step="any"><span class="unit">%</span></div></div>
+            <div class="field"><label for="cf_p2o5">P₂O₅</label><div class="input-row"><input id="cf_p2o5" type="number" inputmode="decimal" min="0" max="100" step="any"><span class="unit">%</span></div></div>
+            <div class="field"><label for="cf_k2o">K₂O</label><div class="input-row"><input id="cf_k2o" type="number" inputmode="decimal" min="0" max="100" step="any"><span class="unit">%</span></div></div>
+            <div class="field"><label for="cf_ca">Ca</label><div class="input-row"><input id="cf_ca" type="number" inputmode="decimal" min="0" max="100" step="any"><span class="unit">%</span></div></div>
+            <div class="field"><label for="cf_mg">Mg</label><div class="input-row"><input id="cf_mg" type="number" inputmode="decimal" min="0" max="100" step="any"><span class="unit">%</span></div></div>
+            <div class="field"><label for="cf_s">S</label><div class="input-row"><input id="cf_s" type="number" inputmode="decimal" min="0" max="100" step="any"><span class="unit">%</span></div></div>
+          </div>
+          <div class="field">
+            <label for="cf_ox">Ca, Mg and S on the label as</label>
+            <select id="cf_ox">
+              <option value="el">Elements (Ca, Mg, S)</option>
+              <option value="ox">Oxides (CaO, MgO, SO₃)</option>
+            </select>
+          </div>
+          <div class="field-hint" style="margin:-4px 0 10px">Phosphate and potash are converted from the label oxides: P = P₂O₅ × 0.4364, K = K₂O × 0.8301. Urea-N and micronutrients in the product are not counted.</div>
+        </div>
+
+        <details class="more" style="margin-top:14px">
+          <summary>A/B concentrated stock tanks</summary>
+          <div class="two-col stack">
+            <div class="field">
+              <label for="dil">Dilution, 1 part stock to</label>
+              <div class="input-row"><input id="dil" type="number" inputmode="decimal" min="2" step="any"><span class="unit">parts final</span></div>
+              <div class="field-hint">100 means 1:100: 10 mL of A and 10 mL of B per litre of final solution.</div>
+            </div>
+            <div class="field">
+              <label for="sv">Volume of each stock tank</label>
+              <div class="input-row"><input id="sv" type="number" inputmode="decimal" min="0" step="any"><select class="unit-select" data-unit-group="volume" data-unit-for="sv" data-unit-default="L" aria-label="Stock tank volume unit"></select></div>
+            </div>
+          </div>
+          <div class="notice" id="stock-notice" hidden></div>
+          <div class="table-scroll">
+            <table class="calc-table">
+              <thead><tr><th>Product</th><th>Tank</th><th>Stock</th><th>Per tank</th></tr></thead>
+              <tbody id="stock-table"></tbody>
+            </table>
+          </div>
+          <ul class="result-list">
+            <li><span>Tank A total</span><span class="v" id="r-stockA">–</span></li>
+            <li><span>Tank B total</span><span class="v" id="r-stockB">–</span></li>
+            <li><span>Each pair of tanks makes</span><span class="v" id="r-stockmake">–</span></li>
+            <li><span>Dose</span><span class="v" id="r-stockdose">–</span></li>
+          </ul>
+          <div class="field-hint">Tank A: calcium and iron. Tank B: phosphates, sulfates and the other micronutrients. Never mix the two concentrates directly; add each to the water separately.</div>
+        </details>
+
+        <hr class="divider">
+
+        <div class="notice" id="notice" hidden></div>
+
+        <div class="field">
+          <label for="mout">Show product amounts in</label>
+          <select id="mout" class="unit-select" data-unit-group="mass" data-unit-default="g" aria-label="Product mass output unit"></select>
+        </div>
+
+        <div class="result-main" aria-live="polite">
+          <div class="label" id="r-main-label">Fertilizer for the batch</div>
+          <div class="value" id="r-main">–</div>
+          <div class="sub" id="r-main-sub"></div>
+        </div>
+
+        <div class="table-scroll">
+          <table class="calc-table">
+            <thead><tr><th>Product</th><th>Tank</th><th>Batch</th><th>/100 L</th><th>/100 gal</th></tr></thead>
+            <tbody id="salt-table"></tbody>
+          </table>
+        </div>
+        <p class="muted-note" id="unused"></p>
+
+        <ul class="result-list">
+          <li><span>Macronutrients vs target</span><span class="v" id="r-fit">–</span></li>
+          <li><span>Estimated EC, 25 °C (theoretical × 0.90)</span><span class="v" id="r-ec">–</span></li>
+          <li><span>EC already in the water</span><span class="v" id="r-ecw">–</span></li>
+          <li><span>Cations / anions</span><span class="v" id="r-bal">–</span></li>
+          <li><span>Unwanted ions added</span><span class="v" id="r-extra">–</span></li>
+        </ul>
+        <p class="muted-note" style="margin-top:8px"><a id="ec-link" href="nutrient-ec.html">Open this solution in the Nutrient EC calculator →</a></p>
+
+        <p class="table-head">Result for each element (mg/L)</p>
+        <div class="table-scroll">
+          <table class="calc-table">
+            <thead><tr><th>Element</th><th>Water</th><th>Added</th><th>Total</th><th>Target</th><th>Diff.</th></tr></thead>
+            <tbody id="el-table"></tbody>
+          </table>
+        </div>
+
+        <div class="share-bar">
+          <button class="btn btn-primary" type="button" id="btn-share">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="m8.6 13.5 6.8 4M15.4 6.5l-6.8 4"/></svg>
+            Share
+          </button>
+          <button class="btn" type="button" id="btn-link">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.5.5l3-3a5 5 0 0 0-7-7l-1.7 1.7"/><path d="M14 11a5 5 0 0 0-7.5-.5l-3 3a5 5 0 0 0 7 7l1.7-1.7"/></svg>
+            Copy link
+          </button>
+          <button class="btn" type="button" id="btn-copy">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h10a1 1 0 0 1 1 1v1"/></svg>
+            Copy results
+          </button>
+          <button class="btn" type="button" id="btn-reset">Reset</button>
+        </div>
+      </section>
+
+      <!-- Visualization -->
+      <section class="card viz-card" aria-labelledby="viz-heading">
+        <h2 id="viz-heading">Visualization</h2>
+        <svg class="viz" id="viz" viewBox="0 0 480 400" role="img" aria-label="Bars of each element's concentration from source water and from added fertilizer against the target, and a stacked bar of the fertilizer masses"></svg>
+        <p class="viz-caption" id="viz-caption"></p>
+      </section>
+    </div>
+
+    <article class="article">
+      <h2>How the nutrient additions calculator works</h2>
+      <p>A hydroponic recipe is a list of target concentrations: so many mg/L (ppm) of nitrogen, phosphorus, potassium and so on. Fertilizer salts each carry two or more of those elements in a fixed ratio set by their chemical formula. Potassium nitrate, for example, always brings 13.9% N and 38.7% K. The calculator finds the amount of each salt you ticked that gets the whole solution as close as possible to every target at once.</p>
+      <ol>
+        <li>It takes the <strong>target</strong> for each element and subtracts what the <strong>source water</strong> already holds (or, in top-up mode, what the tested solution still holds).</li>
+        <li>From each salt's formula and IUPAC atomic weights it works out the share of each element in the salt, then scales that by the purity or label analysis you enter.</li>
+        <li>It solves for the mg/L of each salt with a <strong>non-negative least-squares</strong> method (Lawson &amp; Hanson, 1974): the amounts can never be negative, and the result minimises the squared relative error over all elements.</li>
+        <li>It multiplies by the batch volume to give grams, reports what each element ends up at, and estimates the EC of the finished solution with the same ion-sum method as the <a href="nutrient-ec.html">Nutrient EC calculator</a>.</li>
+      </ol>
+      <p>When the salts you ticked can match the recipe exactly, as with Hoagland's solution and the four salts it was designed from, the fit is exact. When they cannot, for example when your water already holds a lot of calcium, the solver finds the best compromise and the page shows which elements end up over or under target.</p>
+
+      <h3>Why it matters</h3>
+      <p>Mixing your own nutrients from single salts is cheaper than buying ready-made concentrates and lets you adjust the recipe to your crop and your water. It is also easy to get wrong: the same "200 ppm N" needs very different amounts of salt depending on which salts supply it, and every salt brings a partner ion you may not want. Hard tap or well water can already hold much of the calcium and magnesium a recipe asks for, so ignoring it overdoses those elements and raises EC. In a recirculating system, ions that plants do not take up, such as sodium and chloride, build up over time.</p>
+
+      <h3>Formulas</h3>
+      <p>Share of an element in a salt, from its formula (n = atoms of the element per formula unit, A = atomic weight, M = molar mass of the salt including any water of crystallisation):</p>
+      <div class="formula">fraction = n × A ÷ M × purity
+
+KNO₃:  N = 1 × 14.007 ÷ 101.102 = 0.1385   K = 39.098 ÷ 101.102 = 0.3867</div>
+      <p>Concentration of an element from all salts, with x<sub>j</sub> the dose of salt j in mg/L and C<sub>water</sub> what is already present:</p>
+      <div class="formula">C<sub>i</sub> = C<sub>water,i</sub> + Σ<sub>j</sub> fraction<sub>ij</sub> × x<sub>j</sub></div>
+      <p>The solver chooses x ≥ 0 to minimise the weighted sum of squared relative errors:</p>
+      <div class="formula">minimise Σ<sub>i</sub> [ w<sub>i</sub> × (C<sub>i</sub> − target<sub>i</sub>) ÷ max(target<sub>i</sub>, floor<sub>i</sub>) ]²
+           + Σ [ 0.3 × added Na or Cl ÷ 100 mg/L ]²
+
+w = 1 for NO₃-N, P, K, Ca, Mg and micronutrients; 0.7 for S; 0.5 for NH₄-N
+floor = 5 mg/L (macronutrients), 0.01 mg/L (micronutrients)</div>
+      <p>The weights are a design choice, not a standard. They make nitrate, P, K, Ca and Mg fit first, let sulfur run a little over when sulfate salts are needed for magnesium or potassium, and add a small penalty on sodium and chloride, so that a salt such as potassium chloride is used only when nothing else supplies the potassium.</p>
+      <p>Grams to weigh out, with V in litres:</p>
+      <div class="formula">salt (g) = x (mg/L) × V (L) ÷ 1000
+per 100 L       = x ÷ 10
+per 100 US gal  = x × 378.54 ÷ 1000</div>
+      <p>Fertilizer labels give phosphate and potash as oxides. The conversion factors follow from the atomic weights:</p>
+      <div class="formula">P = P₂O₅ × 2(30.974) ÷ 141.943 = P₂O₅ × 0.4364
+K = K₂O  × 2(39.098) ÷ 94.195  = K₂O  × 0.8301
+Ca = CaO × 0.7147   Mg = MgO × 0.6030   S = SO₃ × 0.4005
+HCO₃ = alkalinity as CaCO₃ × 1.2193</div>
+
+      <h3>Salts and their analysis</h3>
+      <p>Molar masses from IUPAC standard atomic weights (Prohaska et al., 2022); percentages are for the pure compound. Commercial grades can be slightly less pure, contain a different amount of water of crystallisation, or (calcium nitrate) be a different compound altogether, so always use the analysis on your bag.</p>
+      <div class="table-scroll">
+      <table>
+        <thead><tr><th>Salt</th><th>Formula</th><th>M, g/mol</th><th>Analysis</th><th>Tank</th></tr></thead>
+        <tbody>
+          <tr><td>Calcium nitrate tetrahydrate</td><td>Ca(NO₃)₂·4H₂O</td><td>236.15</td><td>11.9% NO₃-N, 17.0% Ca</td><td>A</td></tr>
+          <tr><td>Calcium nitrate, commercial</td><td>label</td><td>–</td><td>typ. 14.4% NO₃-N, 1.1% NH₄-N, 19% Ca</td><td>A</td></tr>
+          <tr><td>Potassium nitrate</td><td>KNO₃</td><td>101.10</td><td>13.9% N, 38.7% K</td><td>B</td></tr>
+          <tr><td>Monopotassium phosphate</td><td>KH₂PO₄</td><td>136.08</td><td>22.8% P, 28.7% K</td><td>B</td></tr>
+          <tr><td>Monoammonium phosphate</td><td>NH₄H₂PO₄</td><td>115.03</td><td>12.2% NH₄-N, 26.9% P</td><td>B</td></tr>
+          <tr><td>Magnesium sulfate heptahydrate</td><td>MgSO₄·7H₂O</td><td>246.47</td><td>9.9% Mg, 13.0% S</td><td>B</td></tr>
+          <tr><td>Potassium sulfate</td><td>K₂SO₄</td><td>174.25</td><td>44.9% K, 18.4% S</td><td>B</td></tr>
+          <tr><td>Magnesium nitrate hexahydrate</td><td>Mg(NO₃)₂·6H₂O</td><td>256.40</td><td>10.9% NO₃-N, 9.5% Mg</td><td>A</td></tr>
+          <tr><td>Ammonium nitrate</td><td>NH₄NO₃</td><td>80.04</td><td>17.5% NO₃-N, 17.5% NH₄-N</td><td>A</td></tr>
+          <tr><td>Potassium chloride</td><td>KCl</td><td>74.55</td><td>52.4% K, 47.6% Cl</td><td>B</td></tr>
+          <tr><td>Fe-DTPA / Fe-EDDHA / Fe-EDTA</td><td>chelates</td><td>–</td><td>typ. 11 / 6 / 13% Fe (label)</td><td>A</td></tr>
+          <tr><td>Boric acid</td><td>H₃BO₃</td><td>61.83</td><td>17.5% B</td><td>B</td></tr>
+          <tr><td>Manganese sulfate monohydrate</td><td>MnSO₄·H₂O</td><td>169.01</td><td>32.5% Mn, 19.0% S</td><td>B</td></tr>
+          <tr><td>Manganese chloride tetrahydrate</td><td>MnCl₂·4H₂O</td><td>197.90</td><td>27.8% Mn, 35.8% Cl</td><td>B</td></tr>
+          <tr><td>Zinc sulfate heptahydrate</td><td>ZnSO₄·7H₂O</td><td>287.54</td><td>22.7% Zn, 11.1% S</td><td>B</td></tr>
+          <tr><td>Copper sulfate pentahydrate</td><td>CuSO₄·5H₂O</td><td>249.68</td><td>25.5% Cu, 12.8% S</td><td>B</td></tr>
+          <tr><td>Sodium molybdate dihydrate</td><td>Na₂MoO₄·2H₂O</td><td>241.96</td><td>39.7% Mo, 19.0% Na</td><td>B</td></tr>
+        </tbody>
+      </table>
+      </div>
+      <p>The iron chelate figures are the typical label values used on the <a href="iron-addition.html">Iron Addition calculator</a>, which also explains which chelate holds iron at which pH. The commercial calcium nitrate figures are the guaranteed analysis printed on one widely sold greenhouse grade (YaraLiva Calcinit); other labels in other markets give a slightly different nitrate/ammonium split.</p>
+
+      <h3>Why A and B stock tanks</h3>
+      <p>Growers often dissolve the salts as two concentrates, typically 1:100 to 1:200, and dose them into the water. Calcium cannot share a concentrate with sulfate or phosphate: at stock strength calcium sulfate (gypsum) and calcium phosphates exceed their solubility and settle out as a white precipitate that is lost to the plants and can clog drip emitters (Sanchez et al., Penn State Extension). So tank <strong>A</strong> holds the calcium salts (with nitrates and iron chelate), and tank <strong>B</strong> holds the phosphates, sulfates and the other micronutrients. At final strength, the same ions stay dissolved. The calculator puts potassium nitrate in tank B; it can go in either.</p>
+      <p>Each salt also has a limit to how much dissolves in a litre of water, and the limit falls in cold water and when several salts share a tank. Potassium sulfate is the least soluble of the common salts, roughly 110 g per litre of water at 20 °C (CRC Handbook), so the calculator warns when tank B needs more than 100 g/L of it. For the other salts it gives no hard limit: if crystals remain after stirring, use a lower ratio.</p>
+
+      <h3>Example</h3>
+      <p>The defaults make 100 L of Hoagland &amp; Arnon's solution No. 2 from RO water (nothing in the water) with the four salts Hoagland used: calcium nitrate tetrahydrate, potassium nitrate, monoammonium phosphate and magnesium sulfate heptahydrate, plus micronutrients. Each target fixes one salt:</p>
+      <div class="formula">Ca  160.3 mg/L ÷ 40.078 = 4.000 mmol/L Ca(NO₃)₂·4H₂O × 236.15 = 944.5 mg/L
+K   234.6 mg/L ÷ 39.098 = 6.000 mmol/L KNO₃           × 101.10 = 606.6 mg/L
+P    31.0 mg/L ÷ 30.974 = 1.001 mmol/L NH₄H₂PO₄       × 115.03 = 115.1 mg/L
+Mg   48.6 mg/L ÷ 24.305 = 2.000 mmol/L MgSO₄·7H₂O     × 246.47 = 492.8 mg/L</div>
+      <p>These salts then also supply NO₃-N = (2 × 4.000 + 6.000) × 14.007 = 196.1 mg/L, NH₄-N = 14.0 mg/L and S = 64.1 mg/L, exactly the remaining targets. For 100 L that is <strong>94.45 g</strong> calcium nitrate, <strong>60.66 g</strong> potassium nitrate, <strong>11.51 g</strong> MAP and <strong>49.28 g</strong> magnesium sulfate (357.5, 229.6, 43.6 and 186.6 g per 100 US gallons). The micronutrients add 0.909 g Fe-DTPA (1 mg/L Fe at 11%), 0.286 g boric acid, 0.180 g manganese chloride, 0.022 g zinc sulfate, 0.0079 g copper sulfate and 0.0025 g sodium molybdate: the same amounts as Hoagland's micronutrient stock. In total, 217.3 g of product.</p>
+      <p>The estimated EC is <strong>2.30 mS/cm</strong>, the same as the Nutrient EC calculator gives for this recipe: the manganese chloride adds 0.65 mg/L chloride and the molybdate 0.005 mg/L sodium. At 1:100 each 10 L stock tank holds 94.45 g/L calcium nitrate and 0.909 g/L Fe-DTPA in A, and 60.66 g/L KNO₃, 11.51 g/L MAP and 49.28 g/L MgSO₄·7H₂O plus micronutrients in B, enough for 1,000 L.</p>
+
+      <h3>Source water and top-ups</h3>
+      <p>Enter your water report in mg/L. Calcium, magnesium, sulfate and nitrate in the water count towards the targets. Sodium, chloride and bicarbonate count towards EC. Bicarbonate is not removed by fertilizer salts: water with high alkalinity drives the pH up, so neutralise it with acid (see the <a href="ph-adjustment.html">pH Down calculator</a>). Nitric, phosphoric or sulfuric acid then add nitrogen, phosphorus or sulfur; you can enter those amounts as part of the water analysis so the calculator adds less fertilizer. If the pH is too low, the <a href="ph-up-adjustment.html">pH Up calculator</a> works out a potassium or calcium base.</p>
+      <p>In top-up mode, fill the tank back to the batch volume with water, mix, and enter a lab analysis of the solution. The calculator then works out only what is missing. Plants take up elements at different rates, so an EC reading alone cannot tell you which ones are short. Elements that are already above target cannot be removed by adding salts; only dilution or a fresh batch lowers them.</p>
+
+      <h3>Limitations and assumptions</h3>
+      <ul>
+        <li><strong>Purity and hydrates.</strong> The salt masses assume the formula shown. Magnesium sulfate sold as anhydrous or monohydrate, or calcium nitrate sold as the commercial double salt, has a different element content; change the purity, or use the commercial grade or custom fertilizer rows with your label analysis.</li>
+        <li><strong>Ion interactions.</strong> The calculation is a mass balance. It does not model ion pairs, precipitation at final strength, or uptake by plants. The EC estimate is the Nutrient EC method: Kohlrausch sum × 0.90, a rule of thumb that can be off by 10% or more for recipes high in sulfate or magnesium (Fernández, 2020).</li>
+        <li><strong>pH effects.</strong> Ammonium and phosphate salts lower pH and nitrate uptake raises it. The phosphate is counted as H₂PO₄⁻, the main form between pH 5.5 and 6.5. Check pH after mixing.</li>
+        <li><strong>Micronutrients.</strong> Each micronutrient comes from its own salt, so these normally match exactly. Iron chelates, and chelated micronutrient mixes, also contain sodium or ammonium that is not counted.</li>
+        <li><strong>The ±10% band</strong> used to flag elements as over or under target is a display rule of thumb, not a crop tolerance.</li>
+        <li><strong>Recipes.</strong> Hoagland &amp; Arnon's solutions were designed for research on many plant species. Commercial crops are often grown on recipes tuned to the crop, stage and climate; enter those as custom targets.</li>
+      </ul>
+
+      <h3>Safety</h3>
+      <ul>
+        <li>Wear gloves and eye protection when weighing and dissolving salts and handling concentrates. Store them dry, labelled and out of reach of children and animals.</li>
+        <li>Ammonium nitrate and the other nitrates are oxidisers: keep them away from fuels, organic matter and heat, and check local rules for ammonium nitrate.</li>
+        <li>Dissolve each salt in water before adding the next; never pour the A and B concentrates into each other.</li>
+        <li>Nutrient solution is not drinking water. Dispose of spent solution according to local rules; it is a fertilizer rich in nitrate and phosphate.</li>
+      </ul>
+      <p>For system sizing, reservoir volume and how this fits into a whole hydroponic design, see the <a href="../guides/hydroponic-design.html">hydroponic system design guide</a>.</p>
+
+      <h2>Sources</h2>
+      <ol class="sources">
+        <li>Hoagland, D. R. &amp; Arnon, D. I. (1950). <em>The water-culture method for growing plants without soil</em>. California Agricultural Experiment Station Circular 347. Berkeley: University of California.</li>
+        <li>Prohaska, T. et al. (2022). Standard atomic weights of the elements 2021 (IUPAC Technical Report). <em>Pure and Applied Chemistry</em>, 94(5), 573–600. <a href="https://www.ciaaw.org/atomic-weights.htm" rel="noopener" target="_blank">ciaaw.org</a></li>
+        <li>Lawson, C. L. &amp; Hanson, R. J. (1974). <em>Solving Least Squares Problems</em>. Englewood Cliffs, NJ: Prentice-Hall (non-negative least squares, chapter 23; reprinted by SIAM, 1995).</li>
+        <li>Sanchez, E., Berghage, R., Ford, T., Di Gioia, F. &amp; Flax, N. <em>Hydroponics Systems: Using the Two Basic Equations to Calculate a Nutrient Solution Recipe</em>. Penn State Extension. <a href="https://extension.psu.edu/hydroponics-systems-using-the-two-basic-equations-to-calculate-a-nutrient-solution-recipe" rel="noopener" target="_blank">extension.psu.edu</a> (keeping calcium in a separate stock tank from sulfates and phosphates; seen only in a search-result summary, the page itself could not be opened when this calculator was written).</li>
+        <li>Yara. <em>YaraLiva CALCINIT</em> product label and product information sheet (guaranteed analysis 15.5% N, of which about 14.4% nitrate-N and 1.1% ammoniacal-N, and 19% Ca; the US label gives 14.5% and 1.0%). <a href="https://www.yara.us/" rel="noopener" target="_blank">yara.us</a> (seen only in search-result summaries).</li>
+        <li>Haynes, W. M. (ed.). <em>CRC Handbook of Chemistry and Physics</em>, “Aqueous Solubility of Inorganic Compounds at Various Temperatures.” CRC Press (potassium sulfate about 11 g per 100 g water at 20 °C; value not re-checked against the table when this calculator was written, fertilizer supplier tables give 110–120 g/L).</li>
+        <li>Parkhurst, D. L. &amp; Appelo, C. A. J. (2013). <em>Description of input and examples for PHREEQC version 3</em>. U.S. Geological Survey Techniques and Methods, book 6, chap. A43. <a href="https://pubs.usgs.gov/tm/06/a43/" rel="noopener" target="_blank">pubs.usgs.gov</a> (diffusion coefficients in <code>phreeqc.dat</code>).</li>
+        <li>aqion. “Table of Diffusion Coefficients” and “Electrical Conductivity based on Diffusion Coefficients.” <a href="https://www.aqion.de/sd/77?page=5" rel="noopener" target="_blank">aqion.de</a></li>
+        <li>Fernández, D. (2020). “Building a model to predict EC in hydroponic nutrient solutions.” <em>Science in Hydroponics</em>. <a href="https://scienceinhydroponics.com/2020/07/building-a-model-to-predict-ec-in-hydroponic-nutrient-solutions.html" rel="noopener" target="_blank">scienceinhydroponics.com</a></li>
+      </ol>
+    </article>
+  </main>
+
+  <footer class="site-footer">
+    <div class="wrap">Calculations are estimates. Check the sources above before relying on a result.</div>
+  </footer>
+
+  <script src="../assets/share.js"></script>
+  <script src="../assets/units.js"></script>
+  <script src="../assets/nutrient-additions.js"></script>
+</body>
+</html>
