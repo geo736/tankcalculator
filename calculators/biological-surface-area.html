@@ -63,7 +63,7 @@
           <div class="field" data-method="feed">
             <label for="feed">Daily feed</label>
             <div class="input-row"><input id="feed" type="number" inputmode="decimal" min="0" step="any"><select class="unit-select" data-unit-group="mass" data-unit-for="feed" data-unit-default="kg" aria-label="Daily feed unit"></select></div>
-            <div class="field-hint">Amount fed per day, at full stocking.</div>
+            <div class="field-hint">Use the largest daily ration in your production cycle, usually at peak biomass. If young fish get a higher-protein feed, check that stage too and size for whichever gives more TAN.</div>
           </div>
           <div class="field" data-method="feed">
             <label for="protein">Feed protein</label>
@@ -83,7 +83,7 @@
           <div class="field">
             <label for="safety">Safety factor</label>
             <div class="input-row"><input id="safety" type="number" inputmode="decimal" min="1" step="any"><span class="unit">×</span></div>
-            <div class="field-hint">1 = none. Leave empty for 1.</div>
+            <div class="field-hint">Extra area on top of the peak load. Default ×1.25 (25%, rule of thumb); 1 = none. Allow for cold water or low pH in the nitrification rate instead.</div>
           </div>
         </div>
 
@@ -235,10 +235,23 @@ SSA = specific surface area of the media (m²/m³)</div>
       <h3>Example</h3>
       <p>A tank is fed <strong>1 kg of 35% protein feed per day</strong>. TAN produced = 1 × 0.35 × 0.092 = 0.0322 kg = <strong>32.2 g TAN/day</strong>. At 0.5 g/m²/day the bacteria need 32.2 ÷ 0.5 = 64.4 m², and with a 1.25 safety factor <strong>80.5 m²</strong> of biofilm. K1-type carrier at 500 m²/m³ gives 80.5 ÷ 500 = 0.161 m³ = <strong>161 L of media</strong>. In a 300 L moving-bed vessel that is a fill of 161 ÷ 300 = <strong>53.7%</strong>, inside the normal 50–65% range.</p>
 
+      <h3>Sizing for the whole production cycle</h3>
+      <p>The calculator does not model fish growth stage by stage. It works from the feed, because TAN production follows the feed and its protein (Timmons et al., 2002; Ebeling et al., 2006), not the fish weight directly. Young fish do excrete more ammonia per kilogram of fish, but that is because they eat a larger share of their body weight each day and are often fed a higher-protein starter or grower feed. Both effects come into the result through the feed and protein you enter.</p>
+      <ul>
+        <li><strong>Size for the peak.</strong> In most systems the most TAN is produced when the standing biomass, and so the total daily ration, is highest, near harvest. Enter that ration.</li>
+        <li><strong>Check the other stages.</strong> If a stage is fed a much higher-protein feed (for example many fingerlings on a 45–50% protein feed), work it out as well with that stage’s daily feed and protein, and use the larger answer. The <a href="feeding-rate.html">Feeding Rate calculator</a> gives the daily ration for each stage.</li>
+        <li><strong>Then add the safety factor.</strong> It covers the peaks a few hours after feeding, feed that is not eaten, and the uncertainty in the nitrification rate. There is no single published value; this page uses ×1.25 (25%) as a rule of thumb. A smaller margin such as ×1.10–1.15 is reasonable only when the nitrification rate you entered is a measured or supplier-tested value for your conditions.</li>
+      </ul>
+      <p><strong>pH.</strong> pH does not change how much TAN the fish produce, so it is not a reason to change the TAN load or the safety factor. It changes two other things:</p>
+      <ul>
+        <li><strong>How fast the bacteria work.</strong> pH is one of the water quality factors that change the nitrification rate of a biofilm, along with temperature, dissolved oxygen, organic matter, alkalinity and salinity (Chen, Ling &amp; Blancheton, 2006). Systems run at a lower pH, as aquaponic systems often are to suit the plants, should use a lower nitrification rate in the calculator. That gives a larger filter for the same TAN, which is the right way to allow for pH. Nitrification also uses up alkalinity, so pH tends to fall over time unless it is buffered.</li>
+        <li><strong>How toxic the TAN is.</strong> At higher pH more of the TAN is in the toxic un-ionized NH₃ form. That decides how low you must keep TAN in the tanks, not the size of the filter. The <a href="tan-conversion.html">TAN Conversion calculator</a> shows the NH₃ share at your pH and temperature.</li>
+      </ul>
+
       <h3>Limitations and assumptions</h3>
       <ul>
         <li><strong>All TAN goes to the biofilter.</strong> No credit is taken for water exchange, plant uptake or nitrification on tank walls and pipes.</li>
-        <li><strong>Steady feeding.</strong> Size for the largest daily ration you will feed at peak stocking. Ammonia excretion peaks a few hours after feeding, so a filter sized on the daily average has little spare capacity at those times.</li>
+        <li><strong>Steady feeding.</strong> Size for the largest daily ration in the production cycle (see above). Ammonia excretion peaks a few hours after feeding, so a filter sized on the daily average has little spare capacity at those times.</li>
         <li><strong>A new biofilter needs weeks to mature</strong> before it reaches its full rate.</li>
         <li><strong>Nitrite.</strong> The calculation is for ammonia removal; the second nitrification step usually keeps up in a mature filter but can lag in a new one.</li>
         <li>Rates and media areas in the tables are guides, not guarantees. Watch ammonia and nitrite test results and adjust feeding if they rise.</li>
@@ -250,6 +263,7 @@ SSA = specific surface area of the media (m²/m³)</div>
         <li>Timmons, M. B., Ebeling, J. M., Wheaton, F. W., Summerfelt, S. T. &amp; Vinci, B. J. (2002). <em>Recirculating Aquaculture Systems</em> (2nd ed.). Ithaca, NY: Cayuga Aqua Ventures. See also Timmons, M. B. &amp; Ebeling, J. M. (2010). <em>Recirculating Aquaculture</em> (2nd ed.), chapter on biofiltration.</li>
         <li>Rusten, B., Eikebrokk, B., Ulgenes, Y. &amp; Lygren, E. (2006). Design and operations of the Kaldnes moving bed biofilm reactors. <em>Aquacultural Engineering</em>, 34(3), 322–331. <a href="https://doi.org/10.1016/j.aquaeng.2005.04.002" rel="noopener" target="_blank">doi.org</a></li>
         <li>Guerdat, T. C., Losordo, T. M., Classen, J. J., Osborne, J. A. &amp; DeLong, D. P. (2010). An evaluation of commercially available biological filters for recirculating aquaculture systems. <em>Aquacultural Engineering</em>, 42(1), 38–49.</li>
+        <li>Chen, S., Ling, J. &amp; Blancheton, J.-P. (2006). Nitrification kinetics of biofilm as affected by water quality factors. <em>Aquacultural Engineering</em>, 34(3), 179–197. <a href="https://doi.org/10.1016/j.aquaeng.2005.09.004" rel="noopener" target="_blank">doi:10.1016/j.aquaeng.2005.09.004</a></li>
         <li>Somerville, C., Cohen, M., Pantanella, E., Stankus, A. &amp; Lovatelli, A. (2014). <em>Small-scale aquaponic food production: Integrated fish and plant farming</em>. FAO Fisheries and Aquaculture Technical Paper No. 589. Rome: FAO. <a href="https://www.fao.org/3/i4021e/i4021e.pdf" rel="noopener" target="_blank">fao.org</a></li>
       </ol>
     </article>
