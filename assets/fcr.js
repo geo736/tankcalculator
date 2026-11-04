@@ -567,7 +567,7 @@
   (function init() {
     const p = CalcShare.readParams();
     applyDefaults();
-    function okOpt(sel, v) { return v !== undefined && sel.querySelector('option[value="' + v + '"]'); }
+    function okOpt(sel, v) { return v !== undefined && Array.prototype.some.call(sel.options, function (o) { return o.value === v; }); }
     ['species', 'cur', 'price_u', 'out'].forEach(function (f) { if (okOpt($(f), p[f])) $(f).value = p[f]; });
     STOCKS.forEach(function (s) { if (p[s + '_how'] === 'bm' || p[s + '_how'] === 'cw') $(s + '_how').value = p[s + '_how']; });
     FIELDS.forEach(function (f) {
