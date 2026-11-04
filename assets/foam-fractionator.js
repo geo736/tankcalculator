@@ -406,7 +406,7 @@
     while (svg.firstChild) svg.removeChild(svg.firstChild);
     const ok = !!r;
     const D = ok ? r.D : 0.75, H = ok ? r.H : 1.5, R = ok ? r.riser : 0.5;
-    const yBottom = 262, maxH = 216, maxW = 116, minW = 34;
+    const yBottom = 236, maxH = 196, maxW = 104, minW = 34;
     let s = Math.min(maxH / (H + R), maxW / D);
     let w = D * s, hBody = H * s, hRiser = R * s;
     let clamped = false;
@@ -415,7 +415,7 @@
     if (hBody + hRiser > maxH) { hRiser = Math.max(18, maxH - hBody); hBody = Math.min(hBody, maxH - hRiser); clamped = true; }
     if (hRiser < 18) { hRiser = 18; hBody = Math.min(hBody, maxH - hRiser); clamped = true; }
     if (ok) r.notToScale = clamped;
-    const cx = 118, xL = cx - w / 2, xR = cx + w / 2;
+    const cx = 104, xL = cx - w / 2, xR = cx + w / 2;
     const yTop = yBottom - hBody;          // water surface
     const neckW = Math.max(16, w * 0.38);
     const nL = cx - neckW / 2, nR = cx + neckW / 2;
@@ -478,8 +478,7 @@
       el('path', { class: 'pipe', d: 'M' + (cx - w * 0.25) + ',' + yBottom + ' V' + (yBottom + 14) + ' H' + (xL - 22) + ' V' + yInj + ' H' + xL });
       el('rect', { class: 'diffuser', x: xL - 28, y: yInj - 6, width: 12, height: 12, rx: 3 });
       el('path', { class: 'air-line', d: 'M8,' + (yInj - 22) + ' H' + (xL - 22) + ' V' + (yInj - 6) });
-      label(8, yInj - 28, 'air', 'start', 'accent-text');
-      label(14, yBottom + 38, 'pump + venturi', 'start', 'accent-text');
+      label(8, yInj - 28, 'air → venturi', 'start', 'accent-text');
     }
 
     // dimensions: D under the column, H on the left
@@ -492,7 +491,7 @@
       ok ? 'H ' + len(r.H) : 'H –');
 
     // right-hand panel
-    const px = Math.max(xP + 8, 252);
+    const px = Math.max(xP + 8, 226);
     label(xP + 4, yIn + 4, 'in', 'start', 'depth-text');
     label(xP + 4, yBottom + 12, 'out', 'start', 'depth-text');
     label(xP + 4, yCupBot, 'foamate', 'start', 'accent-text');
@@ -510,9 +509,9 @@
     } else {
       lines.push(['Enter the inputs', 'dim-text']);
     }
-    let y = 40;
+    let y = 30;
     const panelX = Math.max(px, xP + 52);
-    lines.forEach(function (l) { label(panelX, y, l[0], 'start', l[1]); y += 20; });
+    lines.forEach(function (l) { label(panelX, y, l[0], 'start', l[1]); y += 19; });
   }
 
   // ---------- Results text ----------

@@ -22,6 +22,7 @@
     .verdict-ok { color: var(--accent-strong); }
     .verdict-bad { color: var(--warn-text); }
     .result-list .v { overflow-wrap: anywhere; }
+    @media (max-width: 520px) { .two-col.ff-inputs { grid-template-columns: minmax(0, 1fr); } }
     .result-main .sub { font-size: .85rem; color: var(--text-muted); margin-top: 2px; }
   </style>
 </head>
@@ -57,7 +58,7 @@
           <div class="field-hint">Switching loads that water type's starting contact time, air-to-water ratio and salinity.</div>
         </div>
 
-        <div class="two-col">
+        <div class="two-col ff-inputs">
           <div class="field">
             <label for="sal">Salinity</label>
             <div class="input-row"><input id="sal" type="number" inputmode="decimal" min="0" step="any"><span class="unit">ppt</span></div>
@@ -84,7 +85,7 @@
           </div>
         </div>
 
-        <div class="two-col">
+        <div class="two-col ff-inputs">
           <div class="field" data-fmode-for="turns">
             <label for="turns">System volume through skimmer</label>
             <div class="input-row"><input id="turns" type="number" inputmode="decimal" min="0" step="any"><span class="unit">per hour</span></div>
@@ -109,7 +110,7 @@
           </div>
         </div>
 
-        <div class="two-col">
+        <div class="two-col ff-inputs">
           <div class="field">
             <label for="ctime">Contact time (water in the column)</label>
             <div class="input-row"><input id="ctime" type="number" inputmode="decimal" min="0" step="any"><select class="unit-select" data-unit-group="time" data-unit-for="ctime" data-unit-default="min" aria-label="Contact time unit"></select></div>
@@ -131,7 +132,7 @@
           </div>
         </div>
 
-        <div class="two-col">
+        <div class="two-col ff-inputs">
           <div class="field" data-smode-for="depth check">
             <label for="depth">Column water depth</label>
             <div class="input-row"><input id="depth" type="number" inputmode="decimal" min="0" step="any"><select class="unit-select" data-unit-group="length" data-unit-for="depth" data-unit-default="m" aria-label="Water depth unit"></select></div>
@@ -161,7 +162,7 @@
           </div>
         </div>
 
-        <div class="two-col">
+        <div class="two-col ff-inputs">
           <div class="field" data-inj-for="diffuser">
             <label for="adepth">Diffuser depth below water surface</label>
             <div class="input-row"><input id="adepth" type="number" inputmode="decimal" min="0" step="any"><select class="unit-select" data-unit-group="length" data-unit-for="adepth" data-unit-default="m" aria-label="Diffuser depth unit"></select></div>
@@ -184,7 +185,7 @@
           </div>
         </div>
 
-        <div class="two-col">
+        <div class="two-col ff-inputs">
           <div class="field">
             <label for="ozone">Ozone</label>
             <select id="ozone">
@@ -263,7 +264,7 @@
       <!-- Visualization -->
       <section class="card viz-card" aria-labelledby="viz-heading">
         <h2 id="viz-heading">Visualization</h2>
-        <svg class="viz" id="viz" viewBox="0 0 480 330" role="img" aria-label="Cross-section of one counter-current foam fractionator column: water enters near the top and leaves at the bottom, air bubbles rise from the base, foam rises up the riser into the collection cup. Labelled with diameter, water depth, flows, air and contact time."></svg>
+        <svg class="viz" id="viz" viewBox="0 0 400 300" role="img" aria-label="Cross-section of one counter-current foam fractionator column: water enters near the top and leaves at the bottom, air bubbles rise from the base, foam rises up the riser into the collection cup. Labelled with diameter, water depth, flows, air and contact time."></svg>
         <p class="viz-caption" id="viz-caption"></p>
       </section>
     </div>
