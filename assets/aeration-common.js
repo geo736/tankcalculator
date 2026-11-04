@@ -46,7 +46,8 @@
 //   PUMP_ORDER
 //   flowAtPressure(pump, pa)   → L/min one pump delivers at pa (0 if pa > pmaxPa)
 //   pumpsFor(pump, lpm, pa)    → { each, count, watts, ok, reason }
-//   bestPump(lpm, pa)          → { id, each, count, watts } lowest total watts, or null
+//   bestPump(lpm, pa)          → { id, each, count, watts } lowest total watts using ≤ 4 pumps
+//                                (lowest watts overall if none fits in 4), or null
 //
 // Unit groups added to CalcUnits.GROUPS (only if missing)
 //   pressure  + 'cmH2O' (98.0665 Pa)
@@ -236,13 +237,19 @@
     const count = Math.max(1, Math.ceil(lpm / each - 1e-9));
     return { each: each, count: count, watts: count * p.watts, ok: true, reason: '' };
   }
+  // Lowest total power among presets needing at most MAX_PUMPS units (a dozen small aquarium pumps
+  // is not a practical answer even if it saves a few watts); if none fits, lowest power overall.
+  const MAX_PUMPS = 4;
   function bestPump(lpm, pa) {
-    let best = null;
+    let best = null, bestAny = null;
     PUMP_ORDER.forEach(function (id) {
       const r = pumpsFor(PUMPS[id], lpm, pa);
-      if (r.ok && (!best || r.watts < best.watts - 1e-9)) best = { id: id, each: r.each, count: r.count, watts: r.watts };
+      if (!r.ok) return;
+      const cand = { id: id, each: r.each, count: r.count, watts: r.watts };
+      if (!bestAny || r.watts < bestAny.watts - 1e-9) bestAny = cand;
+      if (r.count <= MAX_PUMPS && (!best || r.watts < best.watts - 1e-9)) best = cand;
     });
-    return best;
+    return best || bestAny;
   }
 
   window.Aeration = {

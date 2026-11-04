@@ -15,12 +15,12 @@
     CalcUnits.GROUPS.aerint = {
       base: 'LLmin',
       units: [
-        { id: 'LLmin', label: 'L air per L per min', factor: 1 },
+        { id: 'LLmin', label: 'L/L/min', factor: 1 },
         { id: 'L100L', label: 'L/min per 100 L', factor: 0.01 },
         { id: 'Lm3', label: 'L/min per m³', factor: 0.001 },
-        { id: 'Lgal', label: 'L/min per US gal', factor: 1 / 3.785411784 },
-        { id: 'cfm100gal', label: 'CFM per 100 US gal', factor: 28.316846592 / 378.5411784 },
-        { id: 'LLh', label: 'L air per L per hour', factor: 1 / 60 }
+        { id: 'Lgal', label: 'L/min per gal', factor: 1 / 3.785411784 },
+        { id: 'cfm100gal', label: 'CFM per 100 gal', factor: 28.316846592 / 378.5411784 },
+        { id: 'LLh', label: 'L/L/h', factor: 1 / 60 }
       ]
     };
   }
@@ -250,7 +250,7 @@
     else if (r.aintDesign > INT_HI) r.warns.push('The design intensity (' + fmt(r.aintDesign, 2) + ' L/L/min) is above 1.18, where Baiyin et al. (2021) saw growth decrease. More air also costs power.');
     if (ff.factor <= 0) r.warns.push('The DO to keep (' + fmt(doT, 2) + ' mg/L) is at or above saturation (' + fmt(r.csat, 2) + ' mg/L) at this temperature and elevation. Air cannot reach it; cool the solution or lower the target.');
     else if (doT < DO_PLANT_MIN) r.warns.push('The DO to keep is below the 3 mg/L minimum FAO TP 589 gives for plants (rule of thumb).');
-    if (t > WARM_T) r.warns.push('Warm solution: at ' + fmt(t, 1) + ' °C it holds at most ' + fmt(r.csat, 2) + ' mg/L of oxygen while roots use more. Consider cooling; about ' + RZT_COMPROMISE + ' °C is a reasonable compromise (Carotti et al., 2021).');
+    if (t > WARM_T) r.warns.push('Warm solution: at ' + inUnitOf('temp', t) + ' it holds at most ' + fmt(r.csat, 2) + ' mg/L of oxygen while roots use more. Consider cooling; about ' + RZT_COMPROMISE + ' °C (75 °F) is a reasonable compromise (Carotti et al., 2021).');
     if (r.sysId === 'swc' && r.D > 0.15) r.notes.push('More than about 15 cm of solution is deep water culture rather than shallow (this page’s definition).');
     if (r.sysId === 'dwc' && r.D < 0.15) r.notes.push('Less than about 15 cm of solution is shallow water culture; consider the SWC option (same maths, different guidance).');
     if (r.geo === 'canal' && r.sdepth < r.waterDepth * 0.5) r.notes.push('The stones are in the top half of the solution; on the floor they mix the whole depth and dissolve more oxygen.');
@@ -289,7 +289,7 @@
     $('diffuser-hint').textContent = diffuser().basis;
     const p = A.PUMPS[$('pump').value];
     $('pump-hint').textContent = $('pump').value === 'auto'
-      ? 'Picks the preset with the lowest total power that can deliver the air at the pressure needed (same rule as the fish-system calculator).'
+      ? 'Picks the preset with the lowest total power that can deliver the air at the pressure needed, using no more than 4 pumps where possible (same rule as the fish-system calculator).'
       : p ? p.basis : 'Read the flow at the pressure shown below from your pump’s performance curve.';
   }
 
@@ -391,7 +391,7 @@
     setText('r-sflow', r.tube ? fmt(r.byFlow, 0) + ' m per ' + W + ' at ' + flowStr(r.rating) + ' per m'
       : fmt(r.byFlow, 0) + ' per ' + W + ' at ' + flowStr(r.rating) + ' each');
     setText('r-sspace', r.geo === 'canal'
-      ? (r.tube ? fmt(r.rowsAcross, 0) + ' ' + plural(r.rowsAcross, 'run', 'runs') + ' × ' + inUnitOf('cl', r.L) + ' = ' + fmt(r.bySpace, 0) + ' m per ' + W
+      ? (r.tube ? fmt(r.rowsAcross, 0) + ' ' + plural(r.rowsAcross, 'run', 'runs') + ' × ' + inUnitOf('cl', r.L) + ' ≈ ' + fmt(r.bySpace, 0) + ' m per ' + W
         : fmt(r.alongLen, 0) + ' along × ' + fmt(r.rowsAcross, 0) + ' across = ' + fmt(r.bySpace, 0) + ' per ' + W) + ' at ' + inUnitOf('spacing', r.spacing)
       : fmt(r.bySpace, 0) + (r.tube ? ' m' : '') + ' for ' + fmt(r.floor, 2) + ' m² of floor at ' + inUnitOf('spacing', r.spacing));
     setText('r-units', fmt(r.units, 0) + ' ' + uWord + ' per ' + W + (r.n > 1 ? ' (' + fmt(r.unitsTotal, 0) + ' total)' : '') +
@@ -495,7 +495,7 @@
     if (geo === 'canal') {
       // Canal / trough: solution height drawn in proportion to depth (clamped)
       const TB = 268;
-      const hW = r ? Math.max(26, Math.min(150, r.waterDepth * 450)) : (id === 'swc' ? 45 : 135);
+      const hW = r ? Math.max(26, Math.min(140, r.waterDepth * 450)) : (id === 'swc' ? 45 : 135);
       wy = TB - hW;
       const top = wy - 14;
       el('rect', { class: 'tank-glass', x: X0, y: top, width: X1 - X0, height: TB - top });
@@ -511,12 +511,12 @@
       const xs = stones(r, X0 + 4, X1, sy, wy + 6, 8);
       el('path', { class: 'air-line', d: 'M' + lineX + ',' + sy + ' L' + Math.max(lineX, xs[xs.length - 1]) + ',' + sy });
       depthMarker(X0 - 8, wy, sy, r ? inUnitOf('sdepth', r.sdepth) : '');
-      el('text', { class: 'dim-text', x: (X0 + X1) / 2, y: top - 28, 'text-anchor': 'middle' },
-        id === 'swc' ? 'Shallow trough (SWC): raft over a thin layer' : 'Deep water canal (DWC): raft over solution');
+      el('text', { class: 'dim-text', x: (X0 + X1) / 2 + 8, y: 84, 'text-anchor': 'middle' },
+        id === 'swc' ? 'SWC trough: raft on a thin layer' : 'DWC canal: raft over solution');
       label2 = r ? (r.n > 1 ? 'one of ' + r.n + ' ' + r.words + ' · ' : '') + fmt(r.units, 0) + ' ' + (r.tube ? 'm of tube' : plural(r.units, 'stone', 'stones')) + ' · ' + flowStr(r.perEach) : 'Canal';
       el('text', { class: 'dim-text', x: (X0 + X1) / 2, y: TB + 18, 'text-anchor': 'middle' }, label2);
-      if (r && !r.tube && r.units > 8) el('text', { class: 'dim-text', x: (X0 + X1) / 2, y: top - 12, 'text-anchor': 'middle' }, 'drawing shows 8 of ' + r.units + ' stones');
-      else if (r) el('text', { class: 'dim-text', x: (X0 + X1) / 2, y: top - 12, 'text-anchor': 'middle' }, (r.governs === 'flow' ? 'flow rating governs' : 'spacing governs') + ' the stone count');
+      if (r && !r.tube && r.units > 8) el('text', { class: 'dim-text', x: (X0 + X1) / 2 + 8, y: 99, 'text-anchor': 'middle' }, 'drawing shows 8 of ' + r.units + ' stones');
+      else if (r) el('text', { class: 'dim-text', x: (X0 + X1) / 2 + 8, y: 99, 'text-anchor': 'middle' }, (r.governs === 'flow' ? 'flow rating governs' : 'spacing governs') + ' the stone count');
     } else {
       // Upper unit (NFT channel, media bed, or a pot fed by drip), then the aerated reservoir below
       const RT = 170, RB = 270, RX0 = 170, RX1 = X1;

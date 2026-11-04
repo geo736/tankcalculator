@@ -199,7 +199,7 @@
     $('diffuser-hint').textContent = diffuser().basis;
     const p = A.PUMPS[$('pump').value];
     $('pump-hint').textContent = $('pump').value === 'auto'
-      ? 'Picks the preset with the lowest total power that can deliver the air at the pressure needed.'
+      ? 'Picks the preset with the lowest total power that can deliver the air at the pressure needed, using no more than 4 pumps where possible.'
       : p ? p.basis : 'Read the flow at the pressure shown below from your pump’s performance curve.';
   }
 

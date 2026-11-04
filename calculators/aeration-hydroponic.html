@@ -24,9 +24,10 @@
     .viz .leaf { fill: var(--c-hydroponics); fill-opacity: .85; }
     .viz .root { fill: none; stroke: var(--c-hydroponics); stroke-width: 1.2; stroke-linecap: round; }
     .viz .gravel { fill: var(--tank-back); fill-opacity: .7; stroke: var(--tank-stroke); stroke-width: .8; }
-    .viz .pipe { fill: none; stroke: var(--water-deep); stroke-width: 3; stroke-dasharray: 6 4; stroke-linecap: round; }
+    .viz .pipe { fill: none; stroke: var(--water); stroke-width: 3; stroke-dasharray: 6 4; stroke-linecap: round; }
     .viz .note-text { fill: var(--text-muted); font-size: 11px; font-style: italic; font-family: var(--font); }
     .result-list .v { overflow-wrap: anywhere; }
+    #f-dql { grid-column: 1 / -1; }
   </style>
 </head>
 <body>
@@ -113,20 +114,21 @@
             <div class="input-row"><input id="elev" type="number" inputmode="decimal" step="any"><select class="unit-select" data-unit-group="length" data-unit-for="elev" data-unit-default="m" aria-label="Elevation unit"></select></div>
           </div>
           <div class="field">
-            <label for="dotarget">Minimum DO to keep</label>
-            <div class="input-row"><input id="dotarget" type="number" inputmode="decimal" min="0" step="any"><select class="unit-select" data-unit-group="concentration" data-unit-for="dotarget" data-unit-default="mgL" aria-label="Dissolved oxygen unit"></select></div>
-            <div class="field-hint">Rule of thumb: more than 3 mg/L for plants (FAO TP 589, <a href="dissolved-oxygen.html">Dissolved Oxygen</a>). Many growers aim higher.</div>
-          </div>
-          <div class="field">
-            <label for="aint">Aeration intensity</label>
-            <div class="input-row"><input id="aint" type="number" inputmode="decimal" min="0" step="any"><select class="unit-select" data-unit-group="aerint" data-unit-for="aint" data-unit-default="LLmin" aria-label="Aeration intensity unit"></select></div>
-            <div class="field-hint">Example value 0.07: the lowest intensity Baiyin et al. (2021) tested (0.07–0.15 L/L/min improved growth; little extra benefit up to 1.18; less above). Their tests were small containers, so treat it as a starting point and check with a DO meter.</div>
-          </div>
-          <div class="field">
             <label for="sf">Safety factor</label>
             <div class="input-row"><input id="sf" type="number" inputmode="decimal" min="1" step="any"><span class="unit">×</span></div>
             <div class="field-hint">Extra air for warm spells and clogging stones. Your choice; 1.5 is used here (as the fish-system calculator).</div>
           </div>
+        </div>
+
+        <div class="field">
+          <label for="dotarget">Minimum DO to keep</label>
+          <div class="input-row"><input id="dotarget" type="number" inputmode="decimal" min="0" step="any"><select class="unit-select" data-unit-group="concentration" data-unit-for="dotarget" data-unit-default="mgL" aria-label="Dissolved oxygen unit"></select></div>
+          <div class="field-hint">Rule of thumb: more than 3 mg/L for plants (FAO TP 589, <a href="dissolved-oxygen.html">Dissolved Oxygen</a>). Many growers aim higher.</div>
+        </div>
+        <div class="field">
+          <label for="aint">Aeration intensity</label>
+          <div class="input-row"><input id="aint" type="number" inputmode="decimal" min="0" step="any"><select class="unit-select" data-unit-group="aerint" data-unit-for="aint" data-unit-default="LLmin" aria-label="Aeration intensity unit"></select></div>
+          <div class="field-hint">Example value 0.07: the lowest intensity Baiyin et al. (2021) tested (0.07–0.15 L/L/min improved growth; little extra benefit up to 1.18; less above). Their tests were small containers, so treat it as a starting point and check with a DO meter.</div>
         </div>
 
         <div class="field">
@@ -297,7 +299,7 @@ Stones       = the larger of N<sub>flow</sub> and N<sub>space</sub>
       <p><strong>4. Pressure at the pump</strong> (gauge; ρ = 998 kg/m³, g = 9.80665 m/s²):</p>
       <div class="formula">P = ρ × g × stone depth  +  stone drop  +  line allowance
 1 kPa = 0.145 psi = 4.01 in H₂O = 10.2 cm H₂O</div>
-      <p><strong>5. Pump and energy.</strong> Each preset pump’s curve is a straight line from its free-air flow through its rated point, cut off at its maximum pressure. Pumps needed = round up (air ÷ flow per pump at P). The suggestion is the preset with the lowest total power. Energy = watts × 24 h per day, × 365 per year.</p>
+      <p><strong>5. Pump and energy.</strong> Each preset pump’s curve is a straight line from its free-air flow through its rated point, cut off at its maximum pressure. Pumps needed = round up (air ÷ flow per pump at P). The suggestion is the preset with the lowest total power that needs no more than 4 pumps (if none can, the lowest total power overall). Energy = watts × 24 h per day, × 365 per year.</p>
       <p><strong>6. Saturation and oxygen check.</strong> C<sub>sat</sub> is the DO saturation of fresh water at the solution temperature and the site’s air pressure (Benson &amp; Krause, 1984; USGS, 2011; U.S. Standard Atmosphere for pressure), as in the Dissolved Oxygen calculator. The oxygen the air can dissolve uses the same standard-to-field conversion as the fish-system page, with α = 1 (clean water):</p>
       <div class="formula">OTE  = SOTE per m × stone depth × 1.024<sup>(T − 20)</sup> × (C<sub>sat</sub> − C) ÷ 9.09
 O₂ (g/h) = Air (L/min) × 60 × 0.2787 g O₂ per L of air × OTE</div>
@@ -310,15 +312,21 @@ O₂ (g/h) = Air (L/min) × 60 × 0.2787 g O₂ per L of air × OTE</div>
         <li>Stones by flow: 90.7 ÷ 10 = 9.07 → 10 per canal. By spacing: 2.4 ÷ 1.2 = 2 along × 1.2 ÷ 1.2 = 1 across = 2. Flow governs: <strong>10 stones per canal, 20 in all</strong>, each at 9.07 L/min.</li>
         <li>Pressure: 998 × 9.80665 × 0.30 = 2.94 kPa of water + 2 kPa stone + 1 kPa line = <strong>5.94 kPa</strong> (0.86 psi, 23.8 in H₂O, 60.5 cm H₂O).</li>
         <li>At 5.94 kPa a 60 L/min linear pump gives about 83.3 L/min, so <strong>3 pumps, 150 W</strong> (3.6 kWh/day, 1,314 kWh/year). Two 120 L/min pumps would need 220 W; aquarium pumps would need 40 (160 W).</li>
-        <li>Saturation at 20 °C: 9.09 mg/L; 3 mg/L is 33% of it. Oxygen check: SOTE 5% × 0.3 m = 1.5%; × (9.09 − 3) ÷ 9.09 = 1.0%; 181.4 × 60 × 0.2787 × 0.0100 ≈ 30.5 g/h (≈ 731 g/day, 17.6 mg/L per hour of solution) in clean water.</li>
+        <li>Saturation at 20 °C: 9.09 mg/L; 3 mg/L is 33% of it. Oxygen check: SOTE 5% × 0.3 m = 1.5%; × (9.09 − 3) ÷ 9.09 = 1.0%; 181.4 × 60 × 0.2787 × 0.0100 ≈ 30.5 g/h (≈ 732 g/day, 17.6 mg/L per hour of solution) in clean water.</li>
       </ul>
-      <p>The other system types start from these defaults when you pick them: <strong>SWC</strong> two 2.4 × 1.2 m troughs with 10 cm of solution (576 L → 60.5 L/min, 4 stones per trough, 3.98 kPa); <strong>NFT</strong> a 200 L reservoir 50 cm deep (21 L/min, 3 stones, 7.89 kPa); <strong>media bed</strong> a 300 L sump 50 cm deep (31.5 L/min, 4 stones, 7.89 kPa); <strong>reservoir only</strong> 100 L, 40 cm deep (10.5 L/min, 2 stones, 6.91 kPa).</p>
+      <p>The other system types start from these defaults when you pick them (same intensity, safety factor, stones and line allowance):</p>
+      <ul>
+        <li><strong>SWC:</strong> two 2.4 × 1.2 m troughs with 10 cm of solution: 576 L → 60.5 L/min (2.14 CFM); 30.2 L/min per trough → 4 stones per trough by flow (2 by spacing); 0.98 + 2 + 1 = 3.98 kPa. Suggested: one 60 L/min linear pump (50 W, about 88 L/min at this pressure); 12 aquarium pumps would save only 2 W.</li>
+        <li><strong>NFT:</strong> a 200 L reservoir with 50 cm of solution: 21 L/min (0.74 CFM); 3 stones by flow (1 by spacing for 0.4 m² of floor); 4.89 + 2 + 1 = 7.89 kPa; suggested: one 60 L/min linear pump (50 W); 6 aquarium pumps (24 W) would use less power but are more to run.</li>
+        <li><strong>Media bed:</strong> a 300 L sump with 50 cm of solution: 31.5 L/min; 4 stones; 7.89 kPa; suggested: one 60 L/min linear pump (50 W), or 8 aquarium pumps (32 W).</li>
+        <li><strong>Reservoir only:</strong> 100 L with 40 cm of solution: 10.5 L/min; 2 stones; 3.91 + 2 + 1 = 6.91 kPa; 3 aquarium pumps (12 W).</li>
+      </ul>
 
       <h3>Stone spacing (rule of thumb)</h3>
       <p>There is no published standard for how far apart air stones in a raft canal should be. The default of 1.2 m comes from one well-documented design: in the University of the Virgin Islands (UVI) commercial aquaponic system, each raft tank had 24 air diffusers of 10 L/min, placed every 1.2 m along the centre of the tank (Rakocy et al., 2004). Wider canals get more than one row on this page (one row per 1.2 m of width), which is this page’s own extension. For a reservoir, the page allows one stone per 1.2 m × 1.2 m of floor. Small stones in big canals leave dead corners; if spacing governs, consider porous tubing along the canal instead of many stones.</p>
 
       <h3>Typical stone values and pump presets</h3>
-      <p>The stone and pump presets are the same as on the <a href="aeration-aquaculture.html">fish-system calculator</a>, which explains where each comes from. They are typical, illustrative values: replace them with your stone’s and pump’s data. Small air pumps lose flow quickly as pressure rises, so always read the pump’s curve at the pressure shown here, not its free-air rating. Where the lowest-power suggestion means many small pumps, the “Pump options” line shows the alternatives.</p>
+      <p>The stone and pump presets are the same as on the <a href="aeration-aquaculture.html">fish-system calculator</a>, which explains where each comes from. They are typical, illustrative values: replace them with your stone’s and pump’s data. Small air pumps lose flow quickly as pressure rises, so always read the pump’s curve at the pressure shown here, not its free-air rating. The suggestion avoids more than 4 pumps where it can; the “Pump options” line shows every alternative and its power.</p>
 
       <h3>Limitations and assumptions</h3>
       <ul>
