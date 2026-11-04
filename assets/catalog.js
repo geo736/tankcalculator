@@ -53,7 +53,7 @@ window.CALCULATORS = [
     icon: '<path d="M5 4v16h14"/><path d="M5 4l14 16"/><path d="M9 14h4"/>' },
   { slug: 'growing-media-fill', name: 'Growing Media Fill', group: 'design', blurb: 'Media bags, weight and cost', cat: 'aquaponics', tags: ['aquaponics', 'hydroponics'], uses: ['design', 'money'], status: 'live',
     icon: '<path d="M3 9h18l-2 11H5z"/><circle cx="9" cy="14" r="1.5"/><circle cx="14" cy="15" r="1.5"/>' },
-  { slug: 'nutrient-additions', name: 'Nutrient Additions', group: 'water', blurb: 'Fertilizer salts to hit ppm targets', cat: 'hydroponics', tags: ['hydroponics', 'aquaponics'], uses: ['plants', 'water'], status: 'soon',
+  { slug: 'nutrient-additions', name: 'Nutrient Additions', group: 'water', blurb: 'Fertilizer salts to hit ppm targets', cat: 'hydroponics', tags: ['hydroponics', 'aquaponics'], uses: ['plants', 'water'], status: 'live',
     icon: '<path d="M8 3h8M9 3v5l-4 9a2 2 0 0 0 2 3h10a2 2 0 0 0 2-3l-4-9V3"/><path d="M8 14h8"/><circle cx="11" cy="17" r=".8"/><circle cx="14" cy="16" r=".8"/>' },
   { slug: 'iron-addition', name: 'Iron Addition', group: 'water', blurb: 'Chelated iron dose and pH', cat: 'aquaponics', tags: ['aquaponics', 'hydroponics'], uses: ['plants', 'water'], status: 'live',
     icon: '<path d="M7 3h10l-1 6H8z"/><path d="M12 13v4"/><circle cx="12" cy="19" r="2"/>' },
