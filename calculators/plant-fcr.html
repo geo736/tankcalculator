@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Plant Feed Conversion Ratio (FCRplant) Calculator</title>
+  <meta name="description" content="Calculate the plant feed conversion ratio (FCRplant) of an aquaponic system: fish feed supplied divided by plant weight gain, with feed loading rate, yield per m², fish FCR and a planning mode for feed needed.">
+  <link rel="stylesheet" href="../assets/style.css">
+  <style>
+    .status { font-size: .9rem; font-weight: 600; margin-top: 6px; }
+    .status.ok { color: var(--accent-strong); }
+    .status.warn { color: var(--warn-text); }
+    .result-main .sub { font-size: .9rem; color: var(--text-muted); margin-top: 2px; }
+    .viz .bar-bg { fill: var(--surface-2); stroke: var(--border); stroke-width: 1; }
+    .viz .bar-feed { fill: var(--warn-text); fill-opacity: .75; }
+    .viz .bar-fish { fill: var(--water-deep); }
+    .viz .bar-plant { fill: var(--accent); }
+    .viz .bar-dry { fill: var(--accent-strong); fill-opacity: .55; stroke: var(--accent-strong); stroke-width: 1; }
+    .viz .bar-zone { fill: var(--accent); fill-opacity: .55; }
+    .viz .marker { fill: var(--text); }
+    .viz .marker-line { stroke: var(--text); stroke-width: 2; }
+    .viz .marker-text { fill: var(--text); font-size: 12px; font-weight: 700; font-family: var(--font); }
+    .viz .name-text { fill: var(--text); font-size: 12px; font-weight: 600; font-family: var(--font); }
+    .viz .zone-text { fill: var(--accent-strong); font-size: 11px; font-weight: 600; font-family: var(--font); }
+  </style>
+</head>
+<body>
+  <header class="site-header">
+    <div class="wrap">
+      <a class="brand" href="../">
+        <span class="brand-mark" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3c3 4 6 7 6 11a6 6 0 0 1-12 0c0-4 3-7 6-11z"/></svg>
+        </span>
+        Tank Calculator
+      </a>
+      <nav><a href="../">All calculators</a></nav>
+    </div>
+  </header>
+
+  <main class="wrap">
+    <div class="crumbs"><a href="../">Home</a> / Plant FCR</div>
+    <h1 class="page-title">Plant Feed Conversion Ratio (FCRplant) Calculator</h1>
+    <p class="page-lede">How much fish feed does it take to grow a kilogram of plants in your aquaponic system? Enter the feed supplied and the plant weight gained over the same period to get the plant feed conversion ratio, the feed loading rate per m² and, if you weighed the fish too, the fish FCR. Or plan the feed you need for a target harvest.</p>
+
+    <div class="calc-layout">
+      <!-- Calculator -->
+      <section class="card" aria-labelledby="calc-heading">
+        <h2 id="calc-heading">Calculator</h2>
+
+        <div class="field">
+          <span class="label" id="mode-label">What do you want to do?</span>
+          <div class="segmented" role="group" aria-labelledby="mode-label" id="mode-group" style="grid-template-columns: repeat(2, 1fr);">
+            <button type="button" data-mode="measure" aria-pressed="true">
+              <svg viewBox="0 0 34 26" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5 22h24M9 22l3-9h10l3 9M17 13V6M13 6c1-3 7-3 8 0"/></svg>
+              Measure FCRplant
+            </button>
+            <button type="button" data-mode="plan" aria-pressed="false">
+              <svg viewBox="0 0 34 26" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="8" cy="18" r="2.5"/><circle cx="14" cy="14" r="2.2"/><path d="M19 14h7m-3-3 3 3-3 3M29 20v-7m0 0c-3 0-4-3-4-5 2 0 4 2 4 5zm0 0c0-3 2-5 4-5 0 2-1 5-4 5"/></svg>
+              Plan feed needed
+            </button>
+          </div>
+        </div>
+
+        <!-- Measure mode -->
+        <div class="field" data-show="measure">
+          <label for="feed">Fish feed supplied over the period</label>
+          <div class="input-row"><input id="feed" type="number" inputmode="decimal" min="0" step="any"><select class="unit-select" data-unit-group="mass" data-unit-for="feed" data-unit-default="kg" aria-label="Feed unit"></select></div>
+          <div class="field-hint">Total feed given to all fish (as fed) during the plant growing period.</div>
+        </div>
+        <div class="two-col" data-show="measure">
+          <div class="field">
+            <label for="harv">Plant harvest (fresh)</label>
+            <div class="input-row"><input id="harv" type="number" inputmode="decimal" min="0" step="any"><select class="unit-select" data-unit-group="mass" data-unit-for="harv" data-unit-default="kg" aria-label="Harvest unit"></select></div>
+          </div>
+          <div class="field">
+            <label for="start">Transplant weight (optional)</label>
+            <div class="input-row"><input id="start" type="number" inputmode="decimal" min="0" step="any"><select class="unit-select" data-unit-group="mass" data-unit-for="start" data-unit-default="kg" aria-label="Transplant weight unit"></select></div>
+          </div>
+        </div>
+        <div class="field-hint" data-show="measure" style="margin-top:-6px;margin-bottom:12px;">Fresh weight of everything harvested (with roots if you weigh them), and the weight of the seedlings when they went in. Gain = harvest − transplants.</div>
+        <div class="field" data-show="measure">
+          <label for="dm">Plant dry matter (optional)</label>
+          <div class="input-row"><input id="dm" type="number" inputmode="decimal" min="0" max="100" step="any"><span class="unit">% of fresh weight</span></div>
+          <div class="field-hint">Adds a dry-weight result. Butterhead lettuce is about 4.4% dry matter (95.6% water) [5]; measure your own crop if you can.</div>
+        </div>
+
+        <!-- Plan mode -->
+        <div class="field" data-show="plan">
+          <label for="target">Target plant production (fresh weight gain)</label>
+          <div class="input-row"><input id="target" type="number" inputmode="decimal" min="0" step="any"><select class="unit-select" data-unit-group="mass" data-unit-for="target" data-unit-default="kg" aria-label="Target production unit"></select></div>
+        </div>
+        <div class="field" data-show="plan">
+          <label for="fcrp">Plant FCR to plan with</label>
+          <div class="input-row"><input id="fcrp" type="number" inputmode="decimal" min="0" step="any"><span class="unit">kg feed / kg plant</span></div>
+          <div class="field-hint">Use a value measured in your own system (Measure mode). The default is the worked example on this page, not a published standard.</div>
+        </div>
+        <div class="field" data-show="plan">
+          <label for="fcrf">Fish FCR (optional)</label>
+          <div class="input-row"><input id="fcrf" type="number" inputmode="decimal" min="0" step="any"><span class="unit">kg feed / kg fish</span></div>
+          <div class="field-hint">Rule of thumb for tilapia on a good pellet: about 1.2–2, often 1.5 (see the <a href="feeding-rate.html">feeding rate</a> page).</div>
+        </div>
+
+        <!-- Both modes -->
+        <div class="two-col">
+          <div class="field">
+            <label for="period">Period</label>
+            <div class="input-row"><input id="period" type="number" inputmode="decimal" min="0" step="any"><select class="unit-select" data-unit-group="time" data-unit-for="period" data-unit-default="d" aria-label="Period unit"></select></div>
+          </div>
+          <div class="field">
+            <label for="area">Grow area (optional)</label>
+            <div class="input-row"><input id="area" type="number" inputmode="decimal" min="0" step="any"><select class="unit-select" data-unit-group="area" data-unit-for="area" data-unit-default="m2" aria-label="Grow area unit"></select></div>
+          </div>
+        </div>
+        <div class="field" data-show="measure">
+          <label for="fgain">Fish weight gain over the period (optional)</label>
+          <div class="input-row"><input id="fgain" type="number" inputmode="decimal" min="0" step="any"><select class="unit-select" data-unit-group="mass" data-unit-for="fgain" data-unit-default="kg" aria-label="Fish gain unit"></select></div>
+          <div class="field-hint">Final fish biomass − starting biomass (+ any fish removed). Gives the fish FCR and total food produced per kg of feed.</div>
+        </div>
+        <div class="field">
+          <label for="crop">Compare feed loading rate with</label>
+          <select id="crop">
+            <option value="leafy">Leafy greens (FAO) · 40–50 g/m²/day</option>
+            <option value="fruiting">Fruiting vegetables (FAO) · 50–80 g/m²/day</option>
+            <option value="raft">Raft / DWC, UVI (Rakocy) · 60–100 g/m²/day</option>
+            <option value="bibb">Bibb lettuce trial (2026) · 30–75 g/m²/day</option>
+          </select>
+          <div class="field-hint">Rules of thumb for a ~32% protein feed. The 2026 range is from a single tilapia–Bibb lettuce study [2].</div>
+        </div>
+
+        <hr class="divider">
+
+        <div class="notice" id="notice" hidden></div>
+
+        <div class="two-col">
+          <div class="field">
+            <label for="outm">Show masses in</label>
+            <select id="outm" class="unit-select" data-unit-group="mass" data-unit-default="kg"></select>
+          </div>
+          <div class="field">
+            <label for="outy">Show yield in</label>
+            <select id="outy" class="unit-select" data-unit-group="arealmass" data-unit-default="kgm2"></select>
+          </div>
+        </div>
+        <div class="field">
+          <label for="outr">Show feed loading rate in</label>
+          <select id="outr" class="unit-select" data-unit-group="feedratio" data-unit-default="gm2d"></select>
+        </div>
+
+        <div class="result-main" aria-live="polite">
+          <div class="label" id="r-main-label">Plant feed conversion ratio (FCRplant)</div>
+          <div class="value" id="r-main">–</div>
+          <div class="sub" id="r-main-sub"></div>
+          <div class="status" id="r-status" hidden></div>
+        </div>
+
+        <ul class="result-list" id="list-measure">
+          <li><span>Plant weight gain (fresh)</span><span class="v" id="r-gain">–</span></li>
+          <li><span>Plant gain per kg of feed</span><span class="v" id="r-perkg">–</span></li>
+          <li><span>FCRplant, dry plant weight</span><span class="v" id="r-dry">–</span></li>
+          <li><span>Feed loading rate</span><span class="v" id="r-load">–</span></li>
+          <li><span>Plant gain per area</span><span class="v" id="r-yield">–</span></li>
+          <li><span>Fish FCR</span><span class="v" id="r-fcrf">–</span></li>
+          <li><span>Food (plants + fish) per kg feed</span><span class="v" id="r-total">–</span></li>
+          <li><span>Plant : fish mass gain (<a href="plant-fish-ratio.html">PFRM</a>)</span><span class="v" id="r-pfrm">–</span></li>
+        </ul>
+        <ul class="result-list" id="list-plan" hidden>
+          <li><span>Feed needed per day</span><span class="v" id="p-day">–</span></li>
+          <li><span>Feed loading rate</span><span class="v" id="p-load">–</span></li>
+          <li><span>Grow area for this feed (guideline)</span><span class="v" id="p-area">–</span></li>
+          <li><span>Plant production per area</span><span class="v" id="p-yield">–</span></li>
+          <li><span>Expected fish gain</span><span class="v" id="p-fish">–</span></li>
+          <li><span>Plant : fish mass gain (PFRM)</span><span class="v" id="p-pfrm">–</span></li>
+        </ul>
+
+        <div class="share-bar">
+          <button class="btn btn-primary" type="button" id="btn-share">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="m8.6 13.5 6.8 4M15.4 6.5l-6.8 4"/></svg>
+            Share
+          </button>
+          <button class="btn" type="button" id="btn-link">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.5.5l3-3a5 5 0 0 0-7-7l-1.7 1.7"/><path d="M14 11a5 5 0 0 0-7.5-.5l-3 3a5 5 0 0 0 7 7l1.7-1.7"/></svg>
+            Copy link
+          </button>
+          <button class="btn" type="button" id="btn-copy">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h10a1 1 0 0 1 1 1v1"/></svg>
+            Copy results
+          </button>
+          <button class="btn" type="button" id="btn-reset">Reset</button>
+        </div>
+      </section>
+
+      <!-- Visualization -->
+      <section class="card viz-card" aria-labelledby="viz-heading">
+        <h2 id="viz-heading">Visualization</h2>
+        <svg class="viz" id="viz" viewBox="0 0 480 340" role="img" aria-label="Bars to one scale for the feed supplied, the plant gain and the fish gain, and a bar comparing the feed loading rate with the guideline range"></svg>
+        <p class="viz-caption" id="viz-caption"></p>
+      </section>
+    </div>
+
+    <article class="article">
+      <h2>How the plant FCR calculator works</h2>
+      <p>Fish farmers judge feeding with the <strong>feed conversion ratio</strong> (FCR): kilograms of feed given per kilogram of fish weight gained. In aquaponics the same feed also fertilizes the plants, so Colt and Semmens (2022) proposed an FCR for the plants as well: the <strong>plant feed conversion ratio, FCR<sub>plant</sub> = feed supplied ÷ increase in plant weight</strong> [1]. It tells you how well the nutrients in the fish feed end up as plant tissue. A lower FCR<sub>plant</sub> means more plant growth from each kilogram of feed.</p>
+      <p>In <strong>Measure</strong> mode you enter the feed given to the fish during a growing period and the plant weight gained in the same period (harvest minus transplants). The page divides one by the other. If you add the grow area and the period, it also gives the <strong>feed loading rate</strong> in g of feed per m² of grow area per day and compares it with the guideline ranges used on the <a href="feed-rate-to-grow-space.html">Feed Rate to Grow Space</a> calculator. If you weighed the fish, it adds the ordinary fish FCR, the total food produced per kilogram of feed and the <a href="plant-fish-ratio.html">plant-fish mass ratio</a>.</p>
+      <p>In <strong>Plan</strong> mode you enter a target plant production and an FCR<sub>plant</sub> (ideally one you measured). The page multiplies them to get the feed you will need, and with a period and an area turns that into feed per day and a loading rate.</p>
+
+      <h3>Why it matters</h3>
+      <p>Feed is the main running cost and the only real nutrient input in most aquaponic systems. The usual sizing rule, the feed rate ratio, says how much feed a square metre of plants can use (for example 40–50 g/m²/day for leafy greens) [3, 4], but it does not tell you how much the plants actually grew from it. FCR<sub>plant</sub> closes that loop. Colt and Semmens recommended that FCR<sub>plant</sub> be reported in aquaponic research [1]. Their abstract says that a theoretical range can be estimated from the composition of the feed and the plants and from nutrient (nitrogen and phosphorus) retention, and that only about half of the published experimental values they examined fell inside that range, which points to large room for improving nutrient retention in the plant part of many systems [1]. A 2026 study of Bibb lettuce with Nile tilapia used FCR<sub>plant</sub> and the plant-fish mass ratio to judge six feed loading rates (15–90 g/m²/day of a 32% protein feed) and reported that 30, 45, 60 and 75 g/m²/day were within standard operating performance for protein and energy retention, while 15 and 90 were not [2].</p>
+
+      <h3>What is and is not confirmed from the source paper</h3>
+      <ul>
+        <li><strong>Confirmed</strong> (abstract and summaries of [1]): FCR<sub>plant</sub> = amount of feed supplied ÷ increase in weight of plants; a theoretical range can be computed from feed and plant composition and N and P retention; about 50% of experimental values fell inside it.</li>
+        <li><strong>Not confirmed</strong>: we could not read the full text, so this page does <em>not</em> show the paper's numeric theoretical range, and we could not confirm whether its tables use fresh or dry plant weight or include roots. This calculator uses <strong>fresh weight</strong> by default and gives a dry-weight version if you enter a dry-matter percentage. Compare only values on the same basis.</li>
+      </ul>
+
+      <h3>Formulas</h3>
+      <p>With F = feed supplied over the period, H = fresh plant harvest, S = transplant weight, d = dry matter (%), T = period (days), A = grow area (m²), G<sub>fish</sub> = fish weight gain:</p>
+      <div class="formula">G<sub>plant</sub>          = H − S
+FCR<sub>plant</sub>        = F ÷ G<sub>plant</sub>              (kg feed per kg plant, fresh)
+Plant per kg feed = G<sub>plant</sub> ÷ F  = 1 ÷ FCR<sub>plant</sub>
+FCR<sub>plant, dry</sub>   = F ÷ (G<sub>plant</sub> × d ÷ 100)
+Loading rate      = F (g) ÷ A ÷ T       (g/m²/day)
+Yield             = G<sub>plant</sub> ÷ A
+FCR<sub>fish</sub>         = F ÷ G<sub>fish</sub>
+Food per kg feed  = (G<sub>plant</sub> + G<sub>fish</sub>) ÷ F
+PFRM              = G<sub>plant</sub> ÷ G<sub>fish</sub>  = FCR<sub>fish</sub> ÷ FCR<sub>plant</sub></div>
+      <p>Plan mode turns the first formula around: <strong>feed needed = target plant gain × FCR<sub>plant</sub></strong>, feed per day = feed ÷ T, and the grow area that feed fits at the guideline ratio R is feed per day ÷ R. The last line is our own algebra: because both FCRs use the same feed, dividing them cancels the feed and leaves the plant-to-fish gain ratio.</p>
+
+      <h3>Example</h3>
+      <p>A 10 m² lettuce raft is fed from a fish tank for <strong>35 days</strong>. The fish get <strong>15.75 kg</strong> of feed in that time (450 g a day, which is 45 g/m²/day). You planted <strong>1 kg</strong> of seedlings and harvested <strong>36 kg</strong> of lettuce, so the plants gained 35 kg. FCR<sub>plant</sub> = 15.75 ÷ 35 = <strong>0.45 kg feed per kg lettuce</strong>, or 35 ÷ 15.75 = 2.22 kg of lettuce per kg of feed. At 4.4% dry matter the dry gain is 35 × 0.044 = 1.54 kg, so the dry-weight FCR<sub>plant</sub> is 15.75 ÷ 1.54 = 10.23. The plants gained 35 ÷ 10 = 3.5 kg/m². The loading rate is 15 750 g ÷ 10 m² ÷ 35 days = 45 g/m²/day, inside the FAO leafy-green range of 40–50. The fish gained <strong>10.5 kg</strong>, so their FCR is 15.75 ÷ 10.5 = 1.5, the system made (35 + 10.5) ÷ 15.75 = 2.89 kg of food per kg of feed, and the plant-fish mass ratio is 35 ÷ 10.5 = 3.33 (= 1.5 ÷ 0.45).</p>
+      <p>Plan mode turns this around. To grow <strong>35 kg</strong> of lettuce in 35 days at an FCR<sub>plant</sub> of 0.45 you need 35 × 0.45 = <strong>15.75 kg of feed</strong>, or 450 g/day. At 40–50 g/m²/day that feed fits 450 ÷ 50 = 9.0 to 450 ÷ 40 = 11.25 m² of grow area; on 10 m² the loading rate is 45 g/m²/day and the plants give 3.5 kg/m². At a fish FCR of 1.5 the fish gain 15.75 ÷ 1.5 = 10.5 kg.</p>
+
+      <h3>Limitations and assumptions</h3>
+      <ul>
+        <li><strong>Same period, same feed.</strong> Feed, plant gain and fish gain must cover the same days. Count all plants harvested in the period and the change in standing crop if beds were not empty at both ends.</li>
+        <li><strong>Fresh weight varies.</strong> Fresh weight depends on water content, trimming and whether roots are included. Dry weight is a fairer basis for comparing crops.</li>
+        <li><strong>No published standard range shown.</strong> The theoretical FCR<sub>plant</sub> range in [1] depends on feed protein and phosphorus, plant N and P content and nutrient retention; we could not confirm its numbers, so the page does not rate your FCR<sub>plant</sub> as good or bad. Track it over time and compare like with like.</li>
+        <li><strong>Supplements.</strong> Iron, potassium or calcium added to the water also feed the plants but are not counted in F [3, 4].</li>
+        <li><strong>Solids removal.</strong> Systems that remove fish solids lose part of the feed nutrients; systems with mineralization recover more. Both change FCR<sub>plant</sub>.</li>
+        <li><strong>Loading-rate ranges are rules of thumb</strong> for warm-water fish on a ~32% protein feed [2, 3, 4].</li>
+      </ul>
+
+      <h2>Sources</h2>
+      <ol class="sources">
+        <li>Colt, J. &amp; Semmens, K. (2022). Computation of feed conversion ratio (FCR<sub>plant</sub>) and plant-fish mass ratio (PFRM) for aquaponic systems. <em>Aquacultural Engineering</em>, 98, 102260. doi:10.1016/j.aquaeng.2022.102260. <a href="https://www.sciencedirect.com/science/article/abs/pii/S014486092200036X" rel="noopener" target="_blank">sciencedirect.com</a></li>
+        <li>Effects of feed loading rate on growth of Bibb lettuce (<em>Lactuca sativa</em>) with Nile tilapia (<em>Oreochromis niloticus</em>) in aquaponic systems (2026). <em>Aquaculture Reports</em>. <a href="https://doi.org/10.1016/j.aqrep.2026.103748" rel="noopener" target="_blank">doi:10.1016/j.aqrep.2026.103748</a></li>
+        <li>Somerville, C., Cohen, M., Pantanella, E., Stankus, A. &amp; Lovatelli, A. (2014). <em>Small-scale aquaponic food production: Integrated fish and plant farming</em>. FAO Fisheries and Aquaculture Technical Paper No. 589. Rome: FAO. Feed rate ratio guidance in Chapters 2 and 8. <a href="https://www.fao.org/3/i4021e/i4021e.pdf" rel="noopener" target="_blank">fao.org</a></li>
+        <li>Rakocy, J. E., Masser, M. P. &amp; Losordo, T. M. (2006). <em>Recirculating Aquaculture Tank Production Systems: Aquaponics—Integrating Fish and Plant Culture</em>. Southern Regional Aquaculture Center (SRAC) Publication No. 454 (revised). Stoneville, MS: SRAC.</li>
+        <li>U.S. Department of Agriculture, Agricultural Research Service. <em>FoodData Central</em>, SR Legacy: Lettuce, butterhead (includes boston and bibb types), raw — water 95.63 g per 100 g. <a href="https://fdc.nal.usda.gov/" rel="noopener" target="_blank">fdc.nal.usda.gov</a></li>
+      </ol>
+      <p>See also: <a href="fcr.html">Fish FCR calculator</a> · <a href="plant-fish-ratio.html">Plant-Fish Mass Ratio (PFRM)</a> · <a href="feed-rate-to-grow-space.html">Feed Rate to Grow Space</a> · <a href="grow-bed-ratio.html">Grow Bed to Fish Tank Ratio</a> · <a href="feeding-rate.html">Fish Feeding Rate</a></p>
+    </article>
+  </main>
+
+  <footer class="site-footer">
+    <div class="wrap">Calculations are estimates. Check the sources above before relying on a result.</div>
+  </footer>
+
+  <script src="../assets/share.js"></script>
+  <script src="../assets/units.js"></script>
+  <script src="../assets/plant-fcr.js"></script>
+</body>
+</html>

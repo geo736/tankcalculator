@@ -1,0 +1,417 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Feed Conversion Ratio (FCR) Calculator</title>
+  <meta name="description" content="Measure biological and economic feed conversion ratio (FCR) from your fish records, with specific growth rate, feed efficiency and protein efficiency ratio, or plan how much feed a crop of fish needs and what a better FCR is worth.">
+  <link rel="stylesheet" href="../assets/style.css">
+  <style>
+    .segmented.two { grid-template-columns: repeat(2, 1fr); }
+    .stock { border: 1px solid var(--border); border-radius: 12px; background: var(--surface-2); padding: 10px 10px 2px; margin: 0 0 12px; min-width: 0; }
+    .stock legend { font-weight: 600; font-size: .9rem; padding: 0 6px; color: var(--text); }
+    .stock .stock-how { display: flex; gap: 8px; align-items: center; margin-bottom: 8px; }
+    .stock .stock-how label { margin: 0; font-size: .8rem; color: var(--text-muted); flex: none; }
+    .stock .stock-how select { flex: 1; min-width: 0; }
+    .stock .two-col { gap: 8px; }
+    .stock .field { margin-bottom: 8px; }
+    .stock .field label { font-size: .8rem; margin-bottom: 4px; }
+    .stock .field-hint { margin: -4px 0 8px; }
+    @media (max-width: 480px) { .two-col.stack-sm { grid-template-columns: minmax(0, 1fr); gap: 0; } }
+    .input-row .cur-pre { border-left: 0; border-right: 1px solid var(--border); padding: 0 9px; min-width: 30px; justify-content: center; }
+    .ref-hint.out { color: var(--warn-text); }
+    .viz .title-text { fill: var(--text); font-size: 13px; font-weight: 600; font-family: var(--font); }
+    .viz .bar-feed { fill: var(--c-aquaculture); }
+    .viz .bar-gain { fill: var(--c-aquaponics); }
+    .viz .bar-dead { fill: var(--warn-text); fill-opacity: .75; }
+    .viz .bar-empty { fill: var(--surface-2); stroke: var(--border); }
+    .viz .bar-text { fill: #fff; font-size: 12px; font-weight: 600; font-family: var(--font); }
+    .viz .label-text { fill: var(--text); font-size: 12px; font-family: var(--font); }
+    .viz .track { fill: var(--surface-2); stroke: var(--border); stroke-width: 1; }
+    .viz .band { fill: var(--accent-soft); stroke: var(--accent); stroke-width: 1; }
+    .viz .band-text { fill: var(--accent-strong); font-size: 11px; font-family: var(--font); }
+    .viz .ref-mark { stroke: var(--accent-strong); stroke-width: 2; }
+    .viz .grid { stroke: var(--border); stroke-width: 1; }
+    .viz .axis { stroke: var(--tank-stroke); stroke-width: 1.2; fill: none; }
+    .viz .tick { stroke: var(--tank-stroke); stroke-width: 1; }
+    .viz .mk-bio { fill: var(--c-aquaponics); stroke: var(--surface); stroke-width: 1.5; }
+    .viz .mk-eco { fill: var(--c-aquaculture); stroke: var(--surface); stroke-width: 1.5; }
+    .viz .mk-bio-text { fill: var(--c-aquaponics); font-size: 12px; font-weight: 700; font-family: var(--font); }
+    .viz .mk-eco-text { fill: var(--c-aquaculture); font-size: 12px; font-weight: 700; font-family: var(--font); }
+    .viz .curve { stroke: var(--c-aquaculture); stroke-width: 2.5; fill: none; }
+    .viz .save { stroke: var(--c-aquaponics); stroke-width: 3; }
+    .viz .save-text { fill: var(--c-aquaponics); font-size: 12px; font-weight: 700; font-family: var(--font); }
+    .viz .guide { stroke: var(--text-muted); stroke-width: 1; stroke-dasharray: 3 3; }
+  </style>
+</head>
+<body>
+  <header class="site-header">
+    <div class="wrap">
+      <a class="brand" href="../">
+        <span class="brand-mark" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3c3 4 6 7 6 11a6 6 0 0 1-12 0c0-4 3-7 6-11z"/></svg>
+        </span>
+        Tank Calculator
+      </a>
+      <nav><a href="../">All calculators</a></nav>
+    </div>
+  </header>
+
+  <main class="wrap">
+    <div class="crumbs"><a href="../">Home</a> / Feed Conversion Ratio (FCR)</div>
+    <h1 class="page-title">Feed Conversion Ratio (FCR) Calculator</h1>
+    <p class="page-lede">Measure how many kilograms of feed your fish needed for each kilogram of growth, both biological and economic FCR, along with growth rate, feed efficiency and protein efficiency. Or plan the feed for a crop of fish and see what a better FCR saves.</p>
+
+    <div class="calc-layout">
+      <!-- Calculator -->
+      <section class="card" aria-labelledby="calc-heading">
+        <h2 id="calc-heading">Calculator</h2>
+
+        <div class="field">
+          <span class="label" id="mode-label">What do you want to do?</span>
+          <div class="segmented two" role="group" aria-labelledby="mode-label" id="mode-group">
+            <button type="button" data-mode="measure" aria-pressed="true">
+              <svg viewBox="0 0 34 26" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5 4h18v19H5zM9 9h10M9 13h10M9 17h6M25 8l4 4-4 4"/></svg>
+              Measure FCR from records
+            </button>
+            <button type="button" data-mode="plan" aria-pressed="false">
+              <svg viewBox="0 0 34 26" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 22h26M7 22V14M14 22V9M21 22V12M28 22V5"/></svg>
+              Plan feed with an FCR
+            </button>
+          </div>
+        </div>
+
+        <!-- Measure mode -->
+        <div data-mode-show="measure">
+          <fieldset class="stock">
+            <legend>Fish at the start of the period</legend>
+            <div class="stock-how"><label for="start_how">Enter as</label>
+              <select id="start_how" data-stock="start"><option value="cw">Count × average weight</option><option value="bm">Total weight (biomass)</option></select></div>
+            <div class="two-col stack-sm">
+              <div class="field">
+                <label for="start_n" data-n-label>Number of fish</label>
+                <div class="input-row"><input id="start_n" type="number" inputmode="numeric" min="0" step="1"><span class="unit">fish</span></div>
+              </div>
+              <div class="field" data-how="cw">
+                <label for="start_w">Average weight</label>
+                <div class="input-row"><input id="start_w" type="number" inputmode="decimal" min="0" step="any"><select class="unit-select" data-unit-group="mass" data-unit-for="start_w" data-unit-default="g" aria-label="Starting average weight unit"></select></div>
+              </div>
+              <div class="field" data-how="bm">
+                <label for="start_b">Total weight</label>
+                <div class="input-row"><input id="start_b" type="number" inputmode="decimal" min="0" step="any"><select class="unit-select" data-unit-group="mass" data-unit-for="start_b" data-unit-default="kg" aria-label="Starting biomass unit"></select></div>
+              </div>
+            </div>
+          </fieldset>
+
+          <fieldset class="stock">
+            <legend>Fish at the end of the period</legend>
+            <div class="stock-how"><label for="end_how">Enter as</label>
+              <select id="end_how" data-stock="end"><option value="cw">Count × average weight</option><option value="bm">Total weight (biomass)</option></select></div>
+            <div class="two-col stack-sm">
+              <div class="field">
+                <label for="end_n" data-n-label>Number of fish</label>
+                <div class="input-row"><input id="end_n" type="number" inputmode="numeric" min="0" step="1"><span class="unit">fish</span></div>
+              </div>
+              <div class="field" data-how="cw">
+                <label for="end_w">Average weight</label>
+                <div class="input-row"><input id="end_w" type="number" inputmode="decimal" min="0" step="any"><select class="unit-select" data-unit-group="mass" data-unit-for="end_w" data-unit-default="g" aria-label="Ending average weight unit"></select></div>
+              </div>
+              <div class="field" data-how="bm">
+                <label for="end_b">Total weight</label>
+                <div class="input-row"><input id="end_b" type="number" inputmode="decimal" min="0" step="any"><select class="unit-select" data-unit-group="mass" data-unit-for="end_b" data-unit-default="kg" aria-label="Ending biomass unit"></select></div>
+              </div>
+            </div>
+            <div class="field-hint">Fish still in the tank or pond on the last day. If you harvested everything on the last day, enter the harvest here.</div>
+          </fieldset>
+
+          <fieldset class="stock">
+            <legend>Fish removed during the period</legend>
+            <div class="stock-how"><label for="rem_how">Enter as</label>
+              <select id="rem_how" data-stock="rem"><option value="cw">Count × average weight</option><option value="bm">Total weight (biomass)</option></select></div>
+            <div class="two-col stack-sm">
+              <div class="field">
+                <label for="rem_n" data-n-label>Number of fish</label>
+                <div class="input-row"><input id="rem_n" type="number" inputmode="numeric" min="0" step="1"><span class="unit">fish</span></div>
+              </div>
+              <div class="field" data-how="cw">
+                <label for="rem_w">Average weight</label>
+                <div class="input-row"><input id="rem_w" type="number" inputmode="decimal" min="0" step="any"><select class="unit-select" data-unit-group="mass" data-unit-for="rem_w" data-unit-default="g" aria-label="Removed fish average weight unit"></select></div>
+              </div>
+              <div class="field" data-how="bm">
+                <label for="rem_b">Total weight</label>
+                <div class="input-row"><input id="rem_b" type="number" inputmode="decimal" min="0" step="any"><select class="unit-select" data-unit-group="mass" data-unit-for="rem_b" data-unit-default="kg" aria-label="Removed fish biomass unit"></select></div>
+              </div>
+            </div>
+            <div class="field-hint">Live fish harvested, sold or moved out before the end, at the weight they left at. Enter 0 if none.</div>
+          </fieldset>
+
+          <fieldset class="stock">
+            <legend>Mortalities during the period</legend>
+            <div class="stock-how"><label for="dead_how">Enter as</label>
+              <select id="dead_how" data-stock="dead"><option value="cw">Count × average weight</option><option value="bm">Total weight (biomass)</option></select></div>
+            <div class="two-col stack-sm">
+              <div class="field">
+                <label for="dead_n" data-n-label>Number of fish</label>
+                <div class="input-row"><input id="dead_n" type="number" inputmode="numeric" min="0" step="1"><span class="unit">fish</span></div>
+              </div>
+              <div class="field" data-how="cw">
+                <label for="dead_w">Average weight</label>
+                <div class="input-row"><input id="dead_w" type="number" inputmode="decimal" min="0" step="any"><select class="unit-select" data-unit-group="mass" data-unit-for="dead_w" data-unit-default="g" aria-label="Dead fish average weight unit"></select></div>
+              </div>
+              <div class="field" data-how="bm">
+                <label for="dead_b">Total weight</label>
+                <div class="input-row"><input id="dead_b" type="number" inputmode="decimal" min="0" step="any"><select class="unit-select" data-unit-group="mass" data-unit-for="dead_b" data-unit-default="kg" aria-label="Dead fish biomass unit"></select></div>
+              </div>
+            </div>
+            <div class="field-hint">Weigh dead fish when you remove them, or estimate their weight at death. Enter 0 if none.</div>
+          </fieldset>
+
+          <div class="two-col stack-sm">
+            <div class="field">
+              <label for="feed">Feed fed during the period</label>
+              <div class="input-row"><input id="feed" type="number" inputmode="decimal" min="0" step="any"><select class="unit-select" data-unit-group="mass" data-unit-for="feed" data-unit-default="kg" aria-label="Feed fed unit"></select></div>
+            </div>
+            <div class="field">
+              <label for="days">Length of the period</label>
+              <div class="input-row"><input id="days" type="number" inputmode="decimal" min="0" step="any"><select class="unit-select" data-unit-group="time" data-unit-for="days" data-unit-default="d" aria-label="Period length unit"></select></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Plan mode -->
+        <div data-mode-show="plan">
+          <div class="field">
+            <label for="gain">Fish weight to grow (biomass gain)</label>
+            <div class="input-row"><input id="gain" type="number" inputmode="decimal" min="0" step="any"><select class="unit-select" data-unit-group="mass" data-unit-for="gain" data-unit-default="kg" aria-label="Biomass gain unit"></select></div>
+            <div class="field-hint">Harvest weight minus the weight of the fingerlings you stock.</div>
+          </div>
+          <div class="two-col">
+            <div class="field">
+              <label for="fcr_a">Current FCR</label>
+              <div class="input-row"><input id="fcr_a" type="number" inputmode="decimal" min="0" step="any"><span class="unit">kg/kg</span></div>
+            </div>
+            <div class="field">
+              <label for="fcr_b">Improved FCR</label>
+              <div class="input-row"><input id="fcr_b" type="number" inputmode="decimal" min="0" step="any"><span class="unit">kg/kg</span></div>
+            </div>
+          </div>
+          <div class="field-hint" style="margin:-6px 0 12px">Kilograms of feed per kilogram of fish. Leave the improved FCR empty to plan with one value.</div>
+        </div>
+
+        <!-- Shared -->
+        <div class="two-col stack-sm">
+          <div class="field">
+            <label for="protein">Feed protein, optional</label>
+            <div class="input-row"><input id="protein" type="number" inputmode="decimal" min="0" max="100" step="any"><span class="unit">%</span></div>
+            <div class="field-hint">Crude protein from the feed label.</div>
+          </div>
+          <div class="field">
+            <label for="price">Feed price, optional</label>
+            <div class="input-row"><span class="unit cur-pre" aria-hidden="true">$</span><input id="price" type="number" inputmode="decimal" min="0" step="any"><select class="unit-select" id="price_u" aria-label="Feed price per">
+              <option value="kg">per kg</option><option value="lb">per lb</option><option value="t">per t (metric)</option><option value="ton">per US ton</option>
+            </select></div>
+          </div>
+        </div>
+        <div class="two-col stack-sm">
+          <div class="field">
+            <label for="cur">Currency symbol</label>
+            <select id="cur"></select>
+            <div class="field-hint">Display only, no exchange rates.</div>
+          </div>
+          <div class="field">
+            <label for="species">Compare with</label>
+            <select id="species">
+              <option value="general">General rule of thumb (about 1–2)</option>
+              <option value="tilapia">Tilapia, greenhouse RAS</option>
+              <option value="catfish">Channel catfish, ponds</option>
+              <option value="salmon">Atlantic salmon, Norway</option>
+            </select>
+          </div>
+        </div>
+        <div class="field-hint ref-hint" id="ref-hint"></div>
+
+        <hr class="divider">
+
+        <div class="notice" id="notice" hidden></div>
+
+        <div class="field">
+          <label for="out">Show weights in</label>
+          <select class="unit-select" id="out" data-unit-group="mass" data-unit-default="kg" aria-label="Output weight unit"></select>
+        </div>
+
+        <div class="result-main" aria-live="polite">
+          <div class="label" id="r-main-label">Biological FCR (kg feed per kg gain)</div>
+          <div class="value" id="r-main">–</div>
+        </div>
+
+        <ul class="result-list" id="list-measure" data-mode-show="measure">
+          <li><span>Economic FCR (net harvestable gain)</span><span class="v" id="r-efcr">–</span></li>
+          <li><span>Biological gain (incl. dead fish)</span><span class="v" id="r-gb">–</span></li>
+          <li><span>Net harvestable gain</span><span class="v" id="r-ge">–</span></li>
+          <li><span>Feed efficiency (gain ÷ feed)</span><span class="v" id="r-fe">–</span></li>
+          <li><span>Protein efficiency ratio (PER)</span><span class="v" id="r-per">–</span></li>
+          <li><span>Specific growth rate (SGR)</span><span class="v" id="r-sgr">–</span></li>
+          <li><span>Average daily feed (% body weight)</span><span class="v" id="r-bw">–</span></li>
+          <li><span>Average daily feed</span><span class="v" id="r-daily">–</span></li>
+          <li><span>Mortality (by number)</span><span class="v" id="r-mort">–</span></li>
+          <li><span>Feed cost per kg of fish (economic)</span><span class="v" id="r-cost">–</span></li>
+          <li><span>Ammonia-N (TAN) from this feed</span><span class="v" id="r-tan">–</span></li>
+        </ul>
+
+        <ul class="result-list" id="list-plan" data-mode-show="plan">
+          <li><span>Feed needed at improved FCR</span><span class="v" id="r-feed-b">–</span></li>
+          <li><span>Feed saved by improving FCR</span><span class="v" id="r-saved">–</span></li>
+          <li><span>Feed cost, current FCR</span><span class="v" id="r-cost-a">–</span></li>
+          <li><span>Feed cost, improved FCR</span><span class="v" id="r-cost-b">–</span></li>
+          <li><span>Money saved by improving FCR</span><span class="v" id="r-money">–</span></li>
+          <li><span>Feed cost per kg of fish (current → improved)</span><span class="v" id="r-perkg">–</span></li>
+          <li><span>Each 0.1 of FCR is worth</span><span class="v" id="r-step">–</span></li>
+          <li><span>Ammonia-N (TAN) from the feed (current → improved)</span><span class="v" id="r-tan-plan">–</span></li>
+        </ul>
+
+        <div class="share-bar">
+          <button class="btn btn-primary" type="button" id="btn-share">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="m8.6 13.5 6.8 4M15.4 6.5l-6.8 4"/></svg>
+            Share
+          </button>
+          <button class="btn" type="button" id="btn-link">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.5.5l3-3a5 5 0 0 0-7-7l-1.7 1.7"/><path d="M14 11a5 5 0 0 0-7.5-.5l-3 3a5 5 0 0 0 7 7l1.7-1.7"/></svg>
+            Copy link
+          </button>
+          <button class="btn" type="button" id="btn-copy">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h10a1 1 0 0 1 1 1v1"/></svg>
+            Copy results
+          </button>
+          <button class="btn" type="button" id="btn-reset">Reset</button>
+        </div>
+      </section>
+
+      <!-- Visualization -->
+      <section class="card viz-card" aria-labelledby="viz-heading">
+        <h2 id="viz-heading">Visualization</h2>
+        <svg class="viz" id="viz" viewBox="0 0 480 340" role="img" aria-label="Feed fed compared with fish weight gained, and your FCR on a scale with the reference range"></svg>
+        <p class="viz-caption" id="viz-caption"></p>
+      </section>
+    </div>
+
+    <article class="article">
+      <h2>How the FCR calculator works</h2>
+      <p>The <strong>feed conversion ratio</strong> (FCR) is the weight of feed given divided by the weight the fish gained. An FCR of 1.5 means 1.5 kg of feed was used for every 1 kg of fish produced, so <strong>lower is better</strong>. Robinson &amp; Li (2015) define it the same way for catfish: pounds of feed fed per pound of weight gain.</p>
+      <p>In <strong>Measure</strong> mode you enter what happened over one period: the fish at the start, the fish at the end, any fish removed alive and any that died, the feed used and the number of days. Each group of fish can be entered as a number of fish times their average weight, or as a total weight. The calculator then works out two FCRs and a set of related growth and efficiency figures.</p>
+      <p>In <strong>Plan</strong> mode you enter how much fish weight you want to grow and an FCR, and it gives the feed you will need. Add a feed price and a second, better FCR to see what improving feed conversion is worth in feed, money and ammonia.</p>
+
+      <h3>Biological FCR and economic FCR</h3>
+      <p>Fish that die during the period still ate feed and still grew before they died. The two FCRs treat them differently:</p>
+      <ul>
+        <li><strong>Biological FCR</strong> counts all the growth the fish made, including the weight of fish that died. It tells you how well the fish turned feed into flesh.</li>
+        <li><strong>Economic FCR</strong> counts only the weight you can sell or still have in the tank. Dead fish are lost, so the feed they ate is charged to the surviving fish. It tells you what the feed really cost you per kilogram of product.</li>
+      </ul>
+      <p>Jouannais et al. (2023) use these definitions in their study of trout farming: biological FCR is feed divided by the production of live plus dead fish, and economic FCR is feed divided by live fish only. Economic FCR is always the same or higher than biological FCR, and the gap between them grows with mortality. Not every author uses the terms the same way, so when you compare your FCR with a published figure, check which one it is. Fry et al. (2018) also point out that FCR compares weight of feed with weight of fish, not nutrients, so it is a poor way to compare very different species.</p>
+
+      <h3>Why FCR matters</h3>
+      <p><strong>Feed is the largest running cost.</strong> In semi-intensive and intensive aquaculture, feed typically accounts for 40–60% of production costs (Shipton &amp; Hasan, 2013). Feed cost per kilogram of fish is simply feed price × FCR, so a 10% better FCR is a 10% lower feed bill for the same harvest. Robinson &amp; Li (2015) show the same effect for pond catfish with a drop in farm-level FCR from 2.5 to 2.0. To compare an investment that improves FCR (better feed, oxygen, automatic feeders) against its cost, use the <a href="cost-benefit.html">Cost Benefit Analysis calculator</a>.</p>
+      <p><strong>FCR sets the waste load.</strong> Every kilogram of feed that does not become fish ends up as ammonia, carbon dioxide and solids in the water. A common design estimate for the total ammonia nitrogen (TAN) the fish excrete is feed × protein × 0.092 (Timmons et al., 2002; Ebeling, Timmons &amp; Bisogni, 2006). For the same harvest, a higher FCR means more feed, so a bigger biofilter and more oxygen. Size the biofilter with the <a href="biological-surface-area.html">Biofilter Surface Area calculator</a> and the daily ration with the <a href="feeding-rate.html">Feeding Rate calculator</a>. In aquaponics, wasted feed is not lost to the plants, but uneaten feed that rots in the tank costs oxygen and water quality.</p>
+
+      <h3>What makes FCR worse</h3>
+      <ul>
+        <li><strong>Overfeeding and uneaten feed.</strong> Pellets that sink uneaten count as feed fed but produce no fish. Feed what the fish clear in a few minutes.</li>
+        <li><strong>Low dissolved oxygen.</strong> Fish eat less and digest less efficiently when oxygen is low, and stressed fish waste more feed.</li>
+        <li><strong>Temperature away from the optimum.</strong> Each species has a temperature range where it grows best. In cooler water fish eat less, and feeding the same ration leaves more uneaten.</li>
+        <li><strong>Poor or stale feed.</strong> Low-quality ingredients, the wrong pellet size, or feed stored too long, hot or damp (losing vitamins and fat quality) all raise FCR.</li>
+        <li><strong>Mortality</strong>, especially of large fish late in the cycle. Their feed is lost, which raises economic FCR. Jouannais et al. (2023) found that the same mortality rate costs much more in late growth stages than early ones.</li>
+        <li><strong>Large fish.</strong> FCR rises as fish grow, so the last weeks before harvest are the least efficient (Robinson &amp; Li, 2015).</li>
+        <li><strong>Inaccurate records.</strong> A wrong average weight, uncounted dead fish or a missed feed bag can move FCR more than any real change. Weigh a large enough sample of fish and record feed by the bag.</li>
+      </ul>
+
+      <h3>Formulas</h3>
+      <p>All weights in the same unit (the calculator works in kilograms). B<sub>0</sub> = biomass at the start, B<sub>1</sub> = biomass at the end, R = weight of fish removed alive during the period, D = weight of dead fish, F = feed fed, t = days.</p>
+      <div class="formula">Biomass (if entered as fish)  = number of fish × average weight
+
+Biological gain  G<sub>bio</sub> = B<sub>1</sub> + R + D − B<sub>0</sub>
+Economic gain    G<sub>eco</sub> = B<sub>1</sub> + R − B<sub>0</sub>
+
+Biological FCR   = F ÷ G<sub>bio</sub>
+Economic FCR     = F ÷ G<sub>eco</sub></div>
+      <p><strong>Feed efficiency</strong> is the inverse of FCR, written as a percentage:</p>
+      <div class="formula">Feed efficiency (%) = 100 × G<sub>bio</sub> ÷ F = 100 ÷ biological FCR</div>
+      <p><strong>Protein efficiency ratio</strong> (PER) is the weight gained per unit of protein fed, a measure first proposed by Osborne, Mendel &amp; Ferry (1919):</p>
+      <div class="formula">Protein fed = F × protein % ÷ 100
+PER         = G<sub>bio</sub> ÷ protein fed</div>
+      <p><strong>Specific growth rate</strong> (SGR) uses the average weight of one fish at the start (W<sub>0</sub>) and the end (W<sub>1</sub>). Aquaculture papers usually report it as 100 times the instantaneous growth rate g (Hopkins, 1992). Crane, Ogle &amp; Shoup (2020) point out that the true percentage weight gain per day is 100 × (e<sup>g</sup> − 1), which is slightly higher; the calculator shows both.</p>
+      <div class="formula">g                     = (ln W<sub>1</sub> − ln W<sub>0</sub>) ÷ t
+SGR (usual form)      = 100 × g            %/day
+Daily compound growth = 100 × (e<sup>g</sup> − 1)     %/day</div>
+      <p><strong>Average daily feed</strong> as a percentage of body weight uses the mean of the starting and ending biomass, a simple approximation:</p>
+      <div class="formula">Daily feed      = F ÷ t
+Feed % BW / day = 100 × (F ÷ t) ÷ ((B<sub>0</sub> + B<sub>1</sub>) ÷ 2)</div>
+      <p>Mortality uses fish numbers: dead fish ÷ fish at the start × 100. If every count is entered, the calculator also checks that start − removed − dead = end and warns about fish that are unaccounted for.</p>
+      <p><strong>Plan mode and costs</strong>:</p>
+      <div class="formula">Feed needed          = biomass gain × FCR
+Feed cost per kg fish = feed price per kg × FCR
+Feed saved           = biomass gain × (FCR<sub>current</sub> − FCR<sub>improved</sub>)
+TAN from feed        = feed × protein % ÷ 100 × 0.092</div>
+
+      <h3>Typical FCR values</h3>
+      <p>FCR depends on species, fish size, feed, temperature and management, so the values below are reference points, not targets. Only figures we could trace to a named source are listed; for other species, including rainbow trout, use your feed supplier's figures or your own records.</p>
+      <table>
+        <thead><tr><th>Species and system</th><th>FCR</th><th>Source and notes</th></tr></thead>
+        <tbody>
+          <tr><td>Tilapia, greenhouse recirculating systems, Louisiana</td><td>1.4–2.0 (budget uses 1.8)</td><td>Lutz (2000): long-term feed conversions varied from 1.4:1 to 2:1 with comparably priced feeds from different suppliers; the model budget assumes 1.8 kg of 32% protein feed per kg of gain.</td></tr>
+          <tr><td>Channel catfish, ponds</td><td>1.8 or less in research ponds</td><td>Robinson &amp; Li (2015): research ponds routinely reach 1.8:1 or less, which is rare on commercial farms. They use a farm-level FCR of 2.5 as an example of where improvement is possible.</td></tr>
+          <tr><td>Atlantic salmon, Norway, national average 2016</td><td>1.30 (economic, as-fed)</td><td>Aas, Ytrestøyl &amp; Åsgård (2019): 1.30 on an as-is basis, 1.21 on a dry-matter basis.</td></tr>
+          <tr><td>Fed fish in general</td><td>about 1–2</td><td><em>Rule of thumb</em> used across this site (see the Feeding Rate calculator). Not a published benchmark.</td></tr>
+        </tbody>
+      </table>
+      <p>Pick a species in the <strong>Compare with</strong> box to show its range on the gauge. The comparison uses your economic FCR, because published farm and national figures are economic (they divide feed by the fish actually harvested).</p>
+
+      <h3>Example (the calculator's default inputs)</h3>
+      <p>A tilapia tank starts the period with <strong>1,000 fish averaging 50 g</strong>, so B<sub>0</sub> = 50 kg. Over <strong>120 days</strong> the fish eat <strong>300 kg of 32% protein feed</strong>. During the period <strong>60 fish averaging 200 g</strong> are harvested early (R = 12 kg) and <strong>40 fish averaging 120 g</strong> die (D = 4.8 kg). At the end <strong>900 fish averaging 250 g</strong> remain, so B<sub>1</sub> = 225 kg. The counts reconcile: 1,000 − 60 − 40 = 900.</p>
+      <ul>
+        <li>Biological gain = 225 + 12 + 4.8 − 50 = <strong>191.8 kg</strong>; biological FCR = 300 ÷ 191.8 = <strong>1.56</strong>.</li>
+        <li>Economic gain = 225 + 12 − 50 = <strong>187 kg</strong>; economic FCR = 300 ÷ 187 = <strong>1.60</strong>, inside the 1.4–2.0 tilapia range of Lutz (2000).</li>
+        <li>Feed efficiency = 100 × 191.8 ÷ 300 = <strong>63.9%</strong>.</li>
+        <li>Protein fed = 300 × 0.32 = 96 kg; PER = 191.8 ÷ 96 = <strong>2.00</strong>.</li>
+        <li>g = ln(250 ÷ 50) ÷ 120 = 0.01341; SGR = <strong>1.34%/day</strong> (daily compound growth 1.35%/day).</li>
+        <li>Daily feed = 300 ÷ 120 = 2.5 kg; mean biomass = (50 + 225) ÷ 2 = 137.5 kg; feed = <strong>1.82% of body weight per day</strong>.</li>
+        <li>Mortality = 40 ÷ 1,000 = <strong>4%</strong>.</li>
+        <li>With feed at an example price of 1.20 per kg, feed cost = 1.20 × 1.604 = <strong>1.93 per kg of fish</strong>.</li>
+        <li>TAN = 300 × 0.32 × 0.092 = <strong>8.83 kg</strong> of ammonia-N over the period, about 47 g per kg of fish harvested.</li>
+      </ul>
+      <p>In <strong>Plan</strong> mode the defaults are 1,000 kg of fish to grow, an FCR of 1.6 now and 1.3 after improvement, 32% protein feed at 1.20 per kg. Feed needed is 1,000 × 1.6 = <strong>1,600 kg</strong> now and 1,300 kg after improvement, so improving FCR saves <strong>300 kg of feed</strong>, or <strong>360</strong> in money (1.92 → 1.56 per kg of fish). Each 0.1 of FCR is 100 kg of feed (120 in money). TAN falls from 47.1 kg to 38.27 kg.</p>
+
+      <h3>Limitations and assumptions</h3>
+      <ul>
+        <li><strong>No fish added during the period.</strong> If you stocked fish part way through, add their weight to the starting fish, or the FCR will look better than it is.</li>
+        <li><strong>Feed fed, not feed eaten.</strong> FCR uses the feed you put in. Uneaten feed is part of the result, which is what makes FCR useful for spotting overfeeding.</li>
+        <li><strong>Dead fish weight.</strong> If dead fish were not weighed, the biological gain is an estimate. Fish lost without being found (predators, decomposed fish) cannot be included at all; the calculator warns you when counts do not add up.</li>
+        <li><strong>As-fed basis.</strong> Feed weight is as fed, including its moisture. Some studies, including the Norwegian salmon reports, also give dry-matter FCR, which is lower.</li>
+        <li><strong>Growth rate and feed % BW are averages.</strong> SGR assumes exponential growth between two average weights, and the % BW figure uses the mean of starting and ending biomass. Both get less accurate over long periods, so measure every few weeks.</li>
+        <li><strong>Reference values are context, not standards.</strong> They come from particular systems and years.</li>
+      </ul>
+
+      <h2>Sources</h2>
+      <ol class="sources">
+        <li>Robinson, E. H. &amp; Li, M. H. (2015). <em>Feed Conversion Ratio for Pond-Raised Catfish</em>. Information Sheet 1364. Mississippi Agricultural and Forestry Experiment Station, Mississippi State University. <a href="https://www.mafes.msstate.edu/publications/information-sheets/is1364.pdf" rel="noopener" target="_blank">mafes.msstate.edu</a></li>
+        <li>Lutz, C. G. (2000). Bioeconomics of greenhouse recirculating systems for tilapia production. <em>Global Aquaculture Advocate</em>, June 2000. <a href="https://www.globalseafood.org/advocate/bioeconomics-of-greenhouse-recirculating-systems-for-tilapia-production/" rel="noopener" target="_blank">globalseafood.org</a></li>
+        <li>Aas, T. S., Ytrestøyl, T. &amp; Åsgård, T. (2019). Utilization of feed resources in the production of Atlantic salmon (<em>Salmo salar</em>) in Norway: An update for 2016. <em>Aquaculture Reports</em>, 15, 100216. <a href="https://doi.org/10.1016/j.aqrep.2019.100216" rel="noopener" target="_blank">doi:10.1016/j.aqrep.2019.100216</a></li>
+        <li>Jouannais, P., Gibertoni, P. P., Bartoli, M. &amp; Pizzol, M. (2023). LCA to evaluate the environmental opportunity cost of biological performances in finfish farming. <em>The International Journal of Life Cycle Assessment</em>, 28(10), 1286–1301. <a href="https://doi.org/10.1007/s11367-023-02211-8" rel="noopener" target="_blank">doi:10.1007/s11367-023-02211-8</a></li>
+        <li>Fry, J. P., Mailloux, N. A., Love, D. C., Milli, M. C. &amp; Cao, L. (2018). Feed conversion efficiency in aquaculture: do we measure it correctly? <em>Environmental Research Letters</em>, 13(2), 024017. <a href="https://doi.org/10.1088/1748-9326/aaa273" rel="noopener" target="_blank">doi:10.1088/1748-9326/aaa273</a></li>
+        <li>Shipton, T. A. &amp; Hasan, M. R. (2013). An overview of the current status of feed management practices. In M. R. Hasan &amp; M. B. New (Eds.), <em>On-farm feeding and feed management in aquaculture</em>. FAO Fisheries and Aquaculture Technical Paper No. 583 (pp. 3–20). Rome: FAO. <a href="https://www.fao.org/fishery/docs/CDrom/T583/root/01.pdf" rel="noopener" target="_blank">fao.org</a></li>
+        <li>Hopkins, K. D. (1992). Reporting fish growth: a review of the basics. <em>Journal of the World Aquaculture Society</em>, 23(3), 173–179. <a href="https://doi.org/10.1111/j.1749-7345.1992.tb00766.x" rel="noopener" target="_blank">doi:10.1111/j.1749-7345.1992.tb00766.x</a></li>
+        <li>Crane, D. P., Ogle, D. H. &amp; Shoup, D. E. (2020). Use and misuse of a common growth metric: guidance for appropriately calculating and reporting specific growth rate. <em>Reviews in Aquaculture</em>, 12(3), 1542–1547. <a href="https://doi.org/10.1111/raq.12396" rel="noopener" target="_blank">doi:10.1111/raq.12396</a></li>
+        <li>Osborne, T. B., Mendel, L. B. &amp; Ferry, E. L. (1919). A method of expressing numerically the growth-promoting value of proteins. <em>Journal of Biological Chemistry</em>, 37(2), 223–229.</li>
+        <li>Timmons, M. B., Ebeling, J. M., Wheaton, F. W., Summerfelt, S. T. &amp; Vinci, B. J. (2002). <em>Recirculating Aquaculture Systems</em> (2nd ed.). Ithaca, NY: Cayuga Aqua Ventures.</li>
+        <li>Ebeling, J. M., Timmons, M. B. &amp; Bisogni, J. J. (2006). Engineering analysis of the stoichiometry of photoautotrophic, autotrophic, and heterotrophic removal of ammonia–nitrogen in aquaculture systems. <em>Aquaculture</em>, 257(1–4), 346–358.</li>
+      </ol>
+    </article>
+  </main>
+
+  <footer class="site-footer">
+    <div class="wrap">Calculations are estimates. Check the sources above before relying on a result.</div>
+  </footer>
+
+  <script src="../assets/share.js"></script>
+  <script src="../assets/units.js"></script>
+  <script src="../assets/fcr.js"></script>
+</body>
+</html>
