@@ -55,6 +55,8 @@ Every input that has a unit gets its **own** unit dropdown – never one shared 
 - [ ] Air Pump & Air Stone Sizing (hydroponic systems)
 - [ ] Feed Conversion Ratio (FCR)
 - [ ] Hydroponic Nutrient Additions
+- [ ] Plant Feed Conversion Ratio (FCRplant)
+- [ ] Plant-Fish Mass Ratio (PFRM)
 - [x] Daily Light Integral – `calculators/daily-light-integral.html`
 - [x] Dissolved Oxygen – `calculators/dissolved-oxygen.html`
 - [x] Hydrostatic Pressure – `calculators/hydrostatic-pressure.html`

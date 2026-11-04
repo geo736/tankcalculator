@@ -9,7 +9,7 @@ window.CALC_GROUPS = [
   { id: 'water', label: 'Water quality & chemistry', blurb: 'Oxygen, ammonia, pH, salt and nutrient solution.' },
   { id: 'design', label: 'System design & sizing', blurb: 'Tanks, grow beds, media, biofilter and sump volumes.' },
   { id: 'equipment', label: 'Pumps, plumbing & equipment', blurb: 'Flow, pipes, head, aeration, filters and UV.' },
-  { id: 'fish', label: 'Fish management', blurb: 'Stocking, feeding, feed conversion and hauling.' },
+  { id: 'fish', label: 'Fish & production management', blurb: 'Stocking, feeding, fish and plant feed conversion, plant-fish ratio and hauling.' },
   { id: 'light', label: 'Plants & lighting', blurb: 'Daily light, light units and fixture layout.' },
   { id: 'business', label: 'Power, costs & planning', blurb: 'Backup power and comparing farm decisions.' }
 ];
@@ -61,6 +61,10 @@ window.CALCULATORS = [
     icon: '<circle cx="12" cy="12" r="8"/><path d="M12 4v16M4 12h16M6.3 6.3l11.4 11.4M17.7 6.3 6.3 17.7"/>' },
   { slug: 'fcr', name: 'Feed Conversion Ratio', group: 'fish', blurb: 'Feed per kg of fish grown', cat: 'aquaculture', tags: ['aquaculture', 'aquaponics'], uses: ['fish', 'money'], status: 'soon',
     icon: '<path d="M4 20V10M10 20V4M16 20v-7"/><path d="M3 20h18"/><path d="M14 8l3-3 3 3"/>' },
+  { slug: 'plant-fcr', name: 'Plant FCR', group: 'fish', blurb: 'Feed per kg of plants grown', cat: 'aquaponics', tags: ['aquaponics'], uses: ['plants', 'fish', 'money'], status: 'soon',
+    icon: '<path d="M12 21V11"/><path d="M12 11c-4 0-6-3-6-6 4 0 6 2 6 6zM12 13c3 0 5-2 5-5-3 0-5 2-5 5z"/><path d="M5 21h14"/>' },
+  { slug: 'plant-fish-ratio', name: 'Plant-Fish Mass Ratio', group: 'fish', blurb: 'Plant gain per kg fish gain', cat: 'aquaponics', tags: ['aquaponics'], uses: ['plants', 'fish', 'design'], status: 'soon',
+    icon: '<path d="M12 4v16M5 20h14"/><path d="M4 9h16"/><path d="M4 9l-2 5a3 2 0 0 0 4 0zM20 9l-2 5a3 2 0 0 0 4 0z"/>' },
   { slug: 'fish-hauling', name: 'Fish Hauling', group: 'fish', blurb: 'Safe transport loads and trip needs', cat: 'aquaculture', tags: ['aquaculture', 'aquaponics'], uses: ['fish'], status: 'live',
     icon: '<path d="M2 6h12v10H2z"/><path d="M14 9h4l4 4v3h-8"/><circle cx="6" cy="18" r="2"/><circle cx="18" cy="18" r="2"/>' },
   { slug: 'water-velocity', name: 'Pipe Water Velocity', group: 'equipment', blurb: 'Flow speed and pipe sizing', cat: 'aquaculture', tags: ['aquaculture', 'aquaponics', 'hydroponics'], uses: ['plumbing'], status: 'live',
