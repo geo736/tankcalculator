@@ -27,6 +27,11 @@
     .viz .dim-text { font-size: 13px; }
     .viz .name-text { font-size: 13px; }
     @media (max-width: 480px) { .stack-sm { grid-template-columns: minmax(0, 1fr); gap: 0; } }
+    .ion-group { margin: 4px 0 10px; font-size: .8rem; font-weight: 600; text-transform: uppercase; letter-spacing: .05em; color: var(--text-muted); }
+    details.more { border: 1px solid var(--border); border-radius: 10px; padding: 8px 12px; margin-bottom: 14px; background: var(--surface); }
+    details.more summary { cursor: pointer; font-weight: 600; font-size: .9rem; }
+    details.more[open] summary { margin-bottom: 12px; }
+    .btn-small { padding: 6px 10px; font-size: .85rem; margin-top: 6px; }
   </style>
 </head>
 <body>
@@ -77,7 +82,7 @@
             <div class="input-row"><input id="fgain" type="number" inputmode="decimal" min="0" step="any"><select class="unit-select" data-unit-group="mass" data-unit-for="fgain" data-unit-default="kg" aria-label="Fish gain unit"></select></div>
           </div>
         </div>
-        <div class="field-hint" data-show="measure" style="margin-top:-6px;margin-bottom:12px;">Fresh (wet) weight gained over the <strong>same</strong> period: plants = harvest − transplants; fish = final − starting biomass + fish removed.</div>
+        <div class="field-hint" data-show="measure" style="margin-top:-6px;margin-bottom:12px;">Wet weight gained over the <strong>same</strong> period: plants = salable harvest − its weight at planting (no roots or trimmings; zero start for fruiting crops); fish = final − starting biomass + fish removed [1].</div>
         <div class="field" data-show="measure">
           <label for="feed">Feed fed over the period (optional)</label>
           <div class="input-row"><input id="feed" type="number" inputmode="decimal" min="0" step="any"><select class="unit-select" data-unit-group="mass" data-unit-for="feed" data-unit-default="kg" aria-label="Feed unit"></select></div>
@@ -93,7 +98,29 @@
             <div class="input-row"><input id="dmf" type="number" inputmode="decimal" min="0" max="100" step="any"><span class="unit">%</span></div>
           </div>
         </div>
-        <div class="field-hint" data-show="measure" style="margin-top:-6px;margin-bottom:12px;">Enter both to also get a dry-weight PFRM. Use your own analysis; lettuce is about 4.4% dry matter [5].</div>
+        <div class="field-hint" data-show="measure" style="margin-top:-6px;margin-bottom:12px;">Enter both to also get a dry-weight PFRM. Use your own analysis; lettuce is about 4.37% dry matter [1, 5].</div>
+        <details class="more" data-show="measure">
+          <summary>Standing weights and prices (optional)</summary>
+          <div class="two-col stack-sm">
+            <div class="field">
+              <label for="wop">Plant weight at the start</label>
+              <div class="input-row"><input id="wop" type="number" inputmode="decimal" min="0" step="any"><select class="unit-select" data-unit-group="mass" data-unit-for="wop" data-unit-default="kg" aria-label="Starting plant weight unit"></select></div>
+            </div>
+            <div class="field">
+              <label for="wof">Fish weight at the start</label>
+              <div class="input-row"><input id="wof" type="number" inputmode="decimal" min="0" step="any"><select class="unit-select" data-unit-group="mass" data-unit-for="wof" data-unit-default="kg" aria-label="Starting fish weight unit"></select></div>
+            </div>
+            <div class="field">
+              <label for="pprice">Farmgate price of plants</label>
+              <div class="input-row"><input id="pprice" type="number" inputmode="decimal" min="0" step="any"><select class="unit-select" data-unit-group="pricemass" data-unit-for="pprice" data-unit-default="kg" aria-label="Plant price unit"></select></div>
+            </div>
+            <div class="field">
+              <label for="fprice">Farmgate price of fish</label>
+              <div class="input-row"><input id="fprice" type="number" inputmode="decimal" min="0" step="any"><select class="unit-select" data-unit-group="pricemass" data-unit-for="fprice" data-unit-default="kg" aria-label="Fish price unit"></select></div>
+            </div>
+          </div>
+          <div class="field-hint">Starting weights give the standing ratios at stocking (PFRM<sub>o</sub>) and at harvest (PFRM<sub>h</sub>); with both prices in the same currency they give the plant-fish revenue ratio (PFRR) [1].</div>
+        </details>
         <div class="two-col stack-sm" data-show="measure">
           <div class="field">
             <label for="area">Grow area (optional)</label>
@@ -113,7 +140,8 @@
         <div class="field" data-show="plan">
           <label for="pfrm">PFRM to plan with</label>
           <div class="input-row"><input id="pfrm" type="number" inputmode="decimal" min="0" step="any"><span class="unit">kg plant / kg fish</span></div>
-          <div class="field-hint">Use a value measured in your own system. The default is an example, not a published standard.</div>
+          <div class="field-hint">Best is a value measured in your own system. The default is an example. The theoretical value for your crop and feed is shown in the results.</div>
+          <button type="button" class="btn btn-small" id="btn-usetheory">Use the theoretical value</button>
         </div>
         <div class="field" data-show="plan">
           <label for="yld">Plant yield per area over the same period</label>
@@ -123,7 +151,7 @@
         <div class="field" data-show="plan">
           <label for="pfcrf">Fish FCR (optional)</label>
           <div class="input-row"><input id="pfcrf" type="number" inputmode="decimal" min="0" step="any"><span class="unit">kg feed / kg fish</span></div>
-          <div class="field-hint">Rule of thumb for tilapia: about 1.2–2, often 1.5 (see the <a href="feeding-rate.html">feeding rate</a> page). Gives the feed needed and the loading rate.</div>
+          <div class="field-hint">Typical fish FCR is 1.0–2.4 [1] (see the <a href="fcr.html">fish FCR calculator</a>). Gives the feed needed and the loading rate.</div>
         </div>
 
         <!-- Both -->
@@ -142,6 +170,33 @@
           </select>
           <div class="field-hint">Rules of thumb for a ~32% protein feed; see <a href="feed-rate-to-grow-space.html">Feed Rate to Grow Space</a>.</div>
         </div>
+
+        <div class="ion-group">Theoretical PFRM (Colt &amp; Semmens 2022)</div>
+        <div class="two-col stack-sm">
+          <div class="field">
+            <label for="tcrop">Crop</label>
+            <select id="tcrop"></select>
+          </div>
+          <div class="field">
+            <label for="tfeed">Fish feed</label>
+            <select id="tfeed"></select>
+          </div>
+        </div>
+        <details class="more">
+          <summary>Crop, feed, retention and fish FCR values</summary>
+          <div class="two-col stack-sm">
+            <div class="field"><label for="t_dmp">Crop dry matter</label><div class="input-row"><input id="t_dmp" type="number" inputmode="decimal" min="0" max="100" step="any"><span class="unit">% of wet</span></div></div>
+            <div class="field"><label for="t_dmf">Feed dry matter</label><div class="input-row"><input id="t_dmf" type="number" inputmode="decimal" min="0" max="100" step="any"><span class="unit">% of feed</span></div></div>
+            <div class="field"><label for="t_np">Crop nitrogen</label><div class="input-row"><input id="t_np" type="number" inputmode="decimal" min="0" max="100" step="any"><span class="unit">% of dry</span></div></div>
+            <div class="field"><label for="t_nf">Feed nitrogen</label><div class="input-row"><input id="t_nf" type="number" inputmode="decimal" min="0" max="100" step="any"><span class="unit">% of feed</span></div></div>
+            <div class="field"><label for="t_pp">Crop phosphorus</label><div class="input-row"><input id="t_pp" type="number" inputmode="decimal" min="0" max="100" step="any"><span class="unit">% of dry</span></div></div>
+            <div class="field"><label for="t_pf">Feed phosphorus</label><div class="input-row"><input id="t_pf" type="number" inputmode="decimal" min="0" max="100" step="any"><span class="unit">% of feed</span></div></div>
+            <div class="field"><label for="t_nue">N retained by plants (NUE)</label><div class="input-row"><input id="t_nue" type="number" inputmode="decimal" min="0" max="100" step="any"><span class="unit">% of feed N</span></div></div>
+            <div class="field"><label for="t_pue">P retained by plants (PUE)</label><div class="input-row"><input id="t_pue" type="number" inputmode="decimal" min="0" max="100" step="any"><span class="unit">% of feed P</span></div></div>
+            <div class="field"><label for="t_fcrf">Fish FCR for the theory</label><div class="input-row"><input id="t_fcrf" type="number" inputmode="decimal" min="0" step="any"><span class="unit">kg/kg</span></div></div>
+          </div>
+          <div class="field-hint">Crop values are for the salable product (Table 2 of [1], from USDA data [5]). Feed values and the fish FCR (1.40 warm-water, 1.10 cold-water) are the selected values of Table 3 of [1]. NUE 22.3% and PUE 15.1% are the paper's selected mean retention values. When you enter feed and fish gain, your own fish FCR is used instead. Editing a crop or feed value switches its menu to Custom.</div>
+        </details>
 
         <hr class="divider">
 
@@ -178,10 +233,16 @@
           <div class="label" id="r-main-label">Plant-fish mass ratio (PFRM)</div>
           <div class="value" id="r-main">–</div>
           <div class="sub" id="r-main-sub"></div>
+          <div class="status" id="r-tstatus" hidden></div>
           <div class="status" id="r-status" hidden></div>
         </div>
 
+        <ul class="result-list">
+          <li><span>Theoretical PFRM (controlling)</span><span class="v" id="r-theory">–</span></li>
+          <li><span>Theoretical FCRplant behind it</span><span class="v" id="r-theory-fcr">–</span></li>
+        </ul>
         <ul class="result-list" id="list-measure">
+          <li><span>Your PFRM ÷ theoretical</span><span class="v" id="r-vs">–</span></li>
           <li><span>Fish per kg of plants</span><span class="v" id="r-inv">–</span></li>
           <li><span>PFRM, dry weight</span><span class="v" id="r-dry">–</span></li>
           <li><span>Fish FCR</span><span class="v" id="r-fcrf">–</span></li>
@@ -191,6 +252,8 @@
           <li><span>Fish gain per tank volume</span><span class="v" id="r-fvol">–</span></li>
           <li><span>Grow area per tank volume</span><span class="v" id="r-avol">–</span></li>
           <li><span>Feed loading rate</span><span class="v" id="r-load">–</span></li>
+          <li><span>Standing PFRM at stocking · at harvest</span><span class="v" id="r-stand">–</span></li>
+          <li><span>Plant-fish revenue ratio (PFRR)</span><span class="v" id="r-pfrr">–</span></li>
         </ul>
         <ul class="result-list" id="list-plan" hidden>
           <li><span>Grow area needed</span><span class="v" id="p-area">–</span></li>
@@ -227,18 +290,19 @@
 
     <article class="article">
       <h2>How the plant-fish mass ratio calculator works</h2>
-      <p>Aquaponic systems are often described by how many fish they hold per plant or per square metre, but that says little about what the system <em>produces</em>. Colt and Semmens (2022) proposed the <strong>plant-fish mass ratio (PFRM)</strong>: plant mass divided by fish mass, in kg per kg [1]. A plant-fish ratio can be based on numbers of plants and fish or on mass; PFRM is the mass version [1]. A 2026 lettuce–tilapia study used an experimental version, PFRM<sub>exp</sub>, together with the plant feed conversion ratio to judge six feed loading rates [2].</p>
-      <p>This page computes PFRM from the <strong>weight gained</strong> by plants and fish over the same period: PFRM = plant gain ÷ fish gain. A PFRM of 3 means the system grew 3 kg of plants for every kilogram of fish. If you add the feed, it also gives the two feed conversion ratios and checks that their ratio equals PFRM. Add the grow area, tank volume and period for production per area and per volume and the feed loading rate.</p>
+      <p>Aquaponic systems are often described by how many fish they hold per plant or per square metre, but that says little about what the system <em>produces</em>. Colt and Semmens (2022) define plant-fish ratios on numbers (PFR) and on mass (PFRM), and separate two kinds of mass ratio [1]. The <strong>standing</strong> ratio PFRM<sub>t</sub> is the weight of plants divided by the weight of fish in the system at a time t, for example at stocking (PFRM<sub>o</sub>) or at harvest (PFRM<sub>h</sub>). The <strong>experimental</strong> ratio PFRM<sub>exp</sub> is the plant weight gained divided by the fish weight gained over a period, and is the more fundamental measure of system performance [1]. A 2026 lettuce–tilapia study used PFRM<sub>exp</sub> together with the plant feed conversion ratio to judge six feed loading rates [2].</p>
+      <p>This page's main result is PFRM<sub>exp</sub>, from the <strong>wet weight gained</strong> by the salable plants and by the fish over the same period. A PFRM of 3 means the system grew 3 kg of plants for every kilogram of fish. If you add the feed, it also gives the two feed conversion ratios and checks that their ratio equals PFRM (Eq. 9 of [1]). It compares your PFRM with the theoretical value for your crop and feed. Add the starting weights for the standing ratios, farmgate prices for the revenue ratio, and the grow area, tank volume and period for production per area and per volume and the feed loading rate.</p>
       <p>In <strong>Plan</strong> mode you enter a fish production target, a PFRM and the plant yield your grow beds give per m² over the same period. The page works out the plant production (fish × PFRM), the grow area that needs (plants ÷ yield) and, with a fish FCR, the feed and the loading rate.</p>
 
       <h3>Why it matters</h3>
-      <p>Every gram of plant growth in aquaponics comes from nutrients in the fish feed, so plant and fish production are linked through the feed. PFRM puts that link into one number that can be compared between systems, crops and seasons. Colt and Semmens recommended reporting it in aquaponic research [1]; their abstract notes that estimating theoretical FCR<sub>plant</sub> and PFRM values needs basic information on the composition of the feed and the plants (dry matter, nitrogen and phosphorus) and on nutrient retention [1]. On a farm, PFRM answers a planning question directly: if you want to sell 1 tonne of fish a year, about how much produce, and how much grow area, comes with it?</p>
+      <p>Every gram of plant growth in aquaponics comes from nutrients in the fish feed, so plant and fish production are linked through the feed. PFRM puts that link into one number that can be compared between systems, crops and seasons. On a farm it answers a planning question directly: if you want to sell 1 tonne of fish a year, about how much produce, and how much grow area, comes with it? And because plant sales dominate the economics of aquaponics, the revenue ratio built on it, PFRR, shows how much of the income comes from the plants [1].</p>
 
-      <h3>What is and is not confirmed from the source paper</h3>
-      <ul>
-        <li><strong>Confirmed</strong> (abstract, conference summaries and search snippets of [1]): PFRM is a plant-to-fish <em>mass</em> ratio in kg/kg, as opposed to a ratio of numbers; FCR<sub>plant</sub> = feed supplied ÷ increase in plant weight; theoretical values are estimated from feed and plant composition and nutrient retention.</li>
-        <li><strong>Not confirmed</strong>: we could not read the full text. We could not confirm whether the paper's PFRM uses mass <em>gained</em> over a period or standing mass at a point in time (a snippet shows a time-indexed form, PFRM<sub>t</sub> = W<sub>plant</sub> ÷ W<sub>fish</sub>), whether it uses fresh or dry weight, or any numeric theoretical or typical range. This page therefore uses the plain gain ratio on a fresh-weight basis, gives an optional dry-weight version, and does <strong>not</strong> rate your PFRM as high or low.</li>
-      </ul>
+      <h3>The theoretical PFRM</h3>
+      <p>The plant FCR has a theoretical value from a nitrogen and a phosphorus mass balance: the feed needed per kg of salable plant when the plants retain an average share of the feed N and P. The element that needs more feed is limiting; its value is the controlling FCR<sub>plant</sub> (see the <a href="plant-fcr.html">plant FCR calculator</a>). Dividing the fish FCR by it gives the controlling PFRM [1]. With the paper's selected values (mean warm- and cold-water feeds, fish FCR 1.40 and 1.10, 22.3% of feed N and 15.1% of feed P retained by the plants), the theoretical PFRM ranged from about <strong>2.5 to 9.1 kg plant per kg fish</strong> across 12 crops: lower for nitrogen-rich herbs and greens such as peppermint, basil and parsley, higher for fruiting crops such as tomato and cucumber [1].</p>
+      <p>Only about 30% of the PFRM<sub>exp</sub> values the authors could calculate from published aquaponic studies fell inside 2.5–9.1, and only one study reported a PFRM directly [1]. A PFRM well below the theory at the same fish FCR means the plants grew less from the feed than the mass balance predicts. The authors list low nutrient and micronutrient concentrations, suboptimal pH and temperature, and salt build-up as likely causes [1].</p>
+
+      <h3>Standing ratios and the revenue ratio</h3>
+      <p>The standing ratio changes over a production cycle. Starting from the stocking weights, Eq. 10 of [1] gives it after a feed input FF as PFRM<sub>t</sub> = (W<sub>o</sub><sup>plant</sup> + FF ÷ FCR<sup>plant</sup>) ÷ (W<sub>o</sub><sup>fish</sup> + FF ÷ FCR<sup>fish</sup>): it moves from the stocking ratio towards PFRM<sub>exp</sub> as more feed goes in, quickly if the two are close [1]. Plant stocking weight is usually small, but fish stocking weight varies widely, so the ratio at harvest can be far below PFRM<sub>exp</sub>. The plant-fish revenue ratio uses the ratio at harvest: PFRR = PFRM<sub>h</sub> × (farmgate price of plants ÷ farmgate price of fish), and varied 5–6-fold across the fish-plant combinations in the paper's data [1].</p>
 
       <h3>Formulas</h3>
       <p>With G<sub>plant</sub> and G<sub>fish</sub> = fresh weight gained over the period, F = feed fed in the same period, d<sub>p</sub> and d<sub>f</sub> = dry matter (%):</p>
@@ -247,7 +311,13 @@ PFRM<sub>dry</sub>      = (G<sub>plant</sub> × d<sub>p</sub>) ÷ (G<sub>fish</s
 FCR<sub>fish</sub>      = F ÷ G<sub>fish</sub>
 FCR<sub>plant</sub>     = F ÷ G<sub>plant</sub>
 FCR<sub>fish</sub> ÷ FCR<sub>plant</sub> = (F ÷ G<sub>fish</sub>) ÷ (F ÷ G<sub>plant</sub>) = G<sub>plant</sub> ÷ G<sub>fish</sub> = PFRM</div>
-      <p>The last line is our own algebra, not a formula quoted from the paper: when both FCRs use the same feed over the same period, the feed cancels and their ratio is exactly the gain-based PFRM. It holds only on the same weight basis (both fresh or both dry). It is useful in practice: at a given fish FCR, raising PFRM is the same thing as lowering FCR<sub>plant</sub>.</p>
+      <p>The last line is Eq. 9 of [1]: when both FCRs use the same feed over the same period, the feed cancels and their ratio is exactly PFRM<sub>exp</sub>. It holds only on the same weight basis (both wet or both dry). It is useful in practice: at a given fish FCR, raising PFRM is the same thing as lowering FCR<sub>plant</sub>.</p>
+      <p>Theoretical, standing and revenue ratios (Eqs. 2, 10, 11, 16–19 of [1]):</p>
+      <div class="formula">PFRM<sub>control</sub> = FCR<sub>fish</sub> ÷ FCR<sub>plant, control</sub>
+FCR<sub>plant, control</sub> = larger of (DM<sup>p</sup>÷DM<sup>f</sup>)(N<sup>p</sup>÷N<sup>f</sup>)÷NUE and (DM<sup>p</sup>÷DM<sup>f</sup>)(P<sup>p</sup>÷P<sup>f</sup>)÷PUE
+PFRM<sub>o</sub> = W<sub>o</sub><sup>plant</sup> ÷ W<sub>o</sub><sup>fish</sup>
+PFRM<sub>h</sub> = (W<sub>o</sub><sup>plant</sup> + G<sub>plant</sub>) ÷ (W<sub>o</sub><sup>fish</sup> + G<sub>fish</sub>)
+PFRR = PFRM<sub>h</sub> × price<sup>plant</sup> ÷ price<sup>fish</sup></div>
       <p>Planning (our rearrangement of the same definitions):</p>
       <div class="formula">Plant production = fish production × PFRM
 Grow area        = plant production ÷ yield per m²
@@ -257,13 +327,14 @@ Loading rate     = feed (g) ÷ grow area ÷ days</div>
 
       <h3>Example</h3>
       <p>Over <strong>35 days</strong> a 10 m² lettuce raft gains <strong>35 kg</strong> (fresh) while the fish in a 1 m³ tank gain <strong>10.5 kg</strong> on <strong>15.75 kg</strong> of feed. PFRM = 35 ÷ 10.5 = <strong>3.33 kg of plants per kg of fish</strong> (0.3 kg of fish per kg of plants). The fish FCR is 15.75 ÷ 10.5 = 1.5 and the plant FCR is 15.75 ÷ 35 = 0.45; 1.5 ÷ 0.45 = 3.33, the same as PFRM. The plants gained 3.5 kg/m², the fish 10.5 kg per m³ of tank, there are 10 m² of grow area per m³ of tank, and the loading rate is 15 750 g ÷ 10 m² ÷ 35 days = 45 g/m²/day, inside the FAO leafy-green range of 40–50 [3]. No dry matter is entered by default, so the dry PFRM is blank.</p>
+      <p>Theory: for lettuce with warm-water feed, phosphorus is limiting and the theoretical FCR<sub>plant</sub> is (4.37 ÷ 91.5) × (0.76 ÷ 1.02) ÷ 0.151 = 0.236 [1]. With this system's own fish FCR of 1.5 the theoretical PFRM is 1.5 ÷ 0.236 = <strong>6.36</strong> (5.94 with the paper's 1.40, which Table 3 rounds to 6.0). The measured 3.33 is 0.52 times that: the lettuce grew about half as much per kg of fish as average nutrient retention would allow. If the fish were stocked at 5 kg and the lettuce at 1 kg, the standing ratio would go from 1 ÷ 5 = 0.2 at stocking to 36 ÷ 15.5 = 2.32 at harvest; at $8/kg for lettuce and $10/kg for fish, PFRR = 2.32 × 8 ÷ 10 = 1.86, so the plants would bring in nearly twice the revenue of the fish.</p>
       <p>Plan mode default: to grow <strong>100 kg</strong> of fish in 35 days at a PFRM of 3.5 you get 100 × 3.5 = <strong>350 kg</strong> of plants. At a yield of 3.5 kg/m² over the period that needs 350 ÷ 3.5 = <strong>100 m²</strong>. At a fish FCR of 1.5 you feed 150 kg, the implied FCR<sub>plant</sub> is 1.5 ÷ 3.5 = 0.43, and the loading rate is 150 000 g ÷ 100 m² ÷ 35 days = 42.9 g/m²/day.</p>
 
       <h3>Limitations and assumptions</h3>
       <ul>
         <li><strong>Same period.</strong> Plant and fish gains must cover the same days. A fish grow-out usually lasts months while a lettuce cycle lasts weeks, so add up all plant harvests in the fish period.</li>
         <li><strong>Fresh weight differs by crop.</strong> Lettuce is mostly water, fruiting crops less so, and fish are much drier than lettuce. A fresh-weight PFRM is only comparable between similar crops; use the dry-weight version to compare across crops.</li>
-        <li><strong>No standard range shown.</strong> We could not confirm the paper's theoretical PFRM range, so the page does not judge your value. It depends on feed protein and phosphorus, the crop's nutrient content and how well the system retains nutrients [1].</li>
+        <li><strong>The theory uses averages.</strong> The theoretical PFRM depends on the fish FCR, feed and crop composition, and above all on how much N and P the plants retain, which varies widely between studies [1]. It ignores N and P in the make-up water, and other elements (potassium, calcium, iron) can limit growth first.</li>
         <li><strong>Supplements and solids.</strong> Added iron, potassium or calcium, and solids removed from the system, change how much plant growth each kilogram of fish brings [3, 4].</li>
         <li><strong>Plan mode is linear.</strong> It assumes the PFRM and yield you enter stay the same at the new scale.</li>
         <li><strong>Loading-rate ranges are rules of thumb</strong> for warm-water fish on a ~32% protein feed [2, 3, 4].</li>
@@ -271,11 +342,11 @@ Loading rate     = feed (g) ÷ grow area ÷ days</div>
 
       <h2>Sources</h2>
       <ol class="sources">
-        <li>Colt, J. &amp; Semmens, K. (2022). Computation of feed conversion ratio (FCR<sub>plant</sub>) and plant-fish mass ratio (PFRM) for aquaponic systems. <em>Aquacultural Engineering</em>, 98, 102260. doi:10.1016/j.aquaeng.2022.102260. <a href="https://www.sciencedirect.com/science/article/abs/pii/S014486092200036X" rel="noopener" target="_blank">sciencedirect.com</a></li>
+        <li>Colt, J. &amp; Semmens, K. (2022). Computation of feed conversion ratio (FCR<sup>plant</sup>) and plant-fish mass ratio (PFRM) for aquaponic systems. <em>Aquacultural Engineering</em>, 102260. doi:10.1016/j.aquaeng.2022.102260. Equations 1–19, Tables 1–3, Fig. 3 and section 6. <a href="https://www.sciencedirect.com/science/article/abs/pii/S014486092200036X" rel="noopener" target="_blank">sciencedirect.com</a></li>
         <li>Effects of feed loading rate on growth of Bibb lettuce (<em>Lactuca sativa</em>) with Nile tilapia (<em>Oreochromis niloticus</em>) in aquaponic systems (2026). <em>Aquaculture Reports</em>. <a href="https://doi.org/10.1016/j.aqrep.2026.103748" rel="noopener" target="_blank">doi:10.1016/j.aqrep.2026.103748</a></li>
         <li>Somerville, C., Cohen, M., Pantanella, E., Stankus, A. &amp; Lovatelli, A. (2014). <em>Small-scale aquaponic food production: Integrated fish and plant farming</em>. FAO Fisheries and Aquaculture Technical Paper No. 589. Rome: FAO. Feed rate ratio guidance in Chapters 2 and 8. <a href="https://www.fao.org/3/i4021e/i4021e.pdf" rel="noopener" target="_blank">fao.org</a></li>
         <li>Rakocy, J. E., Masser, M. P. &amp; Losordo, T. M. (2006). <em>Recirculating Aquaculture Tank Production Systems: Aquaponics—Integrating Fish and Plant Culture</em>. Southern Regional Aquaculture Center (SRAC) Publication No. 454 (revised). Stoneville, MS: SRAC.</li>
-        <li>U.S. Department of Agriculture, Agricultural Research Service. <em>FoodData Central</em>, SR Legacy: Lettuce, butterhead (includes boston and bibb types), raw — water 95.63 g per 100 g. <a href="https://fdc.nal.usda.gov/" rel="noopener" target="_blank">fdc.nal.usda.gov</a></li>
+        <li>U.S. Department of Agriculture, Agricultural Research Service (2019). <em>FoodData Central</em>. Crop dry matter, nitrogen and phosphorus as tabulated in Table 2 of [1]. <a href="https://fdc.nal.usda.gov/" rel="noopener" target="_blank">fdc.nal.usda.gov</a></li>
       </ol>
       <p>See also: <a href="plant-fcr.html">Plant FCR (FCRplant)</a> · <a href="fcr.html">Fish FCR calculator</a> · <a href="feed-rate-to-grow-space.html">Feed Rate to Grow Space</a> · <a href="grow-bed-ratio.html">Grow Bed to Fish Tank Ratio</a> · <a href="feeding-rate.html">Fish Feeding Rate</a></p>
     </article>
@@ -287,6 +358,7 @@ Loading rate     = feed (g) ÷ grow area ÷ days</div>
 
   <script src="../assets/share.js"></script>
   <script src="../assets/units.js"></script>
+  <script src="../assets/aquaponic-np.js"></script>
   <script src="../assets/plant-fish-ratio.js"></script>
 </body>
 </html>

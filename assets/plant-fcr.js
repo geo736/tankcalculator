@@ -37,10 +37,15 @@
 
   const DEFAULTS = {
     mode: 'measure', crop: 'leafy',
-    feed: [15.75, 'kg'], harv: [36, 'kg'], start: [1, 'kg'], dm: [4.4], period: [35, 'd'], area: [10, 'm2'], fgain: [10.5, 'kg'],
+    feed: [15.75, 'kg'], harv: [36, 'kg'], start: [1, 'kg'], dm: [4.37], period: [35, 'd'], area: [10, 'm2'], fgain: [10.5, 'kg'],
     target: [35, 'kg'], fcrp: [0.45], fcrf: [1.5],
-    outm: 'kg', outy: 'kgm2', outr: 'gm2d'
+    outm: 'kg', outy: 'kgm2', outr: 'gm2d', tcrop: 'lettuce', tfeed: 'warm'
   };
+  // Theoretical FCRplant inputs (percent), Colt & Semmens 2022 via assets/aquaponic-np.js.
+  const NP = window.AquaponicNP;
+  const CROP_F = { t_dmp: 'dm', t_np: 'n', t_pp: 'p' };
+  const FEED_F = { t_dmf: 'dm', t_nf: 'n', t_pf: 'p' };
+  const THEORY_FIELDS = ['t_dmp', 't_np', 't_pp', 't_dmf', 't_nf', 't_pf', 't_nue', 't_pue'];
   const INPUT_FIELDS = ['feed', 'harv', 'start', 'dm', 'period', 'area', 'fgain', 'target', 'fcrp', 'fcrf'];
   const MODE_FIELDS = {
     measure: ['feed', 'harv', 'start', 'dm', 'period', 'area', 'fgain'],
@@ -50,6 +55,26 @@
   const $ = function (id) { return document.getElementById(id); };
   const modeButtons = document.querySelectorAll('#mode-group button');
   const cropSel = $('crop');
+  const tcrop = $('tcrop'), tfeed = $('tfeed');
+  NP.fillSelect(tcrop, 'crop');
+  NP.fillSelect(tfeed, 'feed');
+  function fillCrop(id, alsoDm) {
+    const c = NP.CROPS[id];
+    if (!c) return;
+    Object.keys(CROP_F).forEach(function (f) { $(f).value = c[CROP_F[f]]; });
+    if (alsoDm) $('dm').value = c.dm;
+  }
+  function fillFeed(id) {
+    const f = NP.FEEDS[id];
+    if (!f) return;
+    Object.keys(FEED_F).forEach(function (k) { $(k).value = f[FEED_F[k]]; });
+  }
+  function theory() {
+    const v = function (id) { const x = parseFloat($(id).value); return isFinite(x) ? x : 0; };
+    return NP.theory({ dmP: v('t_dmp'), nP: v('t_np'), pP: v('t_pp'), dmF: v('t_dmf'), nF: v('t_nf'), pF: v('t_pf'), nue: v('t_nue'), pue: v('t_pue') });
+  }
+  function cropName() { return tcrop.value === 'custom' ? 'your crop' : NP.CROPS[tcrop.value].name.toLowerCase(); }
+  function feedName() { return tfeed.value === 'custom' ? 'your feed' : tfeed.value === 'warm' ? 'warm-water feed' : 'cold-water feed'; }
   const outM = $('outm'), outY = $('outy'), outR = $('outr');
   const svg = $('viz');
   let mode = 'measure';
@@ -75,6 +100,7 @@
   function showR(g) { return fmt(rV(g)) + ' ' + CalcUnits.label('feedratio', outR.value); }
   function showA(m2) { return fmt(m2) + ' m²'; }
   function ratio(r) { return fmt(r, r >= 100 ? 0 : r >= 10 ? 1 : 2); }
+  function ratio3(r) { return fmt(r, r >= 10 ? 1 : r >= 1 ? 2 : 3); }
 
   // ---------- Calculation (kg, m², days, g/m²/day) ----------
   function compute() {
@@ -113,6 +139,8 @@
       if (c.A > 0 && c.days > 0) c.load = c.F * 1000 / c.A / c.days;
     }
     if (c.load) c.status = c.load > c.r.max + 1e-9 ? 'high' : c.load < c.r.min - 1e-9 ? 'low' : 'ok';
+    c.th = theory();
+    if (c.ok && c.th && mode === 'measure') c.vs = c.fcr / c.th.control;
     return c;
   }
 
@@ -126,7 +154,8 @@
   }
 
   function getState() {
-    const st = { mode: mode, crop: cropSel.value, outm: outM.value, outy: outY.value, outr: outR.value };
+    const st = { mode: mode, crop: cropSel.value, outm: outM.value, outy: outY.value, outr: outR.value, tcrop: tcrop.value, tfeed: tfeed.value };
+    THEORY_FIELDS.forEach(function (f) { st[f] = $(f).value === '' ? 'none' : $(f).value; });
     MODE_FIELDS[mode].forEach(function (f) {
       st[f] = $(f).value === '' ? 'none' : $(f).value; // keep cleared optional fields cleared on reload
       const u = CalcUnits.unit(f);
@@ -139,6 +168,9 @@
     INPUT_FIELDS.forEach(function (f) { CalcUnits.set(f, DEFAULTS[f][0], DEFAULTS[f][1]); });
     cropSel.value = DEFAULTS.crop;
     outM.value = DEFAULTS.outm; outY.value = DEFAULTS.outy; outR.value = DEFAULTS.outr;
+    tcrop.value = DEFAULTS.tcrop; tfeed.value = DEFAULTS.tfeed;
+    fillCrop(DEFAULTS.tcrop, false); fillFeed(DEFAULTS.tfeed);
+    $('t_nue').value = NP.NUE; $('t_pue').value = NP.PUE;
   }
 
   // ---------- Render ----------
@@ -161,9 +193,32 @@
     if (c.ok && !(c.days > 0)) notes.push('Enter the period to get the daily feed and the loading rate.');
     if (c.ok && c.days > 0 && !(c.A > 0)) notes.push('Add the grow area to get the loading rate and yield per area.');
     if (c.ok && c.load > 1000) notes.push('A loading rate above 1000 g/m²/day is far outside any guideline. Check the area and period units.');
+    if (c.ok && !c.th) notes.push('Fill in all crop, feed and retention values (above 0) to get the theoretical FCRplant.');
+    if (THEORY_FIELDS.some(function (f) { return parseFloat($(f).value) > 100; })) notes.push('A crop, feed or retention percentage is above 100%.');
     const notice = $('notice');
     notice.textContent = notes.join(' ');
     notice.hidden = notes.length === 0;
+
+    const th = c.th;
+    $('r-theory').textContent = th ? ratio3(th.control) + ' kg/kg (' + th.limiting + '-limited) · ' + fmt(1 / th.control) + ' kg plant per kg feed' : '–';
+    $('r-theory-np').textContent = th ? ratio3(th.fcrN) + ' · ' + ratio3(th.fcrP) : '–';
+    $('r-vs').textContent = c.vs ? fmt(c.vs, 2) + ' ×' : '–';
+    const ts = $('r-tstatus');
+    if (mode === 'measure' && c.vs) {
+      const rg = NP.RANGE.fcrPlant;
+      const inR = c.fcr >= rg[0] && c.fcr <= rg[1];
+      ts.hidden = false;
+      ts.className = 'status ' + (c.vs <= 1.25 ? 'ok' : 'warn');
+      ts.textContent = (c.vs < 0.8
+        ? 'Below the theoretical ' + ratio3(th.control) + ' for ' + cropName() + ' with ' + feedName() + ': more plant per kg of feed than average retention predicts (or N/P from water or supplements).'
+        : c.vs <= 1.25
+          ? 'Close to the theoretical ' + ratio3(th.control) + ' for ' + cropName() + ' with ' + feedName() + '.'
+          : fmt(c.vs, 2) + '× the theoretical ' + ratio3(th.control) + ' for ' + cropName() + ' with ' + feedName() + ': the plants retain less of the feed nutrients than average.') +
+        (inR ? ' Inside' : ' Outside') + ' the 0.064–0.564 range of [1].';
+    } else {
+      ts.hidden = true;
+    }
+    $('btn-usetheory').disabled = !th;
 
     const st = $('r-status');
     if (mode === 'measure') {
@@ -307,6 +362,7 @@
         if (c.FG) L.push('Expected fish gain: ' + showM(c.FG));
       }
     }
+    if (c.th) L.push('Theoretical FCRplant (' + (tcrop.value === 'custom' ? 'custom crop' : NP.CROPS[tcrop.value].name) + ', ' + feedName() + ', NUE ' + $('t_nue').value + '%, PUE ' + $('t_pue').value + '%): ' + ratio3(c.th.control) + ' (' + c.th.limiting + '-limited; N ' + ratio3(c.th.fcrN) + ', P ' + ratio3(c.th.fcrP) + ')' + (c.vs ? '; yours is ' + fmt(c.vs, 2) + '× theoretical' : ''));
     if (c.ok && c.status) L.push($('r-status').textContent);
     L.push(CalcShare.buildUrl(getState()));
     return L.join('\n');
@@ -318,6 +374,19 @@
   });
   INPUT_FIELDS.forEach(function (f) { $(f).addEventListener('input', render); });
   cropSel.addEventListener('change', render);
+  tcrop.addEventListener('change', function () { fillCrop(tcrop.value, true); render(); });
+  tfeed.addEventListener('change', function () { fillFeed(tfeed.value); render(); });
+  THEORY_FIELDS.forEach(function (f) {
+    $(f).addEventListener('input', function () {
+      if (CROP_F[f]) tcrop.value = 'custom';
+      if (FEED_F[f]) tfeed.value = 'custom';
+      render();
+    });
+  });
+  $('btn-usetheory').addEventListener('click', function () {
+    const th = theory();
+    if (th) { $('fcrp').value = +th.control.toFixed(3); render(); }
+  });
 
   CalcUnits.init(render);
 
@@ -333,6 +402,11 @@
     const p = CalcShare.readParams();
     applyDefaults();
     if (p.crop && PRESETS[p.crop]) cropSel.value = p.crop;
+    if (p.tcrop && (NP.CROPS[p.tcrop] || p.tcrop === 'custom')) { tcrop.value = p.tcrop; fillCrop(p.tcrop, false); }
+    if (p.tfeed && (NP.FEEDS[p.tfeed] || p.tfeed === 'custom')) { tfeed.value = p.tfeed; fillFeed(p.tfeed); }
+    THEORY_FIELDS.forEach(function (f) {
+      if (p[f] !== undefined) $(f).value = isFinite(parseFloat(p[f])) ? p[f] : '';
+    });
     [[outM, 'outm', 'mass'], [outY, 'outy', 'arealmass'], [outR, 'outr', 'feedratio']].forEach(function (o) {
       if (p[o[1]] && CalcUnits.unitDef(o[2], p[o[1]])) o[0].value = p[o[1]];
     });

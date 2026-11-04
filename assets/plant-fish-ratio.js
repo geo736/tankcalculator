@@ -23,6 +23,15 @@
     ]
   };
 
+  // Farmgate price per unit mass, base: per kg. Only the ratio of two prices is used, so the currency cancels.
+  CalcUnits.GROUPS.pricemass = CalcUnits.GROUPS.pricemass || {
+    base: 'kg',
+    units: [
+      { id: 'kg', label: 'per kg', factor: 1 },
+      { id: 'lb', label: 'per lb', factor: 1 / 0.45359237 }
+    ]
+  };
+
   // Loading-rate guideline ranges, g/m²/day (same sources as plant-fcr.js).
   const PRESETS = {
     leafy: { min: 40, max: 50, name: 'FAO leafy greens' },
@@ -36,11 +45,13 @@
     pgain: [35, 'kg'], fgain: [10.5, 'kg'], feed: [15.75, 'kg'], dmp: [''], dmf: [''],
     area: [10, 'm2'], vol: [1, 'm3'], period: [35, 'd'],
     tfish: [100, 'kg'], pfrm: [3.5], yld: [3.5, 'kgm2'], pfcrf: [1.5],
+    wop: ['', 'kg'], wof: ['', 'kg'], pprice: ['', 'kg'], fprice: ['', 'kg'],
+    tcrop: 'lettuce', tfeed: 'warm',
     outm: 'kg', outa: 'm2', outy: 'kgm2', outr: 'gm2d', outd: 'kgm3', outs: 'm2m3'
   };
-  const INPUT_FIELDS = ['pgain', 'fgain', 'feed', 'dmp', 'dmf', 'area', 'vol', 'period', 'tfish', 'pfrm', 'yld', 'pfcrf'];
+  const INPUT_FIELDS = ['pgain', 'fgain', 'feed', 'dmp', 'dmf', 'area', 'vol', 'period', 'tfish', 'pfrm', 'yld', 'pfcrf', 'wop', 'wof', 'pprice', 'fprice'];
   const MODE_FIELDS = {
-    measure: ['pgain', 'fgain', 'feed', 'dmp', 'dmf', 'area', 'vol', 'period'],
+    measure: ['pgain', 'fgain', 'feed', 'dmp', 'dmf', 'area', 'vol', 'period', 'wop', 'wof', 'pprice', 'fprice'],
     plan: ['tfish', 'pfrm', 'yld', 'pfcrf', 'period']
   };
   const OUTS = [['outm', 'mass'], ['outa', 'area'], ['outy', 'arealmass'], ['outr', 'feedratio'], ['outd', 'density'], ['outs', 'specificarea']];
@@ -48,6 +59,28 @@
   const $ = function (id) { return document.getElementById(id); };
   const modeButtons = document.querySelectorAll('#mode-group button');
   const cropSel = $('crop');
+  // Theoretical PFRM inputs (percent), Colt & Semmens 2022 via assets/aquaponic-np.js.
+  const NP = window.AquaponicNP;
+  const CROP_F = { t_dmp: 'dm', t_np: 'n', t_pp: 'p' };
+  const FEED_F = { t_dmf: 'dm', t_nf: 'n', t_pf: 'p', t_fcrf: 'fcrFish' };
+  const THEORY_FIELDS = ['t_dmp', 't_np', 't_pp', 't_dmf', 't_nf', 't_pf', 't_nue', 't_pue', 't_fcrf'];
+  const tcrop = $('tcrop'), tfeed = $('tfeed');
+  NP.fillSelect(tcrop, 'crop');
+  NP.fillSelect(tfeed, 'feed');
+  function fillCrop(id) {
+    const c = NP.CROPS[id];
+    if (c) Object.keys(CROP_F).forEach(function (f) { $(f).value = c[CROP_F[f]]; });
+  }
+  function fillFeed(id) {
+    const f = NP.FEEDS[id];
+    if (f) Object.keys(FEED_F).forEach(function (k) { $(k).value = f[FEED_F[k]]; });
+  }
+  function tv(id) { const x = parseFloat($(id).value); return isFinite(x) ? x : 0; }
+  function theory() {
+    return NP.theory({ dmP: tv('t_dmp'), nP: tv('t_np'), pP: tv('t_pp'), dmF: tv('t_dmf'), nF: tv('t_nf'), pF: tv('t_pf'), nue: tv('t_nue'), pue: tv('t_pue') });
+  }
+  function cropName() { return tcrop.value === 'custom' ? 'your crop' : NP.CROPS[tcrop.value].name.toLowerCase(); }
+  function feedName() { return tfeed.value === 'custom' ? 'your feed' : tfeed.value === 'warm' ? 'warm-water feed' : 'cold-water feed'; }
   const svg = $('viz');
   let mode = 'measure';
 
@@ -75,6 +108,7 @@
   function showD(v) { return out('density', v, 'kgm3', 'outd'); }
   function showS(v) { return out('specificarea', v, 'm2m3', 'outs'); }
   function ratio(r) { return fmt(r, r >= 100 ? 0 : r >= 10 ? 1 : r >= 0.1 ? 2 : 3); }
+  function ratio3(r) { return fmt(r, r >= 10 ? 1 : r >= 1 ? 2 : 3); }
 
   // ---------- Calculation (kg, m², m³, days) ----------
   function compute() {
@@ -110,6 +144,22 @@
       if (c.F > 0 && c.A > 0 && c.days > 0) c.load = c.F * 1000 / c.A / c.days;
     }
     if (c.load) c.status = c.load > c.r.max + 1e-9 ? 'high' : c.load < c.r.min - 1e-9 ? 'low' : 'ok';
+    // Theory: PFRMcontrol = FCRfish ÷ controlling FCRplant (Colt & Semmens 2022, Eqs. 16–19)
+    c.th = theory();
+    c.thFcrf = mode === 'measure' && c.fcrf ? c.fcrf : mode === 'plan' && c.fcrfIn > 0 ? c.fcrfIn : tv('t_fcrf');
+    c.thFcrfOwn = (mode === 'measure' && !!c.fcrf) || (mode === 'plan' && c.fcrfIn > 0);
+    if (c.th && c.thFcrf > 0) c.thPfrm = c.thFcrf / c.th.control;
+    if (c.ok && c.thPfrm && mode === 'measure') c.vs = c.pfrm / c.thPfrm;
+    // Standing ratios and revenue ratio (Eqs. 2 and 11)
+    if (mode === 'measure' && c.ok) {
+      c.Wop = CalcUnits.base('wop'); c.Wof = CalcUnits.base('wof');
+      if (c.Wof > 0) {
+        c.pfrmO = c.Wop / c.Wof;
+        c.pfrmH = (c.Wop + c.P) / (c.Wof + c.Fi);
+        const pp = CalcUnits.base('pprice'), fp = CalcUnits.base('fprice');
+        if (pp > 0 && fp > 0) c.pfrr = c.pfrmH * pp / fp;
+      }
+    }
     return c;
   }
 
@@ -123,7 +173,8 @@
   }
 
   function getState() {
-    const st = { mode: mode, crop: cropSel.value };
+    const st = { mode: mode, crop: cropSel.value, tcrop: tcrop.value, tfeed: tfeed.value };
+    THEORY_FIELDS.forEach(function (f) { st[f] = $(f).value === '' ? 'none' : $(f).value; });
     OUTS.forEach(function (o) { st[o[0]] = $(o[0]).value; });
     MODE_FIELDS[mode].forEach(function (f) {
       st[f] = $(f).value === '' ? 'none' : $(f).value; // keep cleared optional fields cleared on reload
@@ -137,6 +188,9 @@
     INPUT_FIELDS.forEach(function (f) { CalcUnits.set(f, DEFAULTS[f][0], DEFAULTS[f][1]); });
     cropSel.value = DEFAULTS.crop;
     OUTS.forEach(function (o) { $(o[0]).value = DEFAULTS[o[0]]; });
+    tcrop.value = DEFAULTS.tcrop; tfeed.value = DEFAULTS.tfeed;
+    fillCrop(DEFAULTS.tcrop); fillFeed(DEFAULTS.tfeed);
+    $('t_nue').value = NP.NUE; $('t_pue').value = NP.PUE;
   }
 
   // ---------- Render ----------
@@ -158,6 +212,10 @@
       if (c.ok && c.pfrm > 100) notes.push('A PFRM above 100 is extreme. Check the value.');
       if (c.ok && c.F > 0 && c.A > 0 && !(c.days > 0)) notes.push('Enter the period to get the feed loading rate.');
     }
+    if (c.ok && (!c.th || !(c.thFcrf > 0))) notes.push('Fill in all crop, feed, retention and fish FCR values (above 0) to get the theoretical PFRM.');
+    if (THEORY_FIELDS.some(function (f) { return f !== 't_fcrf' && parseFloat($(f).value) > 100; })) notes.push('A crop, feed or retention percentage is above 100%.');
+    if (mode === 'measure' && c.ok && c.Wop > 0 && !(c.Wof > 0)) notes.push('Enter the fish weight at the start too, to get the standing ratios.');
+    if (mode === 'measure' && c.ok && c.Wof > 0 && (CalcUnits.base('pprice') > 0) !== (CalcUnits.base('fprice') > 0)) notes.push('Enter both farmgate prices, in the same currency, for the revenue ratio.');
     if (c.ok && c.load > 1000) notes.push('A loading rate above 1000 g/m²/day is far outside any guideline. Check the area and period units.');
     const notice = $('notice');
     notice.textContent = notes.join(' ');
@@ -190,9 +248,30 @@
     if (c.ok) {
       interp = 'Each kg of fish growth ' + (mode === 'measure' ? 'came' : 'comes') + ' with ' + ratio(c.pfrm) + ' kg of fresh plant growth.';
       if (c.fcrf) interp += ' At this fish FCR (' + ratio(c.fcrf) + '), every kg of feed gives ' + fmt(1 / c.fcrp) + ' kg of plants and ' + fmt(1 / c.fcrf) + ' kg of fish; raising PFRM at the same fish FCR means a lower FCRplant.';
-      interp += ' No published reference range for PFRM could be confirmed, so the value is not rated; compare it with your own earlier periods and crops on the same weight basis.';
+      if (c.thPfrm) interp += ' The theoretical PFRM for ' + cropName() + ' with ' + feedName() + ' is ' + ratio(c.thPfrm) + ' (at fish FCR ' + ratio(c.thFcrf) + ' and average plant retention of feed N and P); Colt & Semmens (2022) give 2.5–9.1 across 12 crops.';
     }
     $('interp').textContent = interp;
+
+    $('r-theory').textContent = c.thPfrm ? ratio(c.thPfrm) + ' kg plant / kg fish (fish FCR ' + ratio(c.thFcrf) + (c.thFcrfOwn ? ', yours' : '') + ')' : '–';
+    $('r-theory-fcr').textContent = c.th ? ratio3(c.th.control) + ' kg feed / kg plant (' + c.th.limiting + '-limited; N ' + ratio3(c.th.fcrN) + ', P ' + ratio3(c.th.fcrP) + ')' : '–';
+    $('r-vs').textContent = c.vs ? fmt(c.vs, 2) + ' ×' : '–';
+    $('r-stand').textContent = c.pfrmH !== undefined ? ratio(c.pfrmO) + ' · ' + ratio(c.pfrmH) + ' kg/kg' : '–';
+    $('r-pfrr').textContent = c.pfrr ? ratio(c.pfrr) + ' (plant revenue ÷ fish revenue)' : '–';
+    $('btn-usetheory').disabled = !c.thPfrm;
+    const ts = $('r-tstatus');
+    if (c.vs) {
+      const rg = NP.RANGE.pfrm, inR = c.pfrm >= rg[0] && c.pfrm <= rg[1];
+      ts.hidden = false;
+      ts.className = 'status ' + (c.vs >= 0.8 ? 'ok' : 'warn');
+      ts.textContent = (c.vs > 1.25
+        ? 'Above the theoretical ' + ratio(c.thPfrm) + ' for ' + cropName() + ' with ' + feedName() + ': more plant per kg of fish than average retention predicts (or N/P from water or supplements).'
+        : c.vs >= 0.8
+          ? 'Close to the theoretical ' + ratio(c.thPfrm) + ' for ' + cropName() + ' with ' + feedName() + '.'
+          : fmt(c.vs, 2) + '× the theoretical ' + ratio(c.thPfrm) + ' for ' + cropName() + ' with ' + feedName() + ': the plants grew less from the feed than average retention predicts.') +
+        (inR ? ' Inside' : ' Outside') + ' the 2.5–9.1 range of Colt & Semmens (2022).';
+    } else {
+      ts.hidden = true;
+    }
 
     const st = $('r-status');
     if (c.ok && c.status) {
@@ -297,6 +376,7 @@
         if (c.fvol) L.push('Fish gain per tank volume: ' + showD(c.fvol));
         if (c.avol) L.push('Grow area per tank volume: ' + showS(c.avol));
         if (c.load) L.push('Feed loading rate: ' + showR(c.load));
+        if (c.pfrmH !== undefined) L.push('Standing PFRM at stocking ' + ratio(c.pfrmO) + ', at harvest ' + ratio(c.pfrmH) + (c.pfrr ? '; PFRR ' + ratio(c.pfrr) : ''));
       }
     } else {
       L.push('Target fish production: ' + typed('tfish') + '; PFRM ' + typed('pfrm'));
@@ -310,6 +390,7 @@
         if (c.load) L.push('Feed loading rate: ' + showR(c.load));
       }
     }
+    if (c.thPfrm) L.push('Theoretical PFRM (' + (tcrop.value === 'custom' ? 'custom crop' : NP.CROPS[tcrop.value].name) + ', ' + feedName() + ', fish FCR ' + ratio(c.thFcrf) + '): ' + ratio(c.thPfrm) + (c.vs ? '; yours is ' + fmt(c.vs, 2) + '× theoretical' : ''));
     if (c.ok && c.status) L.push($('r-status').textContent);
     L.push(CalcShare.buildUrl(getState()));
     return L.join('\n');
@@ -321,6 +402,19 @@
   });
   INPUT_FIELDS.forEach(function (f) { $(f).addEventListener('input', render); });
   cropSel.addEventListener('change', render);
+  tcrop.addEventListener('change', function () { fillCrop(tcrop.value); render(); });
+  tfeed.addEventListener('change', function () { fillFeed(tfeed.value); render(); });
+  THEORY_FIELDS.forEach(function (f) {
+    $(f).addEventListener('input', function () {
+      if (CROP_F[f]) tcrop.value = 'custom';
+      if (FEED_F[f]) tfeed.value = 'custom';
+      render();
+    });
+  });
+  $('btn-usetheory').addEventListener('click', function () {
+    const c = compute();
+    if (c.thPfrm) { $('pfrm').value = +c.thPfrm.toFixed(2); render(); }
+  });
 
   CalcUnits.init(render);
 
@@ -336,6 +430,11 @@
     const p = CalcShare.readParams();
     applyDefaults();
     if (p.crop && PRESETS[p.crop]) cropSel.value = p.crop;
+    if (p.tcrop && (NP.CROPS[p.tcrop] || p.tcrop === 'custom')) { tcrop.value = p.tcrop; fillCrop(p.tcrop); }
+    if (p.tfeed && (NP.FEEDS[p.tfeed] || p.tfeed === 'custom')) { tfeed.value = p.tfeed; fillFeed(p.tfeed); }
+    THEORY_FIELDS.forEach(function (f) {
+      if (p[f] !== undefined) $(f).value = isFinite(parseFloat(p[f])) ? p[f] : '';
+    });
     OUTS.forEach(function (o) {
       if (p[o[0]] && CalcUnits.unitDef(o[1], p[o[0]])) $(o[0]).value = p[o[0]];
     });

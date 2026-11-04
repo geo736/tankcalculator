@@ -25,6 +25,11 @@
     .viz .dim-text { font-size: 13px; }
     .viz .name-text { font-size: 13px; }
     @media (max-width: 480px) { .stack-sm { grid-template-columns: minmax(0, 1fr); gap: 0; } }
+    .ion-group { margin: 4px 0 10px; font-size: .8rem; font-weight: 600; text-transform: uppercase; letter-spacing: .05em; color: var(--text-muted); }
+    details.more { border: 1px solid var(--border); border-radius: 10px; padding: 8px 12px; margin-bottom: 14px; background: var(--surface); }
+    details.more summary { cursor: pointer; font-weight: 600; font-size: .9rem; }
+    details.more[open] summary { margin-bottom: 12px; }
+    .btn-small { padding: 6px 10px; font-size: .85rem; margin-top: 6px; }
   </style>
 </head>
 <body>
@@ -80,11 +85,11 @@
             <div class="input-row"><input id="start" type="number" inputmode="decimal" min="0" step="any"><select class="unit-select" data-unit-group="mass" data-unit-for="start" data-unit-default="kg" aria-label="Transplant weight unit"></select></div>
           </div>
         </div>
-        <div class="field-hint" data-show="measure" style="margin-top:-6px;margin-bottom:12px;">Fresh weight of everything harvested (with roots if you weigh them), and the weight of the seedlings when they went in. Gain = harvest − transplants.</div>
+        <div class="field-hint" data-show="measure" style="margin-top:-6px;margin-bottom:12px;">Wet weight of the <strong>salable</strong> product (no roots, stems or trimmings), and of that product when the plants went in. Gain = harvest − transplants. For fruiting crops (tomato, cucumber, pepper) the starting weight is zero [1].</div>
         <div class="field" data-show="measure">
           <label for="dm">Plant dry matter (optional)</label>
           <div class="input-row"><input id="dm" type="number" inputmode="decimal" min="0" max="100" step="any"><span class="unit">% of fresh weight</span></div>
-          <div class="field-hint">Adds a dry-weight result. Butterhead lettuce is about 4.4% dry matter (95.6% water) [5]; measure your own crop if you can.</div>
+          <div class="field-hint">Adds a dry-weight result. Filled in from the crop chosen below (lettuce 4.37% [1, 5]); measure your own crop if you can.</div>
         </div>
 
         <!-- Plan mode -->
@@ -95,12 +100,13 @@
         <div class="field" data-show="plan">
           <label for="fcrp">Plant FCR to plan with</label>
           <div class="input-row"><input id="fcrp" type="number" inputmode="decimal" min="0" step="any"><span class="unit">kg feed / kg plant</span></div>
-          <div class="field-hint">Use a value measured in your own system (Measure mode). The default is the worked example on this page, not a published standard.</div>
+          <div class="field-hint">Best is a value measured in your own system (Measure mode). The default is the worked example on this page. The theoretical value for your crop and feed is shown in the results.</div>
+          <button type="button" class="btn btn-small" id="btn-usetheory">Use the theoretical value</button>
         </div>
         <div class="field" data-show="plan">
           <label for="fcrf">Fish FCR (optional)</label>
           <div class="input-row"><input id="fcrf" type="number" inputmode="decimal" min="0" step="any"><span class="unit">kg feed / kg fish</span></div>
-          <div class="field-hint">Rule of thumb for tilapia on a good pellet: about 1.2–2, often 1.5 (see the <a href="feeding-rate.html">feeding rate</a> page).</div>
+          <div class="field-hint">Typical fish FCR is 1.0–2.4, higher for some species and feeds [1]. See the <a href="fcr.html">fish FCR calculator</a>.</div>
         </div>
 
         <!-- Both modes -->
@@ -130,6 +136,32 @@
           <div class="field-hint">Rules of thumb for a ~32% protein feed. The 2026 range is from a single tilapia–Bibb lettuce study [2].</div>
         </div>
 
+        <div class="ion-group">Theoretical FCRplant (Colt &amp; Semmens 2022)</div>
+        <div class="two-col stack-sm">
+          <div class="field">
+            <label for="tcrop">Crop</label>
+            <select id="tcrop"></select>
+          </div>
+          <div class="field">
+            <label for="tfeed">Fish feed</label>
+            <select id="tfeed"></select>
+          </div>
+        </div>
+        <details class="more">
+          <summary>Crop, feed and retention values</summary>
+          <div class="two-col stack-sm">
+            <div class="field"><label for="t_dmp">Crop dry matter</label><div class="input-row"><input id="t_dmp" type="number" inputmode="decimal" min="0" max="100" step="any"><span class="unit">% of wet</span></div></div>
+            <div class="field"><label for="t_dmf">Feed dry matter</label><div class="input-row"><input id="t_dmf" type="number" inputmode="decimal" min="0" max="100" step="any"><span class="unit">% of feed</span></div></div>
+            <div class="field"><label for="t_np">Crop nitrogen</label><div class="input-row"><input id="t_np" type="number" inputmode="decimal" min="0" max="100" step="any"><span class="unit">% of dry</span></div></div>
+            <div class="field"><label for="t_nf">Feed nitrogen</label><div class="input-row"><input id="t_nf" type="number" inputmode="decimal" min="0" max="100" step="any"><span class="unit">% of feed</span></div></div>
+            <div class="field"><label for="t_pp">Crop phosphorus</label><div class="input-row"><input id="t_pp" type="number" inputmode="decimal" min="0" max="100" step="any"><span class="unit">% of dry</span></div></div>
+            <div class="field"><label for="t_pf">Feed phosphorus</label><div class="input-row"><input id="t_pf" type="number" inputmode="decimal" min="0" max="100" step="any"><span class="unit">% of feed</span></div></div>
+            <div class="field"><label for="t_nue">N retained by plants (NUE)</label><div class="input-row"><input id="t_nue" type="number" inputmode="decimal" min="0" max="100" step="any"><span class="unit">% of feed N</span></div></div>
+            <div class="field"><label for="t_pue">P retained by plants (PUE)</label><div class="input-row"><input id="t_pue" type="number" inputmode="decimal" min="0" max="100" step="any"><span class="unit">% of feed P</span></div></div>
+          </div>
+          <div class="field-hint">Crop values are for the salable product (Table 2 of [1], from USDA data [5]). Feed values are the means of the warm- and cold-water feeds in Table 1 of [1]. Feed nitrogen = crude protein ÷ 6.25. NUE 22.3% and PUE 15.1% are the paper's selected mean retention values for aquaponic plants. Editing a value switches the menu to Custom.</div>
+        </details>
+
         <hr class="divider">
 
         <div class="notice" id="notice" hidden></div>
@@ -153,10 +185,16 @@
           <div class="label" id="r-main-label">Plant feed conversion ratio (FCRplant)</div>
           <div class="value" id="r-main">–</div>
           <div class="sub" id="r-main-sub"></div>
+          <div class="status" id="r-tstatus" hidden></div>
           <div class="status" id="r-status" hidden></div>
         </div>
 
+        <ul class="result-list">
+          <li><span>Theoretical FCRplant (controlling)</span><span class="v" id="r-theory">–</span></li>
+          <li><span>From nitrogen · from phosphorus</span><span class="v" id="r-theory-np">–</span></li>
+        </ul>
         <ul class="result-list" id="list-measure">
+          <li><span>Your FCRplant ÷ theoretical</span><span class="v" id="r-vs">–</span></li>
           <li><span>Plant weight gain (fresh)</span><span class="v" id="r-gain">–</span></li>
           <li><span>Plant gain per kg of feed</span><span class="v" id="r-perkg">–</span></li>
           <li><span>FCRplant, dry plant weight</span><span class="v" id="r-dry">–</span></li>
@@ -207,16 +245,20 @@
       <p>In <strong>Plan</strong> mode you enter a target plant production and an FCR<sub>plant</sub> (ideally one you measured). The page multiplies them to get the feed you will need, and with a period and an area turns that into feed per day and a loading rate.</p>
 
       <h3>Why it matters</h3>
-      <p>Feed is the main running cost and the only real nutrient input in most aquaponic systems. The usual sizing rule, the feed rate ratio, says how much feed a square metre of plants can use (for example 40–50 g/m²/day for leafy greens) [3, 4], but it does not tell you how much the plants actually grew from it. FCR<sub>plant</sub> closes that loop. Colt and Semmens recommended that FCR<sub>plant</sub> be reported in aquaponic research [1]. Their abstract says that a theoretical range can be estimated from the composition of the feed and the plants and from nutrient (nitrogen and phosphorus) retention, and that only about half of the published experimental values they examined fell inside that range, which points to large room for improving nutrient retention in the plant part of many systems [1]. A 2026 study of Bibb lettuce with Nile tilapia used FCR<sub>plant</sub> and the plant-fish mass ratio to judge six feed loading rates (15–90 g/m²/day of a 32% protein feed) and reported that 30, 45, 60 and 75 g/m²/day were within standard operating performance for protein and energy retention, while 15 and 90 were not [2].</p>
+      <p>Feed is the main running cost and the only real nutrient input in most aquaponic systems. The usual sizing rule, the feed rate ratio, says how much feed a square metre of plants can use (for example 40–50 g/m²/day for leafy greens) [3, 4], but it does not tell you how much the plants actually grew from it. FCR<sub>plant</sub> closes that loop: a poor (high) FCR<sub>plant</sub> may point to excessive loss of nutrients, poor water quality or poor growing conditions [1]. Colt and Semmens strongly recommend that FCR<sub>plant</sub> be reported in aquaponic research, and note that a farmer can use it for routine management with data that is normally collected anyway [1]. A 2026 study of Bibb lettuce with Nile tilapia used FCR<sub>plant</sub> and the plant-fish mass ratio to judge six feed loading rates (15–90 g/m²/day of a 32% protein feed) and reported that 30, 45, 60 and 75 g/m²/day were within standard operating performance for protein and energy retention, while 15 and 90 were not [2].</p>
+      <p>Following [1], all weights are <strong>wet weights</strong>, and the plant weight is the <strong>salable product only</strong>: roots, stems and trimmings are not counted, and the starting weight of fruiting crops such as tomato, cucumber and pepper is zero. The inverse, kg of plant per kg of feed, is the plant feed conversion efficiency (FCE<sub>plant</sub>), which can be easier to read because FCR<sub>plant</sub> is often well below 1 [1].</p>
 
-      <h3>What is and is not confirmed from the source paper</h3>
-      <ul>
-        <li><strong>Confirmed</strong> (abstract and summaries of [1]): FCR<sub>plant</sub> = amount of feed supplied ÷ increase in weight of plants; a theoretical range can be computed from feed and plant composition and N and P retention; about 50% of experimental values fell inside it.</li>
-        <li><strong>Not confirmed</strong>: we could not read the full text, so this page does <em>not</em> show the paper's numeric theoretical range, and we could not confirm whether its tables use fresh or dry plant weight or include roots. This calculator uses <strong>fresh weight</strong> by default and gives a dry-weight version if you enter a dry-matter percentage. Compare only values on the same basis.</li>
-      </ul>
+      <h3>The theoretical FCRplant</h3>
+      <p>Unlike the fish FCR, the plant FCR has a theoretical value that can be worked out from a mass balance [1]. Nitrogen in the feed is FF × DM<sup>feed</sup> × N<sup>feed</sup>; a fraction NUE<sup>plant</sup> of it ends up in the salable plant, which contains ΔW<sup>plant</sup> × DM<sup>plant</sup> × N<sup>plant</sup> of nitrogen. Setting the two equal and rearranging gives the FCR<sub>plant</sub> that nitrogen supports, and the same for phosphorus. Whichever element needs <em>more</em> feed per kg of plant is the limiting one, and its FCR<sub>plant</sub> is the <strong>controlling</strong> value. Make-up water is assumed to bring no N or P.</p>
+      <p>Using mean feed compositions and the selected mean retention values for aquaponic plants (22.3% of feed nitrogen and 15.1% of feed phosphorus), Colt and Semmens found theoretical FCR<sub>plant</sub> values of <strong>0.064 to 0.564 kg feed/kg plant</strong> across 12 vegetables and herbs with warm- or cold-water feed. Phosphorus was limiting for lettuce, tomato, cucumber, pak choi, Swiss chard and jalapeño with warm-water feed, and nitrogen for spinach, basil, parsley, kale, peppermint and mustard greens [1].</p>
+      <p>Only about 51% of the experimental FCR<sub>plant</sub> values they could calculate from 74 published aquaponic studies fell inside that theoretical range; many were well above it, some above 2 [1]. They read this as substandard performance of the plant part of many systems, which may come from (a) low nutrient and micronutrient concentrations, (b) suboptimal pH and temperatures, or (c) a build-up of salts [1]. This page compares your measured value with the theoretical one for your crop and feed. A ratio near 1 means your plants retain feed nutrients about as well as the paper's average; well above 1 means more feed per kg of plants than the mass balance predicts. A value below the theory is possible when the water, supplements or mineralised solids supply extra N or P, or when your plants retain more than the average.</p>
 
       <h3>Formulas</h3>
-      <p>With F = feed supplied over the period, H = fresh plant harvest, S = transplant weight, d = dry matter (%), T = period (days), A = grow area (m²), G<sub>fish</sub> = fish weight gain:</p>
+      <p>Theoretical FCR<sub>plant</sub> from the nitrogen and phosphorus balances (Eqs. 16 and 18 in [1]; all compositions as decimal fractions, plant N and P on a dry basis):</p>
+      <div class="formula">FCR<sub>N</sub> = (DM<sup>plant</sup> ÷ DM<sup>feed</sup>) × (N<sup>plant</sup> ÷ N<sup>feed</sup>) ÷ NUE<sup>plant</sup>
+FCR<sub>P</sub> = (DM<sup>plant</sup> ÷ DM<sup>feed</sup>) × (P<sup>plant</sup> ÷ P<sup>feed</sup>) ÷ PUE<sup>plant</sup>
+FCR<sub>control</sub> = the larger of FCR<sub>N</sub> and FCR<sub>P</sub></div>
+      <p>Measured values, with F = feed supplied over the period, H = wet weight of salable harvest, S = its weight at the start, d = dry matter (%), T = period (days), A = grow area (m²), G<sub>fish</sub> = fish weight gain:</p>
       <div class="formula">G<sub>plant</sub>          = H − S
 FCR<sub>plant</sub>        = F ÷ G<sub>plant</sub>              (kg feed per kg plant, fresh)
 Plant per kg feed = G<sub>plant</sub> ÷ F  = 1 ÷ FCR<sub>plant</sub>
@@ -226,17 +268,19 @@ Yield             = G<sub>plant</sub> ÷ A
 FCR<sub>fish</sub>         = F ÷ G<sub>fish</sub>
 Food per kg feed  = (G<sub>plant</sub> + G<sub>fish</sub>) ÷ F
 PFRM              = G<sub>plant</sub> ÷ G<sub>fish</sub>  = FCR<sub>fish</sub> ÷ FCR<sub>plant</sub></div>
-      <p>Plan mode turns the first formula around: <strong>feed needed = target plant gain × FCR<sub>plant</sub></strong>, feed per day = feed ÷ T, and the grow area that feed fits at the guideline ratio R is feed per day ÷ R. The last line is our own algebra: because both FCRs use the same feed, dividing them cancels the feed and leaves the plant-to-fish gain ratio.</p>
+      <p>Plan mode turns the measured formula around: <strong>feed needed = target plant gain × FCR<sub>plant</sub></strong>, feed per day = feed ÷ T, and the grow area that feed fits at the guideline ratio R is feed per day ÷ R. The last line, PFRM = FCR<sub>fish</sub> ÷ FCR<sub>plant</sub>, is Eq. 9 of [1]: both FCRs use the same feed, so dividing them cancels it.</p>
 
       <h3>Example</h3>
-      <p>A 10 m² lettuce raft is fed from a fish tank for <strong>35 days</strong>. The fish get <strong>15.75 kg</strong> of feed in that time (450 g a day, which is 45 g/m²/day). You planted <strong>1 kg</strong> of seedlings and harvested <strong>36 kg</strong> of lettuce, so the plants gained 35 kg. FCR<sub>plant</sub> = 15.75 ÷ 35 = <strong>0.45 kg feed per kg lettuce</strong>, or 35 ÷ 15.75 = 2.22 kg of lettuce per kg of feed. At 4.4% dry matter the dry gain is 35 × 0.044 = 1.54 kg, so the dry-weight FCR<sub>plant</sub> is 15.75 ÷ 1.54 ≈ 10.2. The plants gained 35 ÷ 10 = 3.5 kg/m². The loading rate is 15 750 g ÷ 10 m² ÷ 35 days = 45 g/m²/day, inside the FAO leafy-green range of 40–50. The fish gained <strong>10.5 kg</strong>, so their FCR is 15.75 ÷ 10.5 = 1.5, the system made (35 + 10.5) ÷ 15.75 = 2.89 kg of food per kg of feed, and the plant-fish mass ratio is 35 ÷ 10.5 = 3.33 (= 1.5 ÷ 0.45).</p>
+      <p>Theory first. Lettuce is 4.37% dry matter with 4.94% N and 0.76% P in the dry matter; the mean warm-water feed is 91.5% dry matter with 5.21% N and 1.02% P [1]. Nitrogen: (4.37 ÷ 91.5) × (4.94 ÷ 5.21) ÷ 0.223 = 0.203. Phosphorus: (4.37 ÷ 91.5) × (0.76 ÷ 1.02) ÷ 0.151 = 0.236. Phosphorus needs more feed, so it is limiting and the theoretical FCR<sub>plant</sub> is <strong>0.236 kg feed per kg lettuce</strong> (about 4.2 kg of lettuce per kg of feed), as in Table 3 of [1].</p>
+      <p>Now a measurement. A 10 m² lettuce raft is fed from a fish tank for <strong>35 days</strong>. The fish get <strong>15.75 kg</strong> of feed in that time (450 g a day, which is 45 g/m²/day). You planted <strong>1 kg</strong> of seedlings and harvested <strong>36 kg</strong> of salable lettuce, so the plants gained 35 kg. FCR<sub>plant</sub> = 15.75 ÷ 35 = <strong>0.45 kg feed per kg lettuce</strong>, or 35 ÷ 15.75 = 2.22 kg of lettuce per kg of feed. That is 0.45 ÷ 0.236 = <strong>1.91 times</strong> the theoretical value: inside the paper's 0.064–0.564 range, but the plants turned feed nutrients into lettuce only about half as well as the mass balance with average retention predicts. At 4.37% dry matter the dry gain is 35 × 0.0437 = 1.53 kg, so the dry-weight FCR<sub>plant</sub> is 15.75 ÷ 1.53 ≈ 10.3. The plants gained 35 ÷ 10 = 3.5 kg/m². The loading rate is 15 750 g ÷ 10 m² ÷ 35 days = 45 g/m²/day, inside the FAO leafy-green range of 40–50. The fish gained <strong>10.5 kg</strong>, so their FCR is 15.75 ÷ 10.5 = 1.5, the system made (35 + 10.5) ÷ 15.75 = 2.89 kg of food per kg of feed, and the plant-fish mass ratio is 35 ÷ 10.5 = 3.33 (= 1.5 ÷ 0.45).</p>
       <p>Plan mode turns this around. To grow <strong>35 kg</strong> of lettuce in 35 days at an FCR<sub>plant</sub> of 0.45 you need 35 × 0.45 = <strong>15.75 kg of feed</strong>, or 450 g/day. At 40–50 g/m²/day that feed fits 450 ÷ 50 = 9.0 to 450 ÷ 40 = 11.25 m² of grow area; on 10 m² the loading rate is 45 g/m²/day and the plants give 3.5 kg/m². At a fish FCR of 1.5 the fish gain 15.75 ÷ 1.5 = 10.5 kg.</p>
 
       <h3>Limitations and assumptions</h3>
       <ul>
         <li><strong>Same period, same feed.</strong> Feed, plant gain and fish gain must cover the same days. Count all plants harvested in the period and the change in standing crop if beds were not empty at both ends.</li>
-        <li><strong>Fresh weight varies.</strong> Fresh weight depends on water content, trimming and whether roots are included. Dry weight is a fairer basis for comparing crops.</li>
-        <li><strong>No published standard range shown.</strong> The theoretical FCR<sub>plant</sub> range in [1] depends on feed protein and phosphorus, plant N and P content and nutrient retention; we could not confirm its numbers, so the page does not rate your FCR<sub>plant</sub> as good or bad. Track it over time and compare like with like.</li>
+        <li><strong>Wet weight varies.</strong> Wet weight depends on water content and trimming. Weigh the salable product consistently; dry weight is a fairer basis for comparing crops.</li>
+        <li><strong>The theory uses averages.</strong> The theoretical value depends strongly on the retention values (NUE and PUE), which vary widely between studies; [1] used averages over the studies it selected, and found unaccounted losses of 30–50% of nitrogen and 10–20% of phosphorus inputs. Crop composition also depends on variety and growing conditions. Enter your own values if you have them.</li>
+        <li><strong>Only N and P.</strong> The mass balance ignores N and P in the make-up water, and potassium, calcium, iron or other elements can limit growth before N or P do [1].</li>
         <li><strong>Supplements.</strong> Iron, potassium or calcium added to the water also feed the plants but are not counted in F [3, 4].</li>
         <li><strong>Solids removal.</strong> Systems that remove fish solids lose part of the feed nutrients; systems with mineralization recover more. Both change FCR<sub>plant</sub>.</li>
         <li><strong>Loading-rate ranges are rules of thumb</strong> for warm-water fish on a ~32% protein feed [2, 3, 4].</li>
@@ -244,11 +288,11 @@ PFRM              = G<sub>plant</sub> ÷ G<sub>fish</sub>  = FCR<sub>fish</sub> 
 
       <h2>Sources</h2>
       <ol class="sources">
-        <li>Colt, J. &amp; Semmens, K. (2022). Computation of feed conversion ratio (FCR<sub>plant</sub>) and plant-fish mass ratio (PFRM) for aquaponic systems. <em>Aquacultural Engineering</em>, 98, 102260. doi:10.1016/j.aquaeng.2022.102260. <a href="https://www.sciencedirect.com/science/article/abs/pii/S014486092200036X" rel="noopener" target="_blank">sciencedirect.com</a></li>
+        <li>Colt, J. &amp; Semmens, K. (2022). Computation of feed conversion ratio (FCR<sup>plant</sup>) and plant-fish mass ratio (PFRM) for aquaponic systems. <em>Aquacultural Engineering</em>, 102260. doi:10.1016/j.aquaeng.2022.102260. Equations 2–19, Tables 1–3, Fig. 4 and section 6. <a href="https://www.sciencedirect.com/science/article/abs/pii/S014486092200036X" rel="noopener" target="_blank">sciencedirect.com</a></li>
         <li>Effects of feed loading rate on growth of Bibb lettuce (<em>Lactuca sativa</em>) with Nile tilapia (<em>Oreochromis niloticus</em>) in aquaponic systems (2026). <em>Aquaculture Reports</em>. <a href="https://doi.org/10.1016/j.aqrep.2026.103748" rel="noopener" target="_blank">doi:10.1016/j.aqrep.2026.103748</a></li>
         <li>Somerville, C., Cohen, M., Pantanella, E., Stankus, A. &amp; Lovatelli, A. (2014). <em>Small-scale aquaponic food production: Integrated fish and plant farming</em>. FAO Fisheries and Aquaculture Technical Paper No. 589. Rome: FAO. Feed rate ratio guidance in Chapters 2 and 8. <a href="https://www.fao.org/3/i4021e/i4021e.pdf" rel="noopener" target="_blank">fao.org</a></li>
         <li>Rakocy, J. E., Masser, M. P. &amp; Losordo, T. M. (2006). <em>Recirculating Aquaculture Tank Production Systems: Aquaponics—Integrating Fish and Plant Culture</em>. Southern Regional Aquaculture Center (SRAC) Publication No. 454 (revised). Stoneville, MS: SRAC.</li>
-        <li>U.S. Department of Agriculture, Agricultural Research Service. <em>FoodData Central</em>, SR Legacy: Lettuce, butterhead (includes boston and bibb types), raw — water 95.63 g per 100 g. <a href="https://fdc.nal.usda.gov/" rel="noopener" target="_blank">fdc.nal.usda.gov</a></li>
+        <li>U.S. Department of Agriculture, Agricultural Research Service (2019). <em>FoodData Central</em>. Crop dry matter, nitrogen and phosphorus as tabulated in Table 2 of [1]. <a href="https://fdc.nal.usda.gov/" rel="noopener" target="_blank">fdc.nal.usda.gov</a></li>
       </ol>
       <p>See also: <a href="fcr.html">Fish FCR calculator</a> · <a href="plant-fish-ratio.html">Plant-Fish Mass Ratio (PFRM)</a> · <a href="feed-rate-to-grow-space.html">Feed Rate to Grow Space</a> · <a href="grow-bed-ratio.html">Grow Bed to Fish Tank Ratio</a> · <a href="feeding-rate.html">Fish Feeding Rate</a></p>
     </article>
@@ -260,6 +304,7 @@ PFRM              = G<sub>plant</sub> ÷ G<sub>fish</sub>  = FCR<sub>fish</sub> 
 
   <script src="../assets/share.js"></script>
   <script src="../assets/units.js"></script>
+  <script src="../assets/aquaponic-np.js"></script>
   <script src="../assets/plant-fcr.js"></script>
 </body>
 </html>
