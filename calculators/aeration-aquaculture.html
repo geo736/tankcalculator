@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Air Pump &amp; Air Stone Sizing (Fish Systems)</title>
+  <meta name="description" content="Size the air pump and air stones for fish tanks, RAS and aquaponics: oxygen demand from feed or fish weight, field oxygen transfer, air flow, number of diffusers, pump pressure at depth and power use.">
+  <link rel="stylesheet" href="../assets/style.css">
+  <style>
+    .viz .pump-box { fill: var(--surface-2); stroke: var(--tank-stroke); stroke-width: 1.5; }
+    .viz .viz-strong { fill: var(--text); font-size: 12px; font-weight: 700; font-family: var(--font); }
+    .viz .air-line { fill: none; stroke: var(--accent); stroke-width: 3; stroke-linejoin: round; stroke-linecap: round; }
+    .viz .air-text { fill: var(--accent-strong); font-size: 12px; font-weight: 600; font-family: var(--font); }
+    .viz .stone { fill: var(--tank-stroke); }
+    .viz .plume { fill: var(--water-top); fill-opacity: .35; }
+    .viz .bubble { fill: var(--surface); fill-opacity: .55; stroke: var(--water-top); stroke-width: 1; }
+    .viz .axis-title { fill: var(--text-muted); font-size: 11px; font-family: var(--font); }
+    .viz .gauge-frame { fill: none; stroke: var(--tank-stroke); stroke-width: 1.5; }
+    .viz .p-water { fill: var(--water); fill-opacity: .85; }
+    .viz .p-diff { fill: var(--tank-back); }
+    .viz .p-line { fill: var(--accent); fill-opacity: .6; }
+    .result-list .v { overflow-wrap: anywhere; }
+  </style>
+</head>
+<body>
+  <header class="site-header">
+    <div class="wrap">
+      <a class="brand" href="../">
+        <span class="brand-mark" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3c3 4 6 7 6 11a6 6 0 0 1-12 0c0-4 3-7 6-11z"/></svg>
+        </span>
+        Tank Calculator
+      </a>
+      <nav><a href="../">All calculators</a></nav>
+    </div>
+  </header>
+
+  <main class="wrap">
+    <div class="crumbs"><a href="../">Home</a> / Air Pump &amp; Air Stone Sizing (Fish Systems)</div>
+    <h1 class="page-title">Air Pump &amp; Air Stone Sizing (Fish Systems)</h1>
+    <p class="page-lede">Work out how much air your fish tanks need, how many air stones or diffusers to use, what pressure the pump must push against at the depth of the stones, and which pump and how much power that takes. For aquaculture, RAS and the fish side of aquaponics.</p>
+
+    <div class="calc-layout">
+      <!-- Calculator -->
+      <section class="card" aria-labelledby="calc-heading">
+        <h2 id="calc-heading">Calculator</h2>
+
+        <div class="field">
+          <label for="method">Oxygen demand from</label>
+          <select id="method">
+            <option value="feed">Daily feed (includes fish, biofilter and bacteria)</option>
+            <option value="biomass">Fish weight × oxygen use rate (fish only)</option>
+          </select>
+        </div>
+
+        <div class="two-col">
+          <div class="field" data-method="feed">
+            <label for="feed">Feed per day</label>
+            <div class="input-row"><input id="feed" type="number" inputmode="decimal" min="0" step="any"><select class="unit-select" data-unit-group="mass" data-unit-for="feed" data-unit-default="kg" aria-label="Feed unit"></select></div>
+            <div class="field-hint">All tanks together. See the <a href="feeding-rate.html">Feeding Rate</a> calculator.</div>
+          </div>
+          <div class="field" data-method="feed">
+            <label for="o2feed">Oxygen per kg of feed</label>
+            <div class="input-row"><input id="o2feed" type="number" inputmode="decimal" min="0" step="any"><span class="unit">kg O₂/kg</span></div>
+            <div class="field-hint">Rule of thumb: about 0.3 with fast solids removal, up to 1.0 where solids stay in the system; 0.5 is a common planning value (Global Aquaculture Advocate).</div>
+          </div>
+          <div class="field">
+            <label for="biomass">Fish biomass (all tanks)</label>
+            <div class="input-row"><input id="biomass" type="number" inputmode="decimal" min="0" step="any"><select class="unit-select" data-unit-group="mass" data-unit-for="biomass" data-unit-default="kg" aria-label="Biomass unit"></select></div>
+            <div class="field-hint">Used for the density check (and the demand in fish-weight mode).</div>
+          </div>
+          <div class="field" data-method="biomass">
+            <label for="o2rate">Fish oxygen use</label>
+            <div class="input-row"><input id="o2rate" type="number" inputmode="decimal" min="0" step="any"><select class="unit-select" data-unit-group="o2rate" data-unit-for="o2rate" data-unit-default="mgkgh" aria-label="Oxygen use unit"></select></div>
+            <div class="field-hint">Adult fish typically use 200–500 mg/kg/h (Boyd). Small fish, warm water and fed fish use more. Does not include the biofilter.</div>
+          </div>
+        </div>
+
+        <div class="two-col">
+          <div class="field">
+            <label for="tanks">Number of tanks</label>
+            <div class="input-row"><input id="tanks" type="number" inputmode="numeric" min="1" step="1"></div>
+          </div>
+          <div class="field">
+            <label for="vol">Water volume per tank</label>
+            <div class="input-row"><input id="vol" type="number" inputmode="decimal" min="0" step="any"><select class="unit-select" data-unit-group="volume" data-unit-for="vol" data-unit-default="L" aria-label="Volume unit"></select></div>
+          </div>
+          <div class="field">
+            <label for="depth">Depth of air stones</label>
+            <div class="input-row"><input id="depth" type="number" inputmode="decimal" min="0" step="any"><select class="unit-select" data-unit-group="length" data-unit-for="depth" data-unit-default="m" aria-label="Depth unit"></select></div>
+            <div class="field-hint">From the water surface down to the stones (submergence).</div>
+          </div>
+          <div class="field">
+            <label for="temp">Water temperature</label>
+            <div class="input-row"><input id="temp" type="number" inputmode="decimal" step="any"><select class="unit-select" data-unit-group="temperature" data-unit-for="temp" data-unit-default="C" aria-label="Temperature unit"></select></div>
+          </div>
+          <div class="field">
+            <label for="sal">Salinity</label>
+            <div class="input-row"><input id="sal" type="number" inputmode="decimal" min="0" step="any"><span class="unit">ppt</span></div>
+            <div class="field-hint">0 for fresh water, about 35 for seawater.</div>
+          </div>
+          <div class="field">
+            <label for="elev">Site elevation</label>
+            <div class="input-row"><input id="elev" type="number" inputmode="decimal" step="any"><select class="unit-select" data-unit-group="length" data-unit-for="elev" data-unit-default="m" aria-label="Elevation unit"></select></div>
+          </div>
+          <div class="field">
+            <label for="dotarget">DO to maintain</label>
+            <div class="input-row"><input id="dotarget" type="number" inputmode="decimal" min="0" step="any"><select class="unit-select" data-unit-group="concentration" data-unit-for="dotarget" data-unit-default="mgL" aria-label="Dissolved oxygen unit"></select></div>
+            <div class="field-hint">Rule of thumb: at least 5 mg/L for warm-water fish, 6.5 mg/L for cold-water fish (<a href="dissolved-oxygen.html">Dissolved Oxygen</a>).</div>
+          </div>
+        </div>
+
+        <div class="field">
+          <label for="diffuser">Air stone / diffuser type</label>
+          <select id="diffuser"></select>
+          <div class="field-hint" id="diffuser-hint"></div>
+        </div>
+
+        <div class="two-col">
+          <div class="field" id="f-dq">
+            <label for="dq">Air flow per stone</label>
+            <div class="input-row"><input id="dq" type="number" inputmode="decimal" min="0" step="any"><select class="unit-select" data-unit-group="airflow" data-unit-for="dq" data-unit-default="Lpm" aria-label="Air flow unit"></select></div>
+            <div class="field-hint">Typical working flow, from the maker if you have it.</div>
+          </div>
+          <div class="field" id="f-dql" hidden>
+            <label for="dql">Air flow per length of tube</label>
+            <div class="input-row"><input id="dql" type="number" inputmode="decimal" min="0" step="any"><select class="unit-select" data-unit-group="airflowlen" data-unit-for="dql" data-unit-default="Lpm_m" aria-label="Air flow per length unit"></select></div>
+          </div>
+          <div class="field">
+            <label for="ddrop">Pressure drop across the stone</label>
+            <div class="input-row"><input id="ddrop" type="number" inputmode="decimal" min="0" step="any"><select class="unit-select" data-unit-group="pressure" data-unit-for="ddrop" data-unit-default="kPa" aria-label="Pressure drop unit"></select></div>
+            <div class="field-hint">Typical value; rises as stones clog.</div>
+          </div>
+          <div class="field">
+            <label for="sote">Oxygen transfer (SOTE) per depth</label>
+            <div class="input-row"><input id="sote" type="number" inputmode="decimal" min="0" step="any"><select class="unit-select" data-unit-group="sotedepth" data-unit-for="sote" data-unit-default="pct_m" aria-label="SOTE unit"></select></div>
+            <div class="field-hint">Share of the oxygen in the air that dissolves, in clean water at 20 °C, per metre of depth. Rule of thumb.</div>
+          </div>
+          <div class="field">
+            <label for="alpha">Alpha factor (α)</label>
+            <div class="input-row"><input id="alpha" type="number" inputmode="decimal" min="0" step="any"></div>
+            <div class="field-hint">Transfer in culture water ÷ clean water. Rule of thumb: 0.6–0.9 for fish-tank water; lower with oils, foam or high organic load.</div>
+          </div>
+          <div class="field">
+            <label for="sf">Safety factor</label>
+            <div class="input-row"><input id="sf" type="number" inputmode="decimal" min="1" step="any"><span class="unit">×</span></div>
+            <div class="field-hint">Extra air for feeding peaks, warm spells and clogged stones. Your choice; 1.5 is used here.</div>
+          </div>
+          <div class="field">
+            <label for="airshare">Share of oxygen supplied by air</label>
+            <div class="input-row"><input id="airshare" type="number" inputmode="decimal" min="0" max="100" step="any"><span class="unit">%</span></div>
+            <div class="field-hint">100% if air is the only oxygen source. Lower it if pure oxygen covers part of the demand.</div>
+          </div>
+          <div class="field">
+            <label for="line">Air line loss allowance</label>
+            <div class="input-row"><input id="line" type="number" inputmode="decimal" min="0" step="any"><select class="unit-select" data-unit-group="pressure" data-unit-for="line" data-unit-default="kPa" aria-label="Line loss unit"></select></div>
+            <div class="field-hint">Rule of thumb for short, generous tubing, valves and check valves. Increase for long or narrow lines.</div>
+          </div>
+        </div>
+
+        <div class="field">
+          <label for="pump">Air pump</label>
+          <select id="pump"></select>
+          <div class="field-hint" id="pump-hint"></div>
+        </div>
+        <div class="two-col">
+          <div class="field" data-pump="custom" hidden>
+            <label for="cq">Pump flow at the pressure needed</label>
+            <div class="input-row"><input id="cq" type="number" inputmode="decimal" min="0" step="any"><select class="unit-select" data-unit-group="airflow" data-unit-for="cq" data-unit-default="Lpm" aria-label="Pump flow unit"></select></div>
+            <div class="field-hint">Read it from the pump’s curve at the pressure shown in the results.</div>
+          </div>
+          <div class="field" data-pump="custom" hidden>
+            <label for="cpmax">Pump maximum pressure</label>
+            <div class="input-row"><input id="cpmax" type="number" inputmode="decimal" min="0" step="any"><select class="unit-select" data-unit-group="pressure" data-unit-for="cpmax" data-unit-default="kPa" aria-label="Pump pressure unit"></select></div>
+          </div>
+          <div class="field" data-pump="custom" hidden>
+            <label for="cw">Pump power</label>
+            <div class="input-row"><input id="cw" type="number" inputmode="decimal" min="0" step="any"><select class="unit-select" data-unit-group="power" data-unit-for="cw" data-unit-default="W" aria-label="Pump power unit"></select></div>
+          </div>
+        </div>
+
+        <hr class="divider">
+
+        <div class="notice" id="notice" hidden></div>
+
+        <div class="two-col">
+          <div class="field">
+            <label for="outflow">Show air flow in</label>
+            <select id="outflow" data-unit-group="airflow" data-unit-default="Lpm"></select>
+          </div>
+          <div class="field">
+            <label for="outp">Show pressure in</label>
+            <select id="outp" data-unit-group="pressure" data-unit-default="kPa"></select>
+          </div>
+        </div>
+
+        <div class="result-main" aria-live="polite">
+          <div class="label">Air flow required (all tanks)</div>
+          <div class="value" id="r-air">–</div>
+        </div>
+
+        <ul class="result-list">
+          <li><span>Air flow, other units</span><span class="v" id="r-air-alt">–</span></li>
+          <li><span>Oxygen demand (design)</span><span class="v" id="r-demand">–</span></li>
+          <li><span>DO at saturation</span><span class="v" id="r-sat">–</span></li>
+          <li><span>Oxygen transfer efficiency</span><span class="v" id="r-ote">–</span></li>
+          <li><span>Oxygen dissolved per unit of air</span><span class="v" id="r-o2air">–</span></li>
+          <li><span>Air flow per tank</span><span class="v" id="r-pertank">–</span></li>
+          <li><span>Air stones / diffusers</span><span class="v" id="r-units">–</span></li>
+          <li><span>Pressure the pump must supply</span><span class="v" id="r-press">–</span></li>
+          <li><span>Made up of</span><span class="v" id="r-press-parts">–</span></li>
+          <li><span>Suggested pump</span><span class="v" id="r-pump">–</span></li>
+          <li><span>Pressure check</span><span class="v" id="r-pcheck">–</span></li>
+          <li><span>Electrical power</span><span class="v" id="r-power">–</span></li>
+          <li><span>Air per water volume</span><span class="v" id="r-airvol">–</span></li>
+          <li><span>Stocking density</span><span class="v" id="r-dens">–</span></li>
+        </ul>
+
+        <div class="share-bar">
+          <button class="btn btn-primary" type="button" id="btn-share">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="m8.6 13.5 6.8 4M15.4 6.5l-6.8 4"/></svg>
+            Share
+          </button>
+          <button class="btn" type="button" id="btn-link">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.5.5l3-3a5 5 0 0 0-7-7l-1.7 1.7"/><path d="M14 11a5 5 0 0 0-7.5-.5l-3 3a5 5 0 0 0 7 7l1.7-1.7"/></svg>
+            Copy link
+          </button>
+          <button class="btn" type="button" id="btn-copy">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h10a1 1 0 0 1 1 1v1"/></svg>
+            Copy results
+          </button>
+          <button class="btn" type="button" id="btn-reset">Reset</button>
+        </div>
+      </section>
+
+      <!-- Visualization -->
+      <section class="card viz-card" aria-labelledby="viz-heading">
+        <h2 id="viz-heading">Visualization</h2>
+        <svg class="viz" id="viz" viewBox="0 0 480 320" role="img" aria-label="Cross-section of a fish tank with air stones at depth, bubble plumes, the air pump and line, and a bar showing the parts of the pump pressure"></svg>
+        <p class="viz-caption" id="viz-caption"></p>
+      </section>
+    </div>
+
+    <article class="article">
+      <h2>How the air pump and air stone calculator works</h2>
+      <p>Fish, and the bacteria in the biofilter, use oxygen all the time. An air pump pushes air down to air stones (diffusers); the bubbles rise and a small part of their oxygen dissolves into the water on the way up. The calculator works backwards from the oxygen the tanks need to the air that must be pumped:</p>
+      <ol>
+        <li><strong>Oxygen demand.</strong> Either the daily feed × the oxygen used per kg of feed (this includes the fish, nitrifying bacteria and the bacteria breaking down waste), or the fish weight × an oxygen use rate per kg of fish (fish only). It is multiplied by your safety factor, and by the share you want air to supply.</li>
+        <li><strong>Standard oxygen transfer.</strong> Diffusers are rated by their <em>standard oxygen transfer efficiency</em> (SOTE): the share of the oxygen in the air that dissolves in clean water at 20 °C with no oxygen in it yet (the test conditions of ASCE/EWRI 2-06). For bubble diffusers it grows roughly in proportion to depth, so it is entered per metre of submergence.</li>
+        <li><strong>Field transfer.</strong> Your tank is not clean water at 20 °C and 0 mg/L. The standard figure is corrected for the culture water (α), temperature (θ<sup>T−20</sup>), and above all for the dissolved oxygen you want to keep: the closer to saturation, the slower oxygen moves in.</li>
+        <li><strong>Air flow.</strong> Oxygen needed ÷ (oxygen carried by each litre of air × field transfer efficiency).</li>
+        <li><strong>Stones and pump.</strong> The air flow per tank ÷ the flow each stone is designed for gives the number of stones. The pump must push air down to the stones against the water above them, plus the pressure drop across the stone and the losses in the air line. The calculator then picks the preset pump (or checks yours) that gives enough air <em>at that pressure</em>, and works out its power use.</li>
+      </ol>
+
+      <h3>Why it matters</h3>
+      <p>Dissolved oxygen (DO) is usually the first thing that limits how many fish a tank can hold, and low DO kills fish faster than any other water quality problem (Boyd &amp; Tucker, 1998). Air pumps are cheap and simple, but they have two weak points. First, they only get a small share of the oxygen into the water, so the air flow needed climbs quickly with fish weight. Second, when the power fails, oxygen in a heavily stocked tank can fall to dangerous levels in a short time. SRAC Publication 452 says backup power is essential in recirculating systems (Masser et al., 1999). Use the <a href="battery-life.html">Battery Life</a> calculator with the pump power found here to size a backup battery.</p>
+      <p>The pressure the pump must make is just as important as its flow. Linear (diaphragm) air pumps deliver much less air as the pressure rises, and stop at their maximum pressure. A pump rated “60 L/min” may give far less at the bottom of a deep tank. Deeper stones dissolve more oxygen but need more pressure; see the <a href="hydrostatic-pressure.html">Hydrostatic Pressure</a> calculator.</p>
+
+      <h3>Formulas</h3>
+      <p><strong>1. Oxygen demand</strong> (g O₂/h):</p>
+      <div class="formula">From feed:     D = feed (kg/day) × F (kg O₂/kg feed) × 1000 ÷ 24
+From biomass:  D = biomass (kg) × R (mg O₂/kg/h) ÷ 1000
+Design:        D<sub>air</sub> = D × safety factor × share supplied by air</div>
+
+      <p><strong>2. Field oxygen transfer efficiency</strong> (standard → field). C<sub>sat</sub> is the DO saturation at your temperature, salinity and site pressure (Benson &amp; Krause, 1984, as in the Dissolved Oxygen calculator), C is the DO you want to keep, and C<sub>s20</sub> = 9.09 mg/L is saturation in fresh water at 20 °C and 1 atm:</p>
+      <div class="formula">SOTE  = SOTE per m × depth (m)        (capped at 40%)
+OTE<sub>f</sub> = SOTE × α × 1.024<sup>(T − 20)</sup> × (C<sub>sat</sub> − C) ÷ C<sub>s20</sub></div>
+      <p>This is the standard way of converting aerator ratings to pond or tank conditions (ASCE, 2007; Boyd, 1998). The salinity (β) and pressure corrections are already inside C<sub>sat</sub>, because it is calculated at the real salinity and elevation.</p>
+
+      <p><strong>3. Oxygen in the air.</strong> Dry air is 20.95% oxygen by volume (U.S. Standard Atmosphere, 1976), which is 23.1% by mass (molar masses 31.999 g/mol for O₂ and 28.964 g/mol for air). The density of air comes from the ideal gas law at the site’s pressure and 20 °C:</p>
+      <div class="formula">ρ<sub>air</sub> = P × 0.0289644 ÷ (8.314462618 × 293.15)   (kg/m³ = g/L; 1.204 at sea level)
+O₂ per litre of air = ρ<sub>air</sub> × 0.2314             (0.279 g/L at sea level)</div>
+
+      <p><strong>4. Air flow and diffusers:</strong></p>
+      <div class="formula">Air (L/min)  = D<sub>air</sub> ÷ (O₂ per L of air × OTE<sub>f</sub>) ÷ 60
+Per tank     = Air ÷ number of tanks
+Stones/tank  = round up (per tank ÷ flow per stone)</div>
+
+      <p><strong>5. Pressure at the pump</strong> (gauge pressure; ρ<sub>w</sub> = 998 kg/m³ fresh to 1025 kg/m³ at 35 ppt, g = 9.80665 m/s²):</p>
+      <div class="formula">P = ρ<sub>w</sub> × g × depth  +  diffuser drop  +  line allowance
+1 kPa = 0.145 psi = 4.01 in H₂O = 10.2 cm H₂O</div>
+
+      <p><strong>6. Pump.</strong> Each preset pump’s curve is a straight line from its free-air flow (0 pressure) through its rated point, cut off at its maximum pressure. Pumps needed = round up (air flow ÷ flow per pump at P). Energy per day = watts × 24 h.</p>
+
+      <h3>Example (the default inputs)</h3>
+      <p>Two 1,000 L tanks hold 50 kg of fish fed 1 kg of feed a day. Water is fresh, 25 °C, at sea level; we want to keep 5 mg/L. Fine-bubble 10 cm stones sit 0.9 m deep; SOTE 5% per m, α = 0.8, safety factor 1.5, air is the only oxygen source.</p>
+      <ul>
+        <li>Demand: 1 kg × 0.5 = 0.5 kg O₂/day = 20.83 g/h; × 1.5 = <strong>31.25 g/h (0.75 kg/day)</strong>.</li>
+        <li>C<sub>sat</sub> at 25 °C = 8.26 mg/L; C<sub>s20</sub> = 9.09 mg/L; 1.024⁵ = 1.126. Field factor = 0.8 × 1.126 × (8.26 − 5) ÷ 9.09 = 0.323.</li>
+        <li>SOTE = 5% × 0.9 = 4.5%, so OTE<sub>f</sub> = 4.5% × 0.323 = <strong>1.45%</strong>. Each m³ of air (0.279 kg O₂) gives 4.05 g of dissolved oxygen.</li>
+        <li>Air = 31.25 ÷ (0.2787 g/L × 0.01455) ÷ 60 = <strong>128.5 L/min</strong> (4.54 CFM, 7.71 m³/h), or 64.2 L/min per tank: <strong>7 stones per tank</strong> at 10 L/min (14 total).</li>
+        <li>Pressure: 998 × 9.80665 × 0.9 = 8.81 kPa of water + 2 kPa stone + 1 kPa line = <strong>11.81 kPa</strong> (1.71 psi, 47.4 in H₂O, 120 cm H₂O).</li>
+        <li>At 11.81 kPa a 60 L/min linear pump gives about 67.6 L/min, so <strong>2 pumps</strong> (100 W, 2.4 kWh/day). One 120 L/min pump would give 129.0 L/min at 110 W, just enough but with nothing in hand and using more power.</li>
+        <li>Checks: 25 kg/m³ is within the ≈ 30 kg/m³ air-only rule of thumb; 64 L/min of air per m³ of water.</li>
+      </ul>
+
+      <h3>Typical diffuser values used by the presets</h3>
+      <p>These are <strong>typical, illustrative values</strong> to start from. Diffuser makers rarely publish SOTE for small air stones, so most of the numbers below are rules of thumb. Replace them with your diffuser’s data when you have it.</p>
+      <table>
+        <thead><tr><th>Type</th><th>Air flow</th><th>Pressure drop</th><th>SOTE</th></tr></thead>
+        <tbody>
+          <tr><td>Coarse bubble: open tube or drilled pipe</td><td>10 L/min per outlet</td><td>0.5 kPa</td><td>2.5%/m</td></tr>
+          <tr><td>Medium bubble: standard air stone</td><td>4 L/min</td><td>1.5 kPa</td><td>4%/m</td></tr>
+          <tr><td>Fine bubble stone, 5 cm (2 in)</td><td>4 L/min</td><td>2 kPa</td><td>5%/m</td></tr>
+          <tr><td>Fine bubble stone, 10 cm (4 in)</td><td>10 L/min</td><td>2 kPa</td><td>5%/m</td></tr>
+          <tr><td>Glass-bonded silica bar, 30 cm (12 in)</td><td>25 L/min</td><td>2.5 kPa</td><td>5%/m</td></tr>
+          <tr><td>Fine-pore membrane disc, 23 cm (9 in)</td><td>40 L/min</td><td>4 kPa</td><td>6%/m</td></tr>
+          <tr><td>Porous rubber aeration tubing</td><td>5 L/min per m</td><td>3 kPa</td><td>5%/m</td></tr>
+          <tr><td>Fine-pore membrane tube, 65 mm</td><td>100 L/min per m</td><td>4 kPa</td><td>6%/m</td></tr>
+        </tbody>
+      </table>
+      <p>Where they come from: in wastewater aeration practice, clean-water SOTE of about 2% per foot of submergence (roughly 6–7.5% per metre) is commonly quoted for fine-pore diffusers covering the whole floor, and about 1% per foot (≈ 3% per metre) or less for coarse bubbles. Single stones in small, shallow fish tanks do not cover the floor, so lower values are used for stones. Membrane disc makers’ curves show wet pressure losses of a few kPa. Everything else in the table is a rule of thumb.</p>
+
+      <h3>Pump presets</h3>
+      <table>
+        <thead><tr><th>Preset</th><th>Curve used</th><th>Power</th></tr></thead>
+        <tbody>
+          <tr><td>Small aquarium air pump</td><td>6.7 L/min free flow, falling to 0 at 2 m water (19.6 kPa)</td><td>4 W</td></tr>
+          <tr><td>Linear air pump 60 L/min</td><td>99 L/min at 0; 60 L/min at 14.7 kPa (2.13 psi); max 24.8 kPa (3.6 psi)</td><td>50 W</td></tr>
+          <tr><td>Linear air pump 120 L/min</td><td>147 L/min at 0; 120 L/min at 17.7 kPa (2.57 psi); max 17.9 kPa (2.6 psi)</td><td>110 W</td></tr>
+        </tbody>
+      </table>
+      <p>The two linear pumps use the same wattages as the <a href="battery-life.html">Battery Life</a> calculator. Their pressure figures are from one maker’s published spec sheets (Hiblow HP-60 and HP-120), and the aquarium pump from retail listings for the Eheim Air 400. They are examples only. Other pumps with the same flow rating can have quite different curves, so check your own pump’s curve, or choose “Other pump” and enter it.</p>
+
+      <h3>Air per water volume</h3>
+      <p>There is no published standard for how much air a fish tank should get per volume of water. As a reference only, Texas rules for wastewater aeration basins require at least 20 standard ft³/min of air per 1,000 ft³ for coarse-bubble mixing (30 TAC §217.155), which is 20 L/min per m³. A fish tank does not need to keep sludge suspended, so this is not a requirement here; it just gives a sense of scale. Above about 100 L/min per m³ (this page’s own flag, a rule of thumb) the tank is very turbulent and air alone is becoming impractical.</p>
+
+      <h3>When air is not enough</h3>
+      <p>Because air is only about 21% oxygen and a shallow stone dissolves only a few percent of it, the air flow needed rises steeply with stocking density. A common rule of thumb in RAS engineering is that aeration with air can support about <strong>30 kg of fish per m³</strong>; above that, pure oxygen is usually needed (Ebeling, 2000; see <a href="fish-stocking-density.html">Fish Stocking Density</a>). The calculator warns above this density. To size air for only part of the demand (for example, when an oxygen cone covers the rest), lower the share supplied by air.</p>
+
+      <h3>Limitations and assumptions</h3>
+      <ul>
+        <li><strong>Maker curves rule.</strong> Pump flow at pressure, stone flow and pressure drop all come from the manufacturer. The presets are examples.</li>
+        <li><strong>SOTE varies.</strong> It changes with bubble size, air flow per stone (more air per stone makes bigger bubbles and lower efficiency), stone fouling, tank shape and water quality. In tests of diffused-air systems for aquaculture, Boyd &amp; Moore (1993) found that efficiency fell as the air flow rose and that many diffusers are needed to use the air well. The per-metre rule is approximate, works best between about 0.5 and 5 m, and is capped at 40%.</li>
+        <li><strong>Alpha</strong> depends on oils, surfactants, dissolved organic matter and feed; there is no single value for fish tanks.</li>
+        <li><strong>Saturation at depth</strong> is a little higher than at the surface because of the water pressure on the bubbles. The calculator ignores this, which is slightly conservative for shallow tanks.</li>
+        <li><strong>Steady state.</strong> Demand peaks after feeding and in warm weather. The safety factor covers these, and you should measure DO.</li>
+        <li><strong>Air conditions.</strong> Air density uses the site’s average pressure (U.S. Standard Atmosphere) and 20 °C air. Pump ratings are usually at sea level; pumps deliver less mass of air at altitude.</li>
+        <li><strong>Pressure.</strong> Long, narrow or many-branched air lines can lose more than the allowance. Check valves and gang valves add drop.</li>
+        <li><strong>Plants.</strong> This page is for fish tanks. Hydroponic reservoirs have different oxygen demand.</li>
+      </ul>
+
+      <h2>Sources</h2>
+      <ol class="sources">
+        <li>American Society of Civil Engineers (2007). <em>Measurement of Oxygen Transfer in Clean Water</em>. ASCE/EWRI 2-06. Reston, VA: ASCE.</li>
+        <li>Boyd, C. E. (1998). Pond water aeration systems. <em>Aquacultural Engineering</em>, 18(1), 9–40. <a href="https://doi.org/10.1016/S0144-8609(98)00019-3" rel="noopener" target="_blank">doi.org</a></li>
+        <li>Boyd, C. E. &amp; Moore, J. M. (1993). Factors affecting the performance of diffused-air aeration systems for aquaculture. <em>Journal of Applied Aquaculture</em>, 2(2), 1–12. <a href="https://doi.org/10.1300/J028v02n02_01" rel="noopener" target="_blank">doi.org</a></li>
+        <li>Boyd, C. E. &amp; Tucker, C. S. (1998). <em>Pond Aquaculture Water Quality Management</em>. Boston: Kluwer Academic Publishers.</li>
+        <li>Boyd, C. E. “Dissolved oxygen requirements in aquatic animal respiration.” <em>Responsible Seafood Advocate</em>, Global Seafood Alliance. <a href="https://www.globalseafood.org/advocate/dissolved-oxygen-requirements-in-aquatic-animal-respiration/" rel="noopener" target="_blank">globalseafood.org</a></li>
+        <li>Global Seafood Alliance. “A look at aeration, oxygenation.” <em>Global Aquaculture Advocate</em>. <a href="https://www.globalseafood.org/advocate/look-at-unit-processes-in-ras-systems/" rel="noopener" target="_blank">globalseafood.org</a></li>
+        <li>Ebeling, J. M. (2000). Engineering aspects of recirculating aquaculture systems. <em>Marine Technology Society Journal</em>, 34(1), 68–78.</li>
+        <li>Benson, B. B. &amp; Krause, D., Jr. (1984). The concentration and isotopic fractionation of oxygen dissolved in freshwater and seawater in equilibrium with the atmosphere. <em>Limnology and Oceanography</em>, 29(3), 620–632.</li>
+        <li>U.S. Geological Survey (2011). <em>Change to solubility equations for oxygen in water</em>. Office of Water Quality Technical Memorandum 2011.03. <a href="https://water.usgs.gov/admin/memo/QW/qw11.03.pdf" rel="noopener" target="_blank">water.usgs.gov</a></li>
+        <li>National Oceanic and Atmospheric Administration, National Aeronautics and Space Administration &amp; U.S. Air Force (1976). <em>U.S. Standard Atmosphere, 1976</em>. Washington, DC: U.S. Government Printing Office.</li>
+        <li>National Institute of Standards and Technology. <em>NIST Chemistry WebBook</em>, SRD 69: Oxygen (molar mass); CODATA value of the molar gas constant. <a href="https://webbook.nist.gov/cgi/cbook.cgi?ID=C7782447" rel="noopener" target="_blank">webbook.nist.gov</a></li>
+        <li>Texas Administrative Code, Title 30, §217.155: Aeration Equipment Sizing. <a href="https://www.law.cornell.edu/regulations/texas/30-Tex-Admin-Code-SS-217-155" rel="noopener" target="_blank">law.cornell.edu</a></li>
+        <li>Masser, M. P., Rakocy, J. &amp; Losordo, T. M. (1999). <em>Recirculating Aquaculture Tank Production Systems: Management of Recirculating Systems</em>. SRAC Publication No. 452. Southern Regional Aquaculture Center.</li>
+        <li>Hiblow. HP-60 and HP-120 linear air pump specification sheets (rated flow and pressure, maximum continuous pressure), as published by distributors.</li>
+        <li>Eheim. Air 400 aquarium air pump, retail product listings (400 L/h, about 2 m maximum depth, 4 W).</li>
+      </ol>
+    </article>
+  </main>
+
+  <footer class="site-footer">
+    <div class="wrap">Calculations are estimates. Check the sources above before relying on a result.</div>
+  </footer>
+
+  <script src="../assets/share.js"></script>
+  <script src="../assets/units.js"></script>
+  <script src="../assets/aeration-common.js"></script>
+  <script src="../assets/aeration-aquaculture.js"></script>
+</body>
+</html>
