@@ -881,11 +881,11 @@
   // ---------- 5. pH, alkalinity and iron ----------
   const stepPh = {
     id: 'ph', title: 'pH, alkalinity and iron', short: 'pH & iron',
-    intro: '<p>Most crops take up nutrients best at a root-zone pH of about 5.5–6.5. Tap and well water often carry alkalinity (bicarbonate) that pushes the pH up, so growers add acid to the batch. Iron is the micronutrient most often short at higher pH, so this step also doses chelated iron. Same chemistry as the pH Adjustment and Iron Addition calculators.</p>',
+    intro: '<p>Most crops take up nutrients best at a root-zone pH of about 5.5–6.5. Tap and well water often carry alkalinity (bicarbonate) that pushes the pH up, so growers add acid to the batch. Iron is the micronutrient most often short at higher pH, so this step also doses chelated iron. Same chemistry as the pH Down Adjustment and Iron Addition calculators.</p>',
     fields: [
       { id: 'solT', label: 'Solution temperature', group: 'temperature', unit: 'C', signed: true, def: 20,
         check: function (t) { return t < 0 || t > 40 ? 'Solution temperature must be between 0 and 40 °C.' : ''; },
-        hint: 'Example value (the pH Adjustment default). It sets the carbonate constants here and oxygen solubility in the next step.' },
+        hint: 'Example value (the pH Down Adjustment default). It sets the carbonate constants here and oxygen solubility in the next step.' },
       { id: 'alk', label: 'Source water alkalinity', group: 'alkalinity', unit: 'caco3', def: 150, allowZero: true,
         hint: 'Example value; use total alkalinity from your water test.' },
       { id: 'ph0', label: 'Source water pH', def: 7.8,
@@ -895,7 +895,7 @@
         hint: 'Suggested 5.8: NC State recommends acidifying to about pH 5.8 (Bailey &amp; Bilderback, 1997).' },
       { id: 'acid', label: 'Acid', type: 'select', def: 'nitric67',
         options: Object.keys(ACIDS).map(function (k) { return { value: k, label: ACID_LABELS[k] }; }),
-        hint: 'Suggested: nitric acid, which adds nitrate. Phosphoric acid (the pH Adjustment default) adds phosphorus, often more than the recipe needs when the alkalinity is high; sulfuric acid adds sulfate.' },
+        hint: 'Suggested: nitric acid, which adds nitrate. Phosphoric acid (the pH Down Adjustment default) adds phosphorus, often more than the recipe needs when the alkalinity is high; sulfuric acid adds sulfate.' },
       { id: 'feCur', label: 'Iron already in the solution', group: 'concentration', unit: 'mgL', allowZero: true,
         def: function (ctx) { return HOAG.fe * ctx.v.strength / 100; },
         hint: 'Suggested: the 1 mg/L iron of the Hoagland micronutrients at your strength. Use 0 if your micronutrient mix has no iron.' },
@@ -946,7 +946,7 @@
       ];
     },
     tips: [
-      'Acid dose = alkalinity removed between the source pH and the target pH (carbonate system, Plummer &amp; Busenberg constants) ÷ protons each acid molecule gives up at the target pH (pH Adjustment calculator).',
+      'Acid dose = alkalinity removed between the source pH and the target pH (carbonate system, Plummer &amp; Busenberg constants) ÷ protons each acid molecule gives up at the target pH (pH Down Adjustment calculator).',
       'NC State recommends acidifying irrigation water to about pH 5.8, or neutralizing about 80% of the alkalinity (Bailey &amp; Bilderback, 1997). Always add acid to water, in steps, and measure.',
       'Chelate stability (Iron Addition calculator): Fe-EDTA to about pH 6.5, Fe-DTPA to about 7.5, Fe-EDDHA to about 9. Above the limit the iron drops out of solution.'
     ],
@@ -976,7 +976,7 @@
     links: function (ctx, r) {
       const x = ctx.v, w = R(ctx, 'water');
       return [
-        { slug: 'ph-adjustment', label: 'pH Adjustment', params: { vol: p(w.total, 6), vol_u: 'L', alk: p(x.alk, 6), alk_u: 'caco3', ph0: p(x.ph0, 6), ph1: p(x.ph1, 6), temp: p(x.solT, 6), temp_u: 'C', acid: x.acid, out: ACIDS[x.acid].rho ? 'mL' : 'g' } },
+        { slug: 'ph-adjustment', label: 'pH Down Adjustment', params: { vol: p(w.total, 6), vol_u: 'L', alk: p(x.alk, 6), alk_u: 'caco3', ph0: p(x.ph0, 6), ph1: p(x.ph1, 6), temp: p(x.solT, 6), temp_u: 'C', acid: x.acid, out: ACIDS[x.acid].rho ? 'mL' : 'g' } },
         { slug: 'iron-addition', label: 'Iron Addition', params: { sys: 'hyd', vol: p(w.total, 6), vol_u: 'L', cur: p(x.feCur, 6), cur_u: 'mgL', tgt: p(x.feT, 6), tgt_u: 'mgL', prod: x.feProd, form: 'powder', pct: p(x.fePct, 6), ph: p(x.ph1, 6), mout: 'g' } }
       ];
     }

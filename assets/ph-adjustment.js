@@ -1,4 +1,4 @@
-// pH Adjustment Calculator: acid dose from alkalinity using the carbonate system,
+// pH Down Adjustment Calculator: acid dose from alkalinity using the carbonate system,
 // live titration-curve SVG, shareable URL state.
 (function () {
   'use strict';
@@ -359,7 +359,7 @@
   function resultsText() {
     const r = compute();
     const lines = [
-      'pH Adjustment Calculator',
+      'pH Down Adjustment Calculator',
       'Water: ' + typed('vol') + ', alkalinity ' + typed('alk') + ', pH ' + $('ph0').value + ' → ' + $('ph1').value + ', ' + fmt(r.tC, 1) + ' °C',
       'Acid: ' + r.acid.name
     ];
@@ -391,7 +391,7 @@
     CalcShare.copy(resultsText(), 'Results copied');
   });
   $('btn-share').addEventListener('click', function () {
-    CalcShare.share({ title: 'pH Adjustment Calculator', text: resultsText(), url: CalcShare.buildUrl(getState()) });
+    CalcShare.share({ title: 'pH Down Adjustment Calculator', text: resultsText(), url: CalcShare.buildUrl(getState()) });
   });
   $('btn-reset').addEventListener('click', function () {
     applyDefaults();

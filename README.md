@@ -48,7 +48,8 @@ Every input that has a unit gets its **own** unit dropdown – never one shared 
 - [x] Grow Bed Ratio – `calculators/grow-bed-ratio.html`
 - [x] Pump & Turnover – `calculators/pump-turnover.html`
 - [x] Nutrient EC – `calculators/nutrient-ec.html`
-- [x] pH Adjustment – `calculators/ph-adjustment.html`
+- [x] pH Down Adjustment – `calculators/ph-adjustment.html`
+- [ ] pH Up Adjustment
 - [x] Daily Light Integral – `calculators/daily-light-integral.html`
 - [x] Dissolved Oxygen – `calculators/dissolved-oxygen.html`
 - [x] Hydrostatic Pressure – `calculators/hydrostatic-pressure.html`
