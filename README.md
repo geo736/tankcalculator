@@ -55,6 +55,7 @@ Every input that has a unit gets its **own** unit dropdown – never one shared 
 - [x] Air Pump & Air Stone Sizing (hydroponic systems) – `calculators/aeration-hydroponic.html`
 - [x] Feed Conversion Ratio (FCR) – `calculators/fcr.html`
 - [x] Hydroponic Nutrient Additions – `calculators/nutrient-additions.html`
+- [ ] Low-Cost Artificial Sea Salt Mix (inland shrimp)
 - [x] Plant Feed Conversion Ratio (FCRplant)
 - [x] Plant-Fish Mass Ratio (PFRM)
 - [x] Foam Fractionator Sizing – `calculators/foam-fractionator.html`
