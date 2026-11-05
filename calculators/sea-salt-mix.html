@@ -1,0 +1,382 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Low-Cost Sea Salt Mix Calculator</title>
+  <meta name="description" content="Mix your own artificial sea salt for inland, low-salinity shrimp (Litopenaeus vannamei) culture from sodium chloride, magnesium and calcium salts, potassium chloride and bicarbonate: amounts per batch, cost against commercial sea salt, and a well-water correction.">
+  <link rel="stylesheet" href="../assets/style.css">
+  <style>
+    .ion-group { margin: 4px 0 10px; font-size: .8rem; font-weight: 600; text-transform: uppercase; letter-spacing: .05em; color: var(--text-muted); }
+    .table-scroll { overflow-x: auto; }
+    .calc-table { width: 100%; border-collapse: collapse; font-size: .78rem; font-variant-numeric: tabular-nums; margin: 6px 0 10px; }
+    .calc-table th, .calc-table td { padding: 5px 3px; border-bottom: 1px solid var(--border); text-align: right; white-space: nowrap; }
+    .calc-table th:first-child, .calc-table td:first-child { text-align: left; white-space: normal; }
+    .calc-table th { color: var(--text-muted); font-weight: 600; }
+    .calc-table tr.off td { color: var(--warn-text); font-weight: 600; }
+    .salt-row { display: grid; grid-template-columns: 96px minmax(0, 1fr); gap: 6px 8px; align-items: center; padding: 8px 0; border-bottom: 1px dashed var(--border); }
+    .salt-check { grid-column: 1 / -1; display: flex; gap: 8px; align-items: flex-start; font-size: .9rem; font-weight: 600; cursor: pointer; min-width: 0; }
+    .salt-check input { margin-top: 3px; flex: none; width: 17px; height: 17px; accent-color: var(--accent); }
+    .salt-name { min-width: 0; overflow-wrap: anywhere; }
+    .salt-an { display: block; font-size: .75rem; font-weight: 400; color: var(--text-muted); }
+    .salt-row .input-row input { padding: 6px 8px; }
+    .salt-row .input-row .unit { padding: 0 6px; font-size: .75rem; white-space: nowrap; }
+    .salt-row .input-row .unit-select { font-size: .75rem; padding: 0 4px; }
+    .salt-row .cur-pre { border-left: 0; border-right: 1px solid var(--border); }
+    .cur-pre.lead { border-left: 0; border-right: 1px solid var(--border); }
+    .result-main .sub { font-size: .85rem; color: var(--text-muted); }
+    .table-head { font-size: .85rem; font-weight: 600; margin: 14px 0 0; }
+    .muted-note { font-size: .8rem; color: var(--text-muted); margin: 0 0 8px; }
+    .caveat { font-size: .8rem; background: var(--surface-2); border-radius: 10px; padding: 8px 10px; margin: -4px 0 14px; color: var(--text); }
+    .auto-val { font-weight: 600; font-variant-numeric: tabular-nums; }
+    .checks { font-size: .8rem; color: var(--text-muted); margin: 6px 0 0; padding-left: 18px; }
+    .checks li { margin-bottom: 3px; }
+    @media (max-width: 480px) {
+      .two-col.stack { grid-template-columns: minmax(0, 1fr); gap: 0; }
+    }
+  </style>
+</head>
+<body>
+  <header class="site-header">
+    <div class="wrap">
+      <a class="brand" href="../">
+        <span class="brand-mark" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3c3 4 6 7 6 11a6 6 0 0 1-12 0c0-4 3-7 6-11z"/></svg>
+        </span>
+        Tank Calculator
+      </a>
+      <nav><a href="../">All calculators</a></nav>
+    </div>
+  </header>
+
+  <main class="wrap">
+    <div class="crumbs"><a href="../">Home</a> / Low-Cost Sea Salt Mix</div>
+    <h1 class="page-title">Low-Cost Sea Salt Mix Calculator</h1>
+    <p class="page-lede">Work out how much sodium chloride, magnesium and calcium salts, potassium chloride and sodium bicarbonate to dissolve so that low-salinity water for Pacific white shrimp (<em>Litopenaeus vannamei</em>) has the same major-ion proportions as diluted seawater, or to top up only the potassium and magnesium your inland well water lacks. Compare the cost with commercial sea salt.</p>
+
+    <div class="calc-layout">
+      <!-- Calculator -->
+      <section class="card" aria-labelledby="calc-heading">
+        <h2 id="calc-heading">Calculator</h2>
+
+        <div class="field">
+          <label for="mode">What are you doing?</label>
+          <select id="mode">
+            <option value="make">Make up to a target salinity</option>
+            <option value="correct">Correct my well water</option>
+          </select>
+        </div>
+        <div class="two-col stack">
+          <div class="field" id="sal-field">
+            <label for="sal">Target salinity</label>
+            <div class="input-row"><input id="sal" type="number" inputmode="decimal" min="0" step="any"><select class="unit-select" data-unit-group="concentration" data-unit-for="sal" data-unit-default="gL" aria-label="Target salinity unit"></select></div>
+            <div class="field-hint">1 g/L ≈ 1 ppt (‰). Seawater is about 35.</div>
+          </div>
+          <div class="field" id="sal-auto" hidden>
+            <span class="label">Target salinity</span>
+            <div class="auto-val" id="sal-auto-v">–</div>
+          </div>
+          <div class="field">
+            <label for="vol">Batch or system volume</label>
+            <div class="input-row"><input id="vol" type="number" inputmode="decimal" min="0" step="any"><select class="unit-select" data-unit-group="volume" data-unit-for="vol" data-unit-default="m3" aria-label="Batch volume unit"></select></div>
+          </div>
+        </div>
+
+        <div class="ion-group">Target ion profile</div>
+        <p class="muted-note">Natural seawater (Reference Composition, Millero et al. 2008) scaled to the target salinity: Na, K, Ca, Mg, Cl, SO₄ and alkalinity in seawater proportions.</p>
+        <div class="field">
+          <label for="mgmode">Magnesium</label>
+          <select id="mgmode">
+            <option value="sw">Seawater ratio (default)</option>
+            <option value="mg">Set a magnesium concentration</option>
+            <option value="ratio">Set a Mg:Ca ratio (by mass)</option>
+          </select>
+        </div>
+        <div class="field" id="mg-t-field" hidden>
+          <label for="mg_t">Magnesium target</label>
+          <div class="input-row"><input id="mg_t" type="number" inputmode="decimal" min="0" step="any"><select class="unit-select" data-unit-group="concentration" data-unit-for="mg_t" data-unit-default="mgL" aria-label="Magnesium target unit"></select></div>
+        </div>
+        <div class="field" id="mgca-field" hidden>
+          <label for="mgca">Mg:Ca ratio (mg/L Mg per mg/L Ca)</label>
+          <div class="input-row"><input id="mgca" type="number" inputmode="decimal" min="0" step="any"><span class="unit">: 1</span></div>
+          <div class="field-hint">Seawater is 3.12 : 1 by mass (5.14 : 1 by moles). Calcium stays at the seawater ratio.</div>
+        </div>
+        <div class="caveat" id="mg-caveat" hidden>Cutting magnesium cuts cost, but the evidence is mixed. Lower magnesium gave lower growth and poorer feed conversion in a 3 g/L trial (Galkanda-Arachchige et al., 2021) and a lower final weight in a 5 g/L BioRAS trial (Ha et al., 2026). A field study in West Alabama suggested larger shrimp (above about 22 g) may need more (Hernandez et al., 2023). Moura et al. (2023) reported acceptable performance at about 30 mg/L Mg and a 1:1 Mg:Ca ratio at 5 g/L in biofloc: a result under their conditions, not a general recommendation. How much magnesium shrimp need depends on the rest of the water chemistry. Trial any reduction on a small scale first.</div>
+        <div class="field">
+          <label for="alk_t">Alkalinity target, optional</label>
+          <div class="input-row"><input id="alk_t" type="number" inputmode="decimal" min="0" step="any" placeholder="seawater ratio"><select class="unit-select" data-unit-group="concentration" data-unit-for="alk_t" data-unit-default="mgL" aria-label="Alkalinity target unit"></select></div>
+          <div class="field-hint">As CaCO₃. Leave blank for the seawater ratio (110 mg/L at 35 g/L, 16 mg/L at 5 g/L). Shrimp farmers usually manage alkalinity separately with bicarbonate during the crop.</div>
+        </div>
+
+        <div class="ion-group">Source water analysis</div>
+        <div class="field-hint" id="water-hint" style="margin:-6px 0 10px"></div>
+        <div class="two-col stack">
+          <div class="field">
+            <label for="w_na">Sodium (Na)</label>
+            <div class="input-row"><input id="w_na" type="number" inputmode="decimal" min="0" step="any"><select class="unit-select" data-unit-group="concentration" data-unit-for="w_na" data-unit-default="mgL" aria-label="Water sodium unit"></select></div>
+          </div>
+          <div class="field">
+            <label for="w_k">Potassium (K)</label>
+            <div class="input-row"><input id="w_k" type="number" inputmode="decimal" min="0" step="any"><select class="unit-select" data-unit-group="concentration" data-unit-for="w_k" data-unit-default="mgL" aria-label="Water potassium unit"></select></div>
+          </div>
+          <div class="field">
+            <label for="w_ca">Calcium (Ca)</label>
+            <div class="input-row"><input id="w_ca" type="number" inputmode="decimal" min="0" step="any"><select class="unit-select" data-unit-group="concentration" data-unit-for="w_ca" data-unit-default="mgL" aria-label="Water calcium unit"></select></div>
+          </div>
+          <div class="field">
+            <label for="w_mg">Magnesium (Mg)</label>
+            <div class="input-row"><input id="w_mg" type="number" inputmode="decimal" min="0" step="any"><select class="unit-select" data-unit-group="concentration" data-unit-for="w_mg" data-unit-default="mgL" aria-label="Water magnesium unit"></select></div>
+          </div>
+          <div class="field">
+            <label for="w_cl">Chloride (Cl)</label>
+            <div class="input-row"><input id="w_cl" type="number" inputmode="decimal" min="0" step="any"><select class="unit-select" data-unit-group="concentration" data-unit-for="w_cl" data-unit-default="mgL" aria-label="Water chloride unit"></select></div>
+          </div>
+          <div class="field">
+            <label for="w_so4">Sulfate (SO₄)</label>
+            <div class="input-row"><input id="w_so4" type="number" inputmode="decimal" min="0" step="any"><select class="unit-select" data-unit-group="concentration" data-unit-for="w_so4" data-unit-default="mgL" aria-label="Water sulfate unit"></select></div>
+          </div>
+          <div class="field">
+            <label for="w_alk">Alkalinity / bicarbonate</label>
+            <div class="input-row"><input id="w_alk" type="number" inputmode="decimal" min="0" step="any"><select class="unit-select" data-unit-group="concentration" data-unit-for="w_alk" data-unit-default="mgL" aria-label="Water alkalinity unit"></select></div>
+          </div>
+          <div class="field">
+            <label for="alk">Entered as</label>
+            <select id="alk">
+              <option value="caco3">Alkalinity as CaCO₃</option>
+              <option value="hco3">HCO₃ (bicarbonate)</option>
+            </select>
+          </div>
+        </div>
+        <div class="field-hint" style="margin:-6px 0 12px">Sulfate reported as SO₄-S? Multiply by 3.0 (96.06 ÷ 32.06).</div>
+
+        <div class="ion-group">Salts you can buy</div>
+        <p class="muted-note">Tick the salts to use. Purity: 100% means the pure compound shown, including its water of crystallisation. Prices are <strong>editable examples, not quotes</strong>: enter what you pay.</p>
+        <div id="salt-list"></div>
+        <ul class="checks">
+          <li>Magnesium chloride flake sold as "47% MgCl₂" is the hexahydrate (MgCl₂ is 46.8% of MgCl₂·6H₂O): enter about 100%.</li>
+          <li>Muriate of potash labelled 60% or 62% K₂O is about 95% or 98% KCl.</li>
+          <li>Calcium chloride labelled by % CaCl₂ (flake, pellets): tick the anhydrous row and enter that %.</li>
+          <li>Epsom salt is MgSO₄·7H₂O (9.86% Mg). Magnesium sulfate monohydrate or anhydrous (kieserite) holds more Mg per kg and is not covered by that row.</li>
+        </ul>
+
+        <div class="two-col stack" style="margin-top:14px">
+          <div class="field">
+            <label for="comm">Commercial sea salt price</label>
+            <div class="input-row"><span class="unit cur-pre lead" aria-hidden="true">$</span><input id="comm" type="number" inputmode="decimal" min="0" step="any"><select class="unit-select" data-unit-group="pricemass" data-unit-for="comm" data-unit-default="kg" aria-label="Commercial sea salt price unit"></select></div>
+            <div class="field-hint">Example price; for comparison only.</div>
+          </div>
+          <div class="field">
+            <label for="cur">Currency symbol</label>
+            <select id="cur"></select>
+            <div class="field-hint">Display only, no exchange rates.</div>
+          </div>
+        </div>
+
+        <hr class="divider">
+
+        <div class="notice" id="notice" hidden></div>
+
+        <div class="field">
+          <label for="mout">Show salt amounts in</label>
+          <select id="mout" class="unit-select" data-unit-group="mass" data-unit-default="kg" aria-label="Salt mass output unit"></select>
+        </div>
+
+        <div class="result-main" aria-live="polite">
+          <div class="label" id="r-main-label">Salt mix for the batch</div>
+          <div class="value" id="r-main">–</div>
+          <div class="sub" id="r-main-sub"></div>
+        </div>
+
+        <div class="table-scroll">
+          <table class="calc-table">
+            <thead><tr><th>Salt</th><th>Batch</th><th>Per m³</th><th id="cost-col">Cost / batch</th></tr></thead>
+            <tbody id="salt-table"></tbody>
+          </table>
+        </div>
+        <p class="muted-note" id="unused"></p>
+
+        <ul class="result-list">
+          <li><span>Salt cost per batch</span><span class="v" id="r-cost">–</span></li>
+          <li><span>Salt cost per m³</span><span class="v" id="r-costm3">–</span></li>
+          <li><span>Commercial salt, same salinity</span><span class="v" id="r-comm">–</span></li>
+          <li><span>Mix vs commercial salt</span><span class="v" id="r-save">–</span></li>
+          <li><span>Estimated salinity (sum of ions)</span><span class="v" id="r-sal">–</span></li>
+          <li><span>Total hardness</span><span class="v" id="r-hard">–</span></li>
+          <li><span>Alkalinity</span><span class="v" id="r-alk">–</span></li>
+        </ul>
+
+        <p class="table-head">Each ion vs target (mg/L)</p>
+        <div class="table-scroll">
+          <table class="calc-table">
+            <thead><tr><th>Ion</th><th>Water</th><th>Added</th><th>Total</th><th>Target</th><th>Diff.</th></tr></thead>
+            <tbody id="ion-table"></tbody>
+          </table>
+        </div>
+
+        <p class="table-head">Ion ratios by mass</p>
+        <div class="table-scroll">
+          <table class="calc-table">
+            <thead><tr><th>Ratio</th><th>Result</th><th>Seawater</th><th>Of seawater</th></tr></thead>
+            <tbody id="ratio-table"></tbody>
+          </table>
+        </div>
+
+        <p class="table-head">Before you stock shrimp</p>
+        <ul class="checks">
+          <li>Check each bag's purity and hydrate form; the amounts change with both.</li>
+          <li>Dissolve the sodium chloride first, then each other salt separately in a bucket of system water, and the bicarbonate last. Do not mix calcium chloride with the sulfate or bicarbonate as concentrates.</li>
+          <li>Check salinity with a refractometer or conductivity meter, and have a lab analyse Na, K, Ca and Mg before stocking.</li>
+        </ul>
+
+        <div class="share-bar">
+          <button class="btn btn-primary" type="button" id="btn-share">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="m8.6 13.5 6.8 4M15.4 6.5l-6.8 4"/></svg>
+            Share
+          </button>
+          <button class="btn" type="button" id="btn-link">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.5.5l3-3a5 5 0 0 0-7-7l-1.7 1.7"/><path d="M14 11a5 5 0 0 0-7.5-.5l-3 3a5 5 0 0 0 7 7l1.7-1.7"/></svg>
+            Copy link
+          </button>
+          <button class="btn" type="button" id="btn-copy">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h10a1 1 0 0 1 1 1v1"/></svg>
+            Copy results
+          </button>
+          <button class="btn" type="button" id="btn-reset">Reset</button>
+        </div>
+      </section>
+
+      <!-- Visualization -->
+      <section class="card viz-card" aria-labelledby="viz-heading">
+        <h2 id="viz-heading">Visualization</h2>
+        <svg class="viz" id="viz" viewBox="0 0 400 420" role="img" aria-label="Bars of each ion's concentration from source water and from the added salts against the seawater-ratio target, a stacked bar of salt mass per cubic metre, and the salt cost per cubic metre against commercial sea salt"></svg>
+        <p class="viz-caption" id="viz-caption"></p>
+      </section>
+    </div>
+
+    <article class="article">
+      <h2>How the sea salt mix calculator works</h2>
+      <p>Shrimp in low-salinity water need more than the right salinity: the proportions of sodium, potassium, magnesium and calcium matter too. Inland saline groundwater often has a very different make-up from diluted seawater, and is frequently short of potassium and magnesium (Boyd &amp; Thunjai, 2003; Roy et al., 2010). Commercial sea salts fix this by copying seawater, trace elements included, but they are a large cost in indoor and inland production. The research groups at Auburn University and Kentucky State University have tested simpler mixes of six agricultural or technical-grade salts (sodium chloride, magnesium sulfate, magnesium chloride, calcium chloride, potassium chloride and sodium bicarbonate) as a cheaper replacement (Galkanda-Arachchige et al., 2020; Tierney et al., 2021; Fleckenstein et al., 2022).</p>
+      <p>This calculator builds that kind of mix for your salinity, water and salt prices:</p>
+      <ol>
+        <li>It scales the major-ion composition of natural seawater to the <strong>target salinity</strong>. In "correct my well water" mode the target salinity is the sum of the ions in your water analysis, so it adds only what is missing at the salinity you already have.</li>
+        <li>Optionally it replaces the magnesium target with your own value or Mg:Ca ratio, and the alkalinity target with your own value.</li>
+        <li>It subtracts what your <strong>source water</strong> already contains.</li>
+        <li>From each salt's formula, IUPAC atomic weights and the purity you enter, it works out the share of each ion in the salt, then finds the amount of each ticked salt that brings every ion as close as possible to its target with a <strong>non-negative least-squares</strong> solver (Lawson &amp; Hanson, 1974), the same method as the <a href="nutrient-additions.html">Nutrient Additions calculator</a>.</li>
+        <li>It multiplies by the volume, prices each salt, and compares the cost with the same salinity made from commercial sea salt.</li>
+      </ol>
+      <p>With the six standard salts and fresh water the match is essentially exact: each salt fixes one ion, and chloride comes out within 0.2% of target. When your water already holds more of one ion than the target, or you untick a salt, the solver finds the best compromise and the tables show which ions end up over or under.</p>
+
+      <h3>Why it matters</h3>
+      <p>Salt can be one of the largest running costs of inland and indoor shrimp farming. In a 15 g/L indoor grow-out, Fleckenstein et al. (2022) found no significant differences in shrimp weight, biomass, survival, feed conversion or growth between a low-cost mixture and blends with commercial salt, and reported salt-water preparation costs of $8.83 against $12.89 per m³. Those are historical salt costs from that study, not a quote and not total production cost. Tierney et al. (2021) reported the low-cost mix as 65% cheaper by mixture weight and 57% cheaper in salt cost per kilogram of shrimp, again a salt-cost figure only. In 42-day juvenile trials at 3, 6 and 15 g/L, Galkanda-Arachchige et al. (2020) found no significant differences in survival, growth, osmoregulation or haemolymph cations between commercial salt and the low-cost mixture.</p>
+      <p>What the evidence supports is a carefully specified mix used under the study conditions. It does not establish one cheapest recipe for every water source, salinity, shrimp size and farming system, and nursery results are not proof for repeated full grow-out cycles. Getting potassium and magnesium wrong is the usual failure: survival was poorer at the lowest magnesium in controlled trials (Roy et al., 2007), and adding potassium and magnesium chlorides improved postlarval survival in West Alabama well waters (Davis et al., 2005).</p>
+
+      <h3>Formulas</h3>
+      <p>Target concentration of each ion, from the Reference-Composition seawater of Millero et al. (2008) at S<sub>R</sub> = 35.16504 g/kg and the target salinity S in g/L:</p>
+      <div class="formula">target<sub>i</sub> (mg/L) = c<sub>i,seawater</sub> (g/kg) × S ÷ 35.16504 × 1000</div>
+      <div class="table-scroll">
+      <table>
+        <thead><tr><th>Ion</th><th>Seawater, g/kg</th><th>At 5 g/L, mg/L</th><th>At 15 g/L, mg/L</th></tr></thead>
+        <tbody>
+          <tr><td>Sodium, Na⁺</td><td>10.78145</td><td>1,533</td><td>4,599</td></tr>
+          <tr><td>Magnesium, Mg²⁺</td><td>1.28372</td><td>182.5</td><td>547.6</td></tr>
+          <tr><td>Calcium, Ca²⁺</td><td>0.41208</td><td>58.6</td><td>175.8</td></tr>
+          <tr><td>Potassium, K⁺</td><td>0.39910</td><td>56.7</td><td>170.2</td></tr>
+          <tr><td>Chloride, Cl⁻</td><td>19.35271</td><td>2,752</td><td>8,255</td></tr>
+          <tr><td>Sulfate, SO₄²⁻</td><td>2.71235</td><td>385.7</td><td>1,157</td></tr>
+          <tr><td>Carbonate alkalinity, as CaCO₃</td><td>2.1957 mmol/kg</td><td>15.6</td><td>46.9</td></tr>
+        </tbody>
+      </table>
+      </div>
+      <p>Bromide, strontium, boron and fluoride (about 0.3% of sea salt) are not supplied. Seawater mass ratios follow from the table: Na:K 27.0, Mg:Ca 3.12, Mg:K 3.22, Na:Mg 8.40, Ca:K 1.03.</p>
+      <p>Share of an ion in a salt (n = ions per formula unit, A = ion mass, M = molar mass including water of crystallisation):</p>
+      <div class="formula">fraction = n × A ÷ M × purity
+
+MgCl₂·6H₂O:  Mg = 24.305 ÷ 203.30 = 11.96%   Cl = 2 × 35.45 ÷ 203.30 = 34.87%
+KCl:         K  = 39.098 ÷ 74.55  = 52.45%</div>
+      <p>The solver chooses salt doses x ≥ 0 (mg/L) to minimise the weighted squared relative error, with C<sub>water</sub> what the water already holds:</p>
+      <div class="formula">minimise Σ<sub>i</sub> [ w<sub>i</sub> × (C<sub>water,i</sub> + Σ<sub>j</sub> fraction<sub>ij</sub> x<sub>j</sub> − target<sub>i</sub>) ÷ max(target<sub>i</sub>, 1 mg/L) ]²
+
+w = 1 for Na, K, Ca, Mg;  0.5 for Cl and alkalinity;  0.4 for SO₄</div>
+      <p>The weights are a design choice: they make the four cations fit first, because those are the ions the shrimp studies vary and measure.</p>
+      <div class="formula">salt per batch (kg) = x (mg/L) × V (L) ÷ 10⁶        salt per m³ (kg) = x ÷ 1000
+cost per m³ = Σ salt per m³ × price per kg
+commercial salt per m³ (kg) = salinity added (g/L) × 1
+total hardness (mg/L as CaCO₃) = 2.497 Ca + 4.118 Mg
+alkalinity: HCO₃ = alkalinity as CaCO₃ × 1.2193</div>
+      <p>The commercial comparison assumes 1 kg of commercial sea salt adds 1 kg of dissolved salinity. Real products contain some moisture and trace elements, so they may need slightly more.</p>
+
+      <h3>Example</h3>
+      <p>The defaults make 10 m³ of 5 g/L water from fresh water (no ions) with the six standard salts at 100% purity, calcium chloride as the dihydrate. Each target fixes one salt:</p>
+      <div class="formula">K     56.75 mg/L ÷ 39.098 = 1.451 mmol/L KCl          × 74.55  = 108.2 mg/L
+Ca    58.59 mg/L ÷ 40.078 = 1.462 mmol/L CaCl₂·2H₂O   × 147.01 = 214.9 mg/L
+SO₄  385.66 mg/L ÷ 96.056 = 4.015 mmol/L MgSO₄·7H₂O   × 246.47 = 989.5 mg/L
+Mg   182.53 − 97.58 (from MgSO₄) = 84.95 mg/L MgCl₂·6H₂O        = 710.5 mg/L
+Alk   19.05 mg/L as HCO₃ = 0.312 mmol/L NaHCO₃       × 84.01  =  26.2 mg/L
+Na  1532.98 − 7.18 (from NaHCO₃) = 1525.8 mg/L NaCl            = 3878.6 mg/L</div>
+      <p>For 10 m³ that is <strong>38.8 kg</strong> sodium chloride, <strong>9.90 kg</strong> magnesium sulfate heptahydrate, <strong>7.11 kg</strong> magnesium chloride hexahydrate, <strong>2.15 kg</strong> calcium chloride dihydrate, <strong>1.08 kg</strong> potassium chloride and <strong>0.26 kg</strong> sodium bicarbonate: 59.3 kg in total, of which about 9.4 kg is water of crystallisation. Chloride comes out at 2,756 mg/L, 0.1% over target, and the seven ions add up to 4.99 g/L. The calculator's solver gives the same amounts to within 0.1%. Total hardness is 898 mg/L as CaCO₃.</p>
+      <p>At the example prices (per kg: NaCl 0.20, MgSO₄·7H₂O 0.70, MgCl₂·6H₂O 0.80, CaCl₂·2H₂O 0.60, KCl 0.80, NaHCO₃ 0.60, commercial sea salt 0.90) the mix costs about <strong>2.27 per m³</strong> (22.68 for the batch) against 4.49 per m³ for 4.99 kg of commercial salt, about 50% less. Most of the cost is magnesium: the two magnesium salts are 29% of the mass but 56% of the cost, which is why magnesium reduction is studied. With your prices the saving may be larger or smaller.</p>
+
+      <h3>Correcting a well water</h3>
+      <p>Choose "correct my well water" and enter the analysis. The calculator takes the sum of the ions you entered as the salinity, builds the seawater profile at that salinity, and adds salts to bring the short ions up. Sodium and chloride in saline groundwater are usually already at or above the seawater proportion, so the solver mostly adds potassium chloride and magnesium salts; any ion that is already over target stays over, because salts cannot take ions out. The salinity rises slightly as the missing ions are added. Saline groundwaters differ greatly from farm to farm (Saoud et al., 2003; Boyd &amp; Thunjai, 2003), so use a full lab analysis of your own water, not a typical value.</p>
+
+      <h3>Limitations and assumptions</h3>
+      <ul>
+        <li><strong>A starting point, not a proven recipe.</strong> The published low-cost mixes were tested under specific salinities, systems and shrimp sizes. Results differ between nursery and grow-out (Ueno Fukura et al., 2024), with the source water (Al-Subiai et al., 2025, where calcium-rich groundwater needed a higher Mg:Ca ratio), and with the system (Bajracharya et al., 2024). In a synbiotic nursery, survival was 70% with a low-cost mix against 90% in full-strength seawater, a comparison that also changed salinity (Limeira et al., 2026).</li>
+        <li><strong>The published recipe is not reproduced.</strong> The exact proportions of the Auburn low-cost salt mixture are in Galkanda-Arachchige et al. (2020), the Auburn dissertation (Galkanda-Arachchige, 2021) and Alabama Extension ANR-2785, none of which could be opened when this calculator was written. Search-result summaries of the extension table list, for 1 g/L in 10,000 L, 7.7 kg sodium chloride, 1.0 kg magnesium chloride (47% MgCl₂), 1.2 kg magnesium sulfate, 213.8 g muriate of potash and 60.6 g sodium bicarbonate, with calcium chloride as a liquid. These are partial and in one repost inconsistent (213.8 kg), and the extension sheet itself says its table is accurate only for the batch of ingredients then available, so they are not offered as a preset. The calculator's seawater-ratio mix for 1 g/L agrees on sodium chloride and potassium chloride but uses more magnesium.</li>
+        <li><strong>Magnesium reduction.</strong> See the caveat under the magnesium setting. Reduced magnesium lowers cost but gave lower growth in several studies, and acceptable results in others only under their conditions.</li>
+        <li><strong>Major ions only.</strong> Trace elements in commercial sea salt are not supplied, and the effect of leaving them out over long periods is not well studied. Feed minerals do not replace adequate water minerals (Roy et al., 2007b; Truong et al., 2023).</li>
+        <li><strong>Mass balance only.</strong> The calculation does not model ion pairs, calcium carbonate or gypsum precipitation, pH or CO₂ exchange. Salinity in g/L is treated as equal to g/kg; the difference is under 1% at 15 g/L.</li>
+        <li><strong>Nitrite.</strong> Nitrite is more toxic to shrimp at lower salt and chloride levels (Sowers et al., 2004), so a lower salinity or chloride also means tighter nitrogen control.</li>
+        <li><strong>Prices</strong> are editable examples. The calculator compares salt costs only, not labour, freight or the value of water reuse.</li>
+        <li>The ±10% band used to flag ions and the ±20% band for ratios are display rules of thumb, not shrimp tolerances.</li>
+      </ul>
+
+      <h3>Safety</h3>
+      <ul>
+        <li>Anhydrous calcium chloride releases a lot of heat as it dissolves. Add it slowly to plenty of water while stirring, and wear gloves and eye protection; the dust irritates eyes and skin.</li>
+        <li>Use non-iodised salt from a known supplier, and ask about any anti-caking or other additives before buying in bulk.</li>
+        <li>Acclimate shrimp to the new water gradually (Davis, Samocha &amp; Boyd, 2004).</li>
+      </ul>
+      <p>For plain sodium chloride doses, see the <a href="salt-addition.html">Salt Addition calculator</a>; to raise alkalinity during the crop, see the <a href="ph-up-adjustment.html">pH Up calculator</a>.</p>
+
+      <h2>Sources</h2>
+      <ol class="sources">
+        <li>Millero, F. J., Feistel, R., Wright, D. G. &amp; McDougall, T. J. (2008). The composition of Standard Seawater and the definition of the Reference-Composition Salinity Scale. <em>Deep-Sea Research Part I</em>, 55(1), 50–72. <a href="https://doi.org/10.1016/j.dsr.2007.10.001" rel="noopener" target="_blank">doi:10.1016/j.dsr.2007.10.001</a> (the paper itself could not be opened; the ion mass fractions above were computed from its Table 4 molalities as coded in the Pytzer Python package, v0.6.0, and reproduce S<sub>R</sub> = 35.16504 g/kg).</li>
+        <li>Prohaska, T. et al. (2022). Standard atomic weights of the elements 2021 (IUPAC Technical Report). <em>Pure and Applied Chemistry</em>, 94(5), 573–600. <a href="https://www.ciaaw.org/atomic-weights.htm" rel="noopener" target="_blank">ciaaw.org</a></li>
+        <li>Lawson, C. L. &amp; Hanson, R. J. (1974). <em>Solving Least Squares Problems</em>. Englewood Cliffs, NJ: Prentice-Hall (non-negative least squares, chapter 23).</li>
+        <li>Fleckenstein, L. J., Tierney, T. W., Fisk, J. C. &amp; Ray, A. J. (2022). Using alternative low-cost artificial sea salt mixtures for intensive, indoor shrimp (<em>Litopenaeus vannamei</em>) production. <em>Aquaculture Reports</em>, 24, 101147. <a href="https://doi.org/10.1016/j.aqrep.2022.101147" rel="noopener" target="_blank">doi:10.1016/j.aqrep.2022.101147</a> (findings and costs from the abstract).</li>
+        <li>Tierney, T. W., Fleckenstein, L. J. &amp; Ray, A. J. (2021). Evaluating a low-cost salt mixture in brackish water intensive shrimp (<em>Litopenaeus vannamei</em>) production systems. <em>Aquaculture Research</em>, 52(7), 3087–3092. <a href="https://doi.org/10.1111/are.15152" rel="noopener" target="_blank">doi:10.1111/are.15152</a> (abstract).</li>
+        <li>Galkanda-Arachchige, H. S. C., Roy, L. A. &amp; Davis, D. A. (2020). Evaluation of an alternative salt mixture to culture Pacific white shrimp (<em>Litopenaeus vannamei</em>) in inland aquaculture. <em>Aquaculture Research</em>, 51(9), 3540–3550. <a href="https://doi.org/10.1111/are.14691" rel="noopener" target="_blank">doi:10.1111/are.14691</a> (abstract).</li>
+        <li>Galkanda-Arachchige, H. S. C., Roy, L. A. &amp; Davis, D. A. (2021). The effects of magnesium concentration in low-salinity water on growth of Pacific white shrimp (<em>Litopenaeus vannamei</em>). <em>Aquaculture Research</em>, 52(2), 589–597. <a href="https://doi.org/10.1111/are.14916" rel="noopener" target="_blank">doi:10.1111/are.14916</a> (abstract).</li>
+        <li>Galkanda-Arachchige, H., Davis, D. A., Kelly, A. M. &amp; Roy, L. A. (2021). <em>Pacific White Shrimp Farming in Alabama: Use of Low-Cost Salt Mixtures</em>. Alabama Cooperative Extension System, ANR-2785. <a href="https://www.aces.edu/blog/topics/aquaculture/pacific-white-shrimp-farming-in-alabama-use-of-low-cost-salt-mixtures/" rel="noopener" target="_blank">aces.edu</a> (seen only in search-result summaries; the page and PDF could not be opened when this calculator was written).</li>
+        <li>Galkanda-Arachchige, H. (2021). <em>Evaluation of an alternative salt mixture and the levels of magnesium in low salinity water for Pacific white shrimp Litopenaeus vannamei</em>. PhD dissertation, Auburn University. <a href="https://etd.auburn.edu/handle/10415/7622" rel="noopener" target="_blank">etd.auburn.edu</a> (not opened).</li>
+        <li>Roy, L. A., Davis, D. A., Saoud, I. P. &amp; Henry, R. P. (2007). Effects of varying levels of aqueous potassium and magnesium on survival, growth, and respiration of the Pacific white shrimp, <em>Litopenaeus vannamei</em>, reared in low salinity waters. <em>Aquaculture</em>, 262, 461–469. <a href="https://doi.org/10.1016/j.aquaculture.2006.10.011" rel="noopener" target="_blank">doi:10.1016/j.aquaculture.2006.10.011</a> (abstract).</li>
+        <li>Roy, L. A., Davis, D. A., Saoud, I. P. &amp; Henry, R. P. (2007b). Supplementation of potassium, magnesium and sodium chloride in practical diets for the Pacific white shrimp, <em>Litopenaeus vannamei</em>, reared in low salinity waters. <em>Aquaculture Nutrition</em>, 13(2), 104–113. <a href="https://doi.org/10.1111/j.1365-2095.2007.00460.x" rel="noopener" target="_blank">doi:10.1111/j.1365-2095.2007.00460.x</a> (abstract).</li>
+        <li>Hernandez, D. P. et al. (2023). Evaluation of aqueous magnesium concentration on performance of Pacific white shrimp (<em>Litopenaeus vannamei</em>) cultured in low salinity water of West Alabama, USA. <em>Aquaculture</em>, 565, 739133. <a href="https://doi.org/10.1016/j.aquaculture.2022.739133" rel="noopener" target="_blank">doi:10.1016/j.aquaculture.2022.739133</a> (abstract and USDA author summary).</li>
+        <li>Moura, P. et al. (2023). Effects of magnesium reduction in artificial low-salinity water on the growth of Pacific white shrimp <em>Litopenaeus vannamei</em> in a biofloc system. <em>Aquaculture</em>, 577, 739956. <a href="https://doi.org/10.1016/j.aquaculture.2023.739956" rel="noopener" target="_blank">doi:10.1016/j.aquaculture.2023.739956</a> (abstract and highlights; whether the 1:1 ratio is by mass or by moles was not checked).</li>
+        <li>Ha, T. B. et al. (2026). Effect of aqueous macromineral ratio and content on whiteleg shrimp (<em>Litopenaeus vannamei</em>) performance and environmental parameters in a low-salinity BioRAS system. <em>Vietnam Journal of Marine Science and Technology</em>, online first. <a href="https://doi.org/10.15625/1859-3097/22397" rel="noopener" target="_blank">doi:10.15625/1859-3097/22397</a> (abstract: at 5‰, the control with Ca:Mg:K 53.5:195.5:58.0 mg/L, close to the seawater ratio, gave the highest final weight; survival did not differ).</li>
+        <li>Al-Subiai, S. N. et al. (2025). Enhancing the performance of <em>Litopenaeus vannamei</em> nursery and grow-out by modifying Mg/Ca ratios in biofloc systems using low-salinity groundwater of Kuwait Desert. <em>Aquaculture</em>, 594, 741405. <a href="https://doi.org/10.1016/j.aquaculture.2024.741405" rel="noopener" target="_blank">doi:10.1016/j.aquaculture.2024.741405</a> (abstract).</li>
+        <li>Ueno Fukura, M., Collazos Lasso, L. F., Vinatea Arana, L. A. &amp; Baldisserotto, B. (2024). Salinity/ionic balance interactions on the zootechnical performance and histology of <em>Litopenaeus vannamei</em> and water quality in a biofloc system. <em>Journal of the World Aquaculture Society</em>, 55(5), e13093. <a href="https://doi.org/10.1111/jwas.13093" rel="noopener" target="_blank">doi:10.1111/jwas.13093</a></li>
+        <li>Bajracharya, S., Fisk, J. C., Fleckenstein, L. J. &amp; Ray, A. J. (2024). Salt type, sugar addition, and system type in intensive RAS for Pacific white shrimp (<em>Litopenaeus vannamei</em>) production. <em>Aquaculture</em>, 586, 740755. <a href="https://doi.org/10.1016/j.aquaculture.2024.740755" rel="noopener" target="_blank">doi:10.1016/j.aquaculture.2024.740755</a> (abstract).</li>
+        <li>Limeira, A. C. et al. (2026). Effect of artificial salinization strategies on growth performance, water quality, and health status of Pacific white shrimp (<em>Penaeus vannamei</em>) reared in a synbiotic nursery with low salinity water. <em>Journal of Applied Aquaculture</em>, 38(2), 128–147. <a href="https://doi.org/10.1080/10454438.2025.2578503" rel="noopener" target="_blank">doi:10.1080/10454438.2025.2578503</a> (abstract).</li>
+        <li>Boyd, C. E. &amp; Thunjai, T. (2003). Concentrations of major ions in waters of inland shrimp farms in China, Ecuador, Thailand, and the United States. <em>Journal of the World Aquaculture Society</em>, 34(4), 524–532. <a href="https://doi.org/10.1111/j.1749-7345.2003.tb00092.x" rel="noopener" target="_blank">doi:10.1111/j.1749-7345.2003.tb00092.x</a></li>
+        <li>Saoud, I. P., Davis, D. A. &amp; Rouse, D. B. (2003). Suitability studies of inland well waters for <em>Litopenaeus vannamei</em> culture. <em>Aquaculture</em>, 217, 373–383. <a href="https://doi.org/10.1016/S0044-8486(02)00418-0" rel="noopener" target="_blank">doi:10.1016/S0044-8486(02)00418-0</a></li>
+        <li>Davis, D. A., Boyd, C. E., Rouse, D. B. &amp; Saoud, I. P. (2005). Effects of potassium, magnesium and age on growth and survival of <em>Litopenaeus vannamei</em> post-larvae reared in inland low salinity well waters in West Alabama. <em>Journal of the World Aquaculture Society</em>, 36(3), 416–419. <a href="https://doi.org/10.1111/j.1749-7345.2005.tb00346.x" rel="noopener" target="_blank">doi:10.1111/j.1749-7345.2005.tb00346.x</a> (abstract).</li>
+        <li>Roy, L. A., Davis, D. A., Saoud, I. P., Boyd, C. A., Pine, H. J. &amp; Boyd, C. E. (2010). Shrimp culture in inland low salinity waters. <em>Reviews in Aquaculture</em>, 2(4), 191–208. <a href="https://doi.org/10.1111/j.1753-5131.2010.01036.x" rel="noopener" target="_blank">doi:10.1111/j.1753-5131.2010.01036.x</a></li>
+        <li>Truong, H. H. et al. (2023). Mineral nutrition in penaeid shrimp. <em>Reviews in Aquaculture</em>, 15(4), 1355–1373. <a href="https://doi.org/10.1111/raq.12780" rel="noopener" target="_blank">doi:10.1111/raq.12780</a></li>
+        <li>Sowers, A., Young, S. P., Isely, J. J., Browdy, C. L. &amp; Tomasso, J. R., Jr. (2004). Nitrite toxicity to <em>Litopenaeus vannamei</em> in water containing low concentrations of sea salt or mixed salts. <em>Journal of the World Aquaculture Society</em>, 35(4), 445–451. <a href="https://doi.org/10.1111/j.1749-7345.2004.tb00109.x" rel="noopener" target="_blank">doi:10.1111/j.1749-7345.2004.tb00109.x</a> (abstract).</li>
+        <li>Davis, D. A., Samocha, T. M. &amp; Boyd, C. E. (2004). <em>Acclimating Pacific White Shrimp, Litopenaeus vannamei, to Inland, Low-Salinity Waters</em>. Southern Regional Aquaculture Center, Publication 2601 (not opened).</li>
+      </ol>
+      <p class="muted-note">Where a source is marked "abstract", the finding quoted here comes from the publisher's abstract; the full paper was not consulted for this calculator.</p>
+    </article>
+  </main>
+
+  <footer class="site-footer">
+    <div class="wrap">Calculations are estimates. Check the sources above before relying on a result.</div>
+  </footer>
+
+  <script src="../assets/share.js"></script>
+  <script src="../assets/units.js"></script>
+  <script src="../assets/sea-salt-mix.js"></script>
+</body>
+</html>
