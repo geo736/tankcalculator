@@ -175,6 +175,8 @@
   function getState() {
     const st = { mode: mode, crop: cropSel.value, tcrop: tcrop.value, tfeed: tfeed.value };
     THEORY_FIELDS.forEach(function (f) { st[f] = $(f).value === '' ? 'none' : $(f).value; });
+    st.t_ret = $('t_ret').value;
+    if (st.t_ret === 'recovery') NP.RET_FIELDS.forEach(function (f) { st[f] = $(f).value === '' ? 'none' : $(f).value; });
     OUTS.forEach(function (o) { st[o[0]] = $(o[0]).value; });
     MODE_FIELDS[mode].forEach(function (f) {
       st[f] = $(f).value === '' ? 'none' : $(f).value; // keep cleared optional fields cleared on reload
@@ -191,10 +193,12 @@
     tcrop.value = DEFAULTS.tcrop; tfeed.value = DEFAULTS.tfeed;
     fillCrop(DEFAULTS.tcrop); fillFeed(DEFAULTS.tfeed);
     $('t_nue').value = NP.NUE; $('t_pue').value = NP.PUE;
+    NP.retentionDefaults($);
   }
 
   // ---------- Render ----------
   function render() {
+    NP.syncRetention($);
     const c = compute();
     const notes = [];
     if (mode === 'measure') {
@@ -248,7 +252,7 @@
     if (c.ok) {
       interp = 'Each kg of fish growth ' + (mode === 'measure' ? 'came' : 'comes') + ' with ' + ratio(c.pfrm) + ' kg of fresh plant growth.';
       if (c.fcrf) interp += ' At this fish FCR (' + ratio(c.fcrf) + '), every kg of feed gives ' + fmt(1 / c.fcrp) + ' kg of plants and ' + fmt(1 / c.fcrf) + ' kg of fish; raising PFRM at the same fish FCR means a lower FCRplant.';
-      if (c.thPfrm) interp += ' The theoretical PFRM for ' + cropName() + ' with ' + feedName() + ' is ' + ratio(c.thPfrm) + ' (at fish FCR ' + ratio(c.thFcrf) + ' and average plant retention of feed N and P); Colt & Semmens (2022) give 2.5–9.1 across 12 crops.';
+      if (c.thPfrm) interp += ' The theoretical PFRM for ' + cropName() + ' with ' + feedName() + ' is ' + ratio(c.thPfrm) + ' (at fish FCR ' + ratio(c.thFcrf) + ' and ' + NP.retentionLabel($) + '); Colt & Semmens (2022) give 2.5–9.1 across 12 crops.';
     }
     $('interp').textContent = interp;
 
@@ -264,10 +268,10 @@
       ts.hidden = false;
       ts.className = 'status ' + (c.vs >= 0.8 ? 'ok' : 'warn');
       ts.textContent = (c.vs > 1.25
-        ? 'Above the theoretical ' + ratio(c.thPfrm) + ' for ' + cropName() + ' with ' + feedName() + ': more plant per kg of fish than average retention predicts (or N/P from water or supplements).'
+        ? 'Above the theoretical ' + ratio(c.thPfrm) + ' for ' + cropName() + ' with ' + feedName() + ': more plant per kg of fish than ' + NP.retentionLabel($) + ' predicts (or N/P from water or supplements).'
         : c.vs >= 0.8
           ? 'Close to the theoretical ' + ratio(c.thPfrm) + ' for ' + cropName() + ' with ' + feedName() + '.'
-          : fmt(c.vs, 2) + '× the theoretical ' + ratio(c.thPfrm) + ' for ' + cropName() + ' with ' + feedName() + ': the plants grew less from the feed than average retention predicts.') +
+          : fmt(c.vs, 2) + '× the theoretical ' + ratio(c.thPfrm) + ' for ' + cropName() + ' with ' + feedName() + ': the plants grew less from the feed than ' + NP.retentionLabel($) + ' predicts.') +
         (inR ? ' Inside' : ' Outside') + ' the 2.5–9.1 range of Colt & Semmens (2022).';
     } else {
       ts.hidden = true;
@@ -390,7 +394,7 @@
         if (c.load) L.push('Feed loading rate: ' + showR(c.load));
       }
     }
-    if (c.thPfrm) L.push('Theoretical PFRM (' + (tcrop.value === 'custom' ? 'custom crop' : NP.CROPS[tcrop.value].name) + ', ' + feedName() + ', fish FCR ' + ratio(c.thFcrf) + '): ' + ratio(c.thPfrm) + (c.vs ? '; yours is ' + fmt(c.vs, 2) + '× theoretical' : ''));
+    if (c.thPfrm) L.push('Theoretical PFRM (' + (tcrop.value === 'custom' ? 'custom crop' : NP.CROPS[tcrop.value].name) + ', ' + feedName() + ', fish FCR ' + ratio(c.thFcrf) + ', plant N/P retention ' + $('t_nue').value + '/' + $('t_pue').value + '%' + ($('t_ret').value === 'recovery' ? ' with solids recovered' : '') + '): ' + ratio(c.thPfrm) + (c.vs ? '; yours is ' + fmt(c.vs, 2) + '× theoretical' : ''));
     if (c.ok && c.status) L.push($('r-status').textContent);
     L.push(CalcShare.buildUrl(getState()));
     return L.join('\n');
@@ -403,11 +407,14 @@
   INPUT_FIELDS.forEach(function (f) { $(f).addEventListener('input', render); });
   cropSel.addEventListener('change', render);
   tcrop.addEventListener('change', function () { fillCrop(tcrop.value); render(); });
+  $('t_ret').addEventListener('change', render);
+  NP.RET_FIELDS.forEach(function (f) { $(f).addEventListener('input', render); });
   tfeed.addEventListener('change', function () { fillFeed(tfeed.value); render(); });
   THEORY_FIELDS.forEach(function (f) {
     $(f).addEventListener('input', function () {
       if (CROP_F[f]) tcrop.value = 'custom';
       if (FEED_F[f]) tfeed.value = 'custom';
+      if (f === 't_nue' || f === 't_pue') $('t_ret').value = 'custom';
       render();
     });
   });
@@ -433,6 +440,10 @@
     if (p.tcrop && (NP.CROPS[p.tcrop] || p.tcrop === 'custom')) { tcrop.value = p.tcrop; fillCrop(p.tcrop); }
     if (p.tfeed && (NP.FEEDS[p.tfeed] || p.tfeed === 'custom')) { tfeed.value = p.tfeed; fillFeed(p.tfeed); }
     THEORY_FIELDS.forEach(function (f) {
+      if (p[f] !== undefined) $(f).value = isFinite(parseFloat(p[f])) ? p[f] : '';
+    });
+    if (NP.RET_MODES.indexOf(p.t_ret) >= 0) $('t_ret').value = p.t_ret;
+    NP.RET_FIELDS.forEach(function (f) {
       if (p[f] !== undefined) $(f).value = isFinite(parseFloat(p[f])) ? p[f] : '';
     });
     OUTS.forEach(function (o) {

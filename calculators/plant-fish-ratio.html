@@ -184,6 +184,23 @@
         </div>
         <details class="more">
           <summary>Crop, feed, retention and fish FCR values</summary>
+          <div class="field">
+            <label for="t_ret">Plant retention of feed N and P</label>
+            <select id="t_ret">
+              <option value="paper">Paper average (22.3% N, 15.1% P)</option>
+              <option value="recovery">Fish solids recovered and returned to the plants</option>
+              <option value="custom">Custom (enter below)</option>
+            </select>
+          </div>
+          <div id="ret-rec" hidden>
+            <div class="two-col stack-sm">
+              <div class="field"><label for="t_fishn">N kept by the fish</label><div class="input-row"><input id="t_fishn" type="number" inputmode="decimal" min="0" max="100" step="any"><span class="unit">% of feed N</span></div></div>
+              <div class="field"><label for="t_fishp">P kept by the fish</label><div class="input-row"><input id="t_fishp" type="number" inputmode="decimal" min="0" max="100" step="any"><span class="unit">% of feed P</span></div></div>
+              <div class="field"><label for="t_recn">Rest of the N reaching plants</label><div class="input-row"><input id="t_recn" type="number" inputmode="decimal" min="0" max="100" step="any"><span class="unit">%</span></div></div>
+              <div class="field"><label for="t_recp">Rest of the P reaching plants</label><div class="input-row"><input id="t_recp" type="number" inputmode="decimal" min="0" max="100" step="any"><span class="unit">%</span></div></div>
+            </div>
+            <div class="field-hint" style="margin:-4px 0 12px">For systems that capture the fish solids, digest them (aerobically or anaerobically) and return the nutrients. Plant retention = (100 − % kept by the fish) × % of the rest that reaches the plants. Fish defaults are the paper's selected means (23.3% of feed N, 39.8% of feed P) [1]. 100% recovery is the ceiling: digesters and anoxic zones lose some N as N₂ gas, and P can be tied up as struvite or calcium phosphate, so enter your measured recovery if you have it.</div>
+          </div>
           <div class="two-col stack-sm">
             <div class="field"><label for="t_dmp">Crop dry matter</label><div class="input-row"><input id="t_dmp" type="number" inputmode="decimal" min="0" max="100" step="any"><span class="unit">% of wet</span></div></div>
             <div class="field"><label for="t_dmf">Feed dry matter</label><div class="input-row"><input id="t_dmf" type="number" inputmode="decimal" min="0" max="100" step="any"><span class="unit">% of feed</span></div></div>
@@ -195,7 +212,7 @@
             <div class="field"><label for="t_pue">P retained by plants (PUE)</label><div class="input-row"><input id="t_pue" type="number" inputmode="decimal" min="0" max="100" step="any"><span class="unit">% of feed P</span></div></div>
             <div class="field"><label for="t_fcrf">Fish FCR for the theory</label><div class="input-row"><input id="t_fcrf" type="number" inputmode="decimal" min="0" step="any"><span class="unit">kg/kg</span></div></div>
           </div>
-          <div class="field-hint">Crop values are for the salable product (Table 2 of [1], from USDA data [5]). Feed values and the fish FCR (1.40 warm-water, 1.10 cold-water) are the selected values of Table 3 of [1]. NUE 22.3% and PUE 15.1% are the paper's selected mean retention values. When you enter feed and fish gain, your own fish FCR is used instead. Editing a crop or feed value switches its menu to Custom.</div>
+          <div class="field-hint">Crop values are for the salable product (Table 2 of [1], from USDA data [5]). Feed values and the fish FCR (1.40 warm-water, 1.10 cold-water) are the selected values of Table 3 of [1]. NUE 22.3% and PUE 15.1% are the paper's selected mean retention values. When you enter feed and fish gain, your own fish FCR is used instead. Editing a crop or feed value switches its menu to Custom; editing NUE or PUE switches the retention setting to Custom.</div>
         </details>
 
         <hr class="divider">
@@ -301,6 +318,8 @@
       <p>The plant FCR has a theoretical value from a nitrogen and a phosphorus mass balance: the feed needed per kg of salable plant when the plants retain an average share of the feed N and P. The element that needs more feed is limiting; its value is the controlling FCR<sub>plant</sub> (see the <a href="plant-fcr.html">plant FCR calculator</a>). Dividing the fish FCR by it gives the controlling PFRM [1]. With the paper's selected values (mean warm- and cold-water feeds, fish FCR 1.40 and 1.10, 22.3% of feed N and 15.1% of feed P retained by the plants), the theoretical PFRM ranged from about <strong>2.5 to 9.1 kg plant per kg fish</strong> across 12 crops: lower for nitrogen-rich herbs and greens such as peppermint, basil and parsley, higher for fruiting crops such as tomato and cucumber [1].</p>
       <p>Only about 30% of the PFRM<sub>exp</sub> values the authors could calculate from published aquaponic studies fell inside 2.5–9.1, and only one study reported a PFRM directly [1]. A PFRM well below the theory at the same fish FCR means the plants grew less from the feed than the mass balance predicts. The authors list low nutrient and micronutrient concentrations, suboptimal pH and temperature, and salt build-up as likely causes [1].</p>
 
+      <h3>Systems that recover the fish solids</h3>
+      <p>The paper's average retention (22.3% of feed nitrogen and 15.1% of feed phosphorus in the plants) comes from typical aquaponic studies, many of which settle out and discard the fish solids. In a system that captures the solids, digests them aerobically or anaerobically and returns the dissolved nutrients, the plants can receive nearly everything the fish do not keep. The fish keep about 23.3% of feed nitrogen and 39.8% of feed phosphorus [1], so the ceiling is 76.7% of feed N and 60.2% of feed P. For lettuce with warm-water feed that gives a theoretical FCR<sub>plant</sub> of 0.059 kg feed per kg lettuce, with nitrogen (0.0590) and phosphorus (0.0591) running out almost together, or a theoretical PFRM of about 24 kg lettuce per kg fish at a fish FCR of 1.4, four times the paper's average-retention value. Real systems land below the ceiling because digesters and anoxic zones lose some nitrogen as N₂ gas and phosphorus can precipitate in the digester. Choose "Fish solids recovered and returned" under the retention setting and enter your recovery to compare against your own system's ceiling.</p>
       <h3>Standing ratios and the revenue ratio</h3>
       <p>The standing ratio changes over a production cycle. Starting from the stocking weights, Eq. 10 of [1] gives it after a feed input FF as PFRM<sub>t</sub> = (W<sub>o</sub><sup>plant</sup> + FF ÷ FCR<sup>plant</sup>) ÷ (W<sub>o</sub><sup>fish</sup> + FF ÷ FCR<sup>fish</sup>): it moves from the stocking ratio towards PFRM<sub>exp</sub> as more feed goes in, quickly if the two are close [1]. Plant stocking weight is usually small, but fish stocking weight varies widely, so the ratio at harvest can be far below PFRM<sub>exp</sub>. The plant-fish revenue ratio uses the ratio at harvest: PFRR = PFRM<sub>h</sub> × (farmgate price of plants ÷ farmgate price of fish), and varied 5–6-fold across the fish-plant combinations in the paper's data [1].</p>
 

@@ -32,6 +32,45 @@
 
   // Selected mean retention by the plants (Supplemental Tables S-2, S-3; Table 3).
   const NUE = 22.3, PUE = 15.1;
+  // Selected mean retention by the fish (sections 4.1 and 4.2): % of feed N and P kept in fish tissue.
+  const FISH_N = 23.3, FISH_P = 39.8;
+
+  // Plant retention when fish solids are recovered (e.g. digested) and returned: the plants can get
+  // at most what the fish do not keep, times the share of it that actually reaches them.
+  function recoveryRetention(fishN, fishP, recN, recP) {
+    if (!(fishN >= 0 && fishN < 100 && fishP >= 0 && fishP < 100 && recN > 0 && recP > 0)) return null;
+    return { nue: (100 - fishN) * Math.min(recN, 100) / 100, pue: (100 - fishP) * Math.min(recP, 100) / 100 };
+  }
+
+  // Shared UI wiring for the retention-mode select ('paper' | 'recovery' | 'custom') on both pages.
+  // ids: t_ret (select), t_fishn, t_fishp, t_recn, t_recp, ret-rec (wrapper), t_nue, t_pue.
+  function syncRetention($) {
+    const mode = $('t_ret').value;
+    $('ret-rec').hidden = mode !== 'recovery';
+    const fixedVals = mode !== 'custom';
+    ['t_nue', 't_pue'].forEach(function (id) { $(id).readOnly = fixedVals; });
+    if (mode === 'paper') { $('t_nue').value = NUE; $('t_pue').value = PUE; }
+    else if (mode === 'recovery') {
+      const v = function (id) { const x = parseFloat($(id).value); return isFinite(x) ? x : NaN; };
+      const r = recoveryRetention(v('t_fishn'), v('t_fishp'), v('t_recn'), v('t_recp'));
+      $('t_nue').value = r ? +r.nue.toFixed(2) : '';
+      $('t_pue').value = r ? +r.pue.toFixed(2) : '';
+    }
+    return mode;
+  }
+  function retentionLabel($) {
+    const m = $('t_ret').value;
+    return m === 'paper' ? 'the paper\'s average plant retention'
+      : m === 'recovery' ? 'full solids recovery (' + $('t_nue').value + '% of feed N and ' + $('t_pue').value + '% of feed P to plants)'
+        : 'your retention values';
+  }
+  function retentionDefaults($) {
+    $('t_ret').value = 'paper';
+    $('t_fishn').value = FISH_N; $('t_fishp').value = FISH_P;
+    $('t_recn').value = 100; $('t_recp').value = 100;
+  }
+  const RET_FIELDS = ['t_fishn', 't_fishp', 't_recn', 't_recp'];
+  const RET_MODES = ['paper', 'recovery', 'custom'];
 
   // Ranges reported in the paper.
   const RANGE = {
@@ -63,5 +102,7 @@
     sel.appendChild(o);
   }
 
-  window.AquaponicNP = { CROPS: CROPS, FEEDS: FEEDS, NUE: NUE, PUE: PUE, RANGE: RANGE, theory: theory, fillSelect: fillSelect };
+  window.AquaponicNP = { CROPS: CROPS, FEEDS: FEEDS, NUE: NUE, PUE: PUE, FISH_N: FISH_N, FISH_P: FISH_P, RANGE: RANGE,
+    theory: theory, fillSelect: fillSelect, recoveryRetention: recoveryRetention, syncRetention: syncRetention,
+    retentionLabel: retentionLabel, retentionDefaults: retentionDefaults, RET_FIELDS: RET_FIELDS, RET_MODES: RET_MODES };
 })();

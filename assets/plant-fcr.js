@@ -156,6 +156,8 @@
   function getState() {
     const st = { mode: mode, crop: cropSel.value, outm: outM.value, outy: outY.value, outr: outR.value, tcrop: tcrop.value, tfeed: tfeed.value };
     THEORY_FIELDS.forEach(function (f) { st[f] = $(f).value === '' ? 'none' : $(f).value; });
+    st.t_ret = $('t_ret').value;
+    if (st.t_ret === 'recovery') NP.RET_FIELDS.forEach(function (f) { st[f] = $(f).value === '' ? 'none' : $(f).value; });
     MODE_FIELDS[mode].forEach(function (f) {
       st[f] = $(f).value === '' ? 'none' : $(f).value; // keep cleared optional fields cleared on reload
       const u = CalcUnits.unit(f);
@@ -171,10 +173,12 @@
     tcrop.value = DEFAULTS.tcrop; tfeed.value = DEFAULTS.tfeed;
     fillCrop(DEFAULTS.tcrop, false); fillFeed(DEFAULTS.tfeed);
     $('t_nue').value = NP.NUE; $('t_pue').value = NP.PUE;
+    NP.retentionDefaults($);
   }
 
   // ---------- Render ----------
   function render() {
+    NP.syncRetention($);
     const c = compute();
     const notes = [];
     if (mode === 'measure') {
@@ -210,10 +214,10 @@
       ts.hidden = false;
       ts.className = 'status ' + (c.vs <= 1.25 ? 'ok' : 'warn');
       ts.textContent = (c.vs < 0.8
-        ? 'Below the theoretical ' + ratio3(th.control) + ' for ' + cropName() + ' with ' + feedName() + ': more plant per kg of feed than average retention predicts (or N/P from water or supplements).'
+        ? 'Below the theoretical ' + ratio3(th.control) + ' for ' + cropName() + ' with ' + feedName() + ': more plant per kg of feed than ' + NP.retentionLabel($) + ' predicts (or N/P from water or supplements).'
         : c.vs <= 1.25
           ? 'Close to the theoretical ' + ratio3(th.control) + ' for ' + cropName() + ' with ' + feedName() + '.'
-          : fmt(c.vs, 2) + '× the theoretical ' + ratio3(th.control) + ' for ' + cropName() + ' with ' + feedName() + ': the plants retain less of the feed nutrients than average.') +
+          : fmt(c.vs, 2) + '× the theoretical ' + ratio3(th.control) + ' for ' + cropName() + ' with ' + feedName() + ': the plants retain less of the feed nutrients than ' + NP.retentionLabel($) + ' predicts.') +
         (inR ? ' Inside' : ' Outside') + ' the 0.064–0.564 range of [1].';
     } else {
       ts.hidden = true;
@@ -362,7 +366,7 @@
         if (c.FG) L.push('Expected fish gain: ' + showM(c.FG));
       }
     }
-    if (c.th) L.push('Theoretical FCRplant (' + (tcrop.value === 'custom' ? 'custom crop' : NP.CROPS[tcrop.value].name) + ', ' + feedName() + ', NUE ' + $('t_nue').value + '%, PUE ' + $('t_pue').value + '%): ' + ratio3(c.th.control) + ' (' + c.th.limiting + '-limited; N ' + ratio3(c.th.fcrN) + ', P ' + ratio3(c.th.fcrP) + ')' + (c.vs ? '; yours is ' + fmt(c.vs, 2) + '× theoretical' : ''));
+    if (c.th) L.push('Theoretical FCRplant (' + (tcrop.value === 'custom' ? 'custom crop' : NP.CROPS[tcrop.value].name) + ', ' + feedName() + ', NUE ' + $('t_nue').value + '%, PUE ' + $('t_pue').value + '%' + ($('t_ret').value === 'recovery' ? ', solids recovered' : '') + '): ' + ratio3(c.th.control) + ' (' + c.th.limiting + '-limited; N ' + ratio3(c.th.fcrN) + ', P ' + ratio3(c.th.fcrP) + ')' + (c.vs ? '; yours is ' + fmt(c.vs, 2) + '× theoretical' : ''));
     if (c.ok && c.status) L.push($('r-status').textContent);
     L.push(CalcShare.buildUrl(getState()));
     return L.join('\n');
@@ -375,11 +379,14 @@
   INPUT_FIELDS.forEach(function (f) { $(f).addEventListener('input', render); });
   cropSel.addEventListener('change', render);
   tcrop.addEventListener('change', function () { fillCrop(tcrop.value, true); render(); });
+  $('t_ret').addEventListener('change', render);
+  NP.RET_FIELDS.forEach(function (f) { $(f).addEventListener('input', render); });
   tfeed.addEventListener('change', function () { fillFeed(tfeed.value); render(); });
   THEORY_FIELDS.forEach(function (f) {
     $(f).addEventListener('input', function () {
       if (CROP_F[f]) tcrop.value = 'custom';
       if (FEED_F[f]) tfeed.value = 'custom';
+      if (f === 't_nue' || f === 't_pue') $('t_ret').value = 'custom';
       render();
     });
   });
@@ -405,6 +412,10 @@
     if (p.tcrop && (NP.CROPS[p.tcrop] || p.tcrop === 'custom')) { tcrop.value = p.tcrop; fillCrop(p.tcrop, false); }
     if (p.tfeed && (NP.FEEDS[p.tfeed] || p.tfeed === 'custom')) { tfeed.value = p.tfeed; fillFeed(p.tfeed); }
     THEORY_FIELDS.forEach(function (f) {
+      if (p[f] !== undefined) $(f).value = isFinite(parseFloat(p[f])) ? p[f] : '';
+    });
+    if (NP.RET_MODES.indexOf(p.t_ret) >= 0) $('t_ret').value = p.t_ret;
+    NP.RET_FIELDS.forEach(function (f) {
       if (p[f] !== undefined) $(f).value = isFinite(parseFloat(p[f])) ? p[f] : '';
     });
     [[outM, 'outm', 'mass'], [outY, 'outy', 'arealmass'], [outR, 'outr', 'feedratio']].forEach(function (o) {
