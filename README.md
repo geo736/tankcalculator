@@ -55,7 +55,7 @@ Every input that has a unit gets its **own** unit dropdown – never one shared 
 - [x] Air Pump & Air Stone Sizing (hydroponic systems) – `calculators/aeration-hydroponic.html`
 - [x] Feed Conversion Ratio (FCR) – `calculators/fcr.html`
 - [x] Hydroponic Nutrient Additions – `calculators/nutrient-additions.html`
-- [ ] Aquaponic Buffer Blend (fish feed to plant nutrient balance)
+- [x] Aquaponic Buffer Blend (fish feed to plant nutrient balance) – `calculators/buffer-blend.html`
 - [x] Low-Cost Artificial Sea Salt Mix (inland shrimp) – `calculators/sea-salt-mix.html`
 - [x] Plant Feed Conversion Ratio (FCRplant)
 - [x] Plant-Fish Mass Ratio (PFRM)

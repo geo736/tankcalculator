@@ -1,0 +1,430 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Aquaponic Buffer Blend Calculator</title>
+  <meta name="description" content="Design a dry buffer blend of calcium hydroxide, potassium carbonate, potassium phosphate and magnesium salts, dosed per kg of fish feed, that tops up aquaponic fish waste to a hydroponic nutrient ratio and supplies alkalinity for pH control. After Wilson Lennard's buffer formulation model.">
+  <link rel="stylesheet" href="../assets/style.css">
+  <style>
+    .ion-group { margin: 4px 0 10px; font-size: .8rem; font-weight: 600; text-transform: uppercase; letter-spacing: .05em; color: var(--text-muted); }
+    details.more { border: 1px solid var(--border); border-radius: 10px; padding: 8px 12px; margin-bottom: 14px; background: var(--surface); }
+    details.more summary { cursor: pointer; font-weight: 600; font-size: .9rem; }
+    details.more[open] summary { margin-bottom: 12px; }
+    .table-scroll { overflow-x: auto; }
+    .calc-table { width: 100%; border-collapse: collapse; font-size: .78rem; font-variant-numeric: tabular-nums; margin: 6px 0 10px; }
+    .calc-table th, .calc-table td { padding: 5px 3px; border-bottom: 1px solid var(--border); text-align: right; white-space: nowrap; }
+    .calc-table th:first-child, .calc-table td:first-child { text-align: left; white-space: normal; }
+    .calc-table th { color: var(--text-muted); font-weight: 600; }
+    .calc-table tr.off td { color: var(--warn-text); font-weight: 600; }
+    .calc-table tr.sum td { font-weight: 700; }
+    .salt-row { padding: 8px 0; border-bottom: 1px dashed var(--border); }
+    .salt-check { display: flex; gap: 8px; align-items: flex-start; font-size: .9rem; font-weight: 600; cursor: pointer; min-width: 0; }
+    .salt-check input { margin-top: 3px; flex: none; width: 17px; height: 17px; accent-color: var(--accent); }
+    .salt-name { min-width: 0; overflow-wrap: anywhere; }
+    .salt-an { display: block; font-size: .75rem; font-weight: 400; color: var(--text-muted); }
+    .salt-opts { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.4fr); gap: 8px; margin: 6px 0 0 25px; }
+    .salt-opts input { padding: 6px 8px; min-width: 0; }
+    .salt-opts .unit { padding: 0 6px; font-size: .75rem; white-space: nowrap; }
+    .salt-opts .unit-select { font-size: .75rem; max-width: 92px; }
+    .result-main .sub { font-size: .85rem; color: var(--text-muted); }
+    .table-head { font-size: .85rem; font-weight: 600; margin: 14px 0 0; }
+    .muted-note { font-size: .8rem; color: var(--text-muted); margin: 0 0 8px; }
+    .viz .dim-text { font-size: 14px; }
+    .three-col { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+    @media (max-width: 480px) {
+      .two-col.stack { grid-template-columns: minmax(0, 1fr); gap: 0; }
+      .three-col { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .salt-opts { margin-left: 0; }
+    }
+  </style>
+</head>
+<body>
+  <header class="site-header">
+    <div class="wrap">
+      <a class="brand" href="../">
+        <span class="brand-mark" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3c3 4 6 7 6 11a6 6 0 0 1-12 0c0-4 3-7 6-11z"/></svg>
+        </span>
+        Tank Calculator
+      </a>
+      <nav><a href="../">All calculators</a></nav>
+    </div>
+  </header>
+
+  <main class="wrap">
+    <div class="crumbs"><a href="../">Home</a> / Aquaponic Buffer Blend</div>
+    <h1 class="page-title">Aquaponic Buffer Blend Calculator</h1>
+    <p class="page-lede">Fish waste brings plenty of nitrogen but too little potassium, calcium and magnesium for good plant growth. Design a dry blend of base and mineral salts that you add in proportion to the fish feed, so the system water reaches a hydroponic nutrient ratio and the bases in it replace the alkalinity that nitrification uses up. Based on Wilson Lennard's buffer formulation model.</p>
+
+    <div class="calc-layout">
+      <!-- Calculator -->
+      <section class="card" aria-labelledby="calc-heading">
+        <h2 id="calc-heading">Calculator</h2>
+
+        <div class="ion-group">Fish feed</div>
+        <div class="two-col">
+          <div class="field">
+            <label for="prot">Feed protein</label>
+            <div class="input-row"><input id="prot" type="number" inputmode="decimal" min="0" max="100" step="any"><span class="unit">%</span></div>
+          </div>
+          <div class="field">
+            <label for="pfeed">Feed phosphorus</label>
+            <div class="input-row"><input id="pfeed" type="number" inputmode="decimal" min="0" max="100" step="any"><span class="unit">% P</span></div>
+          </div>
+          <div class="field">
+            <label for="fcr">Fish FCR</label>
+            <div class="input-row"><input id="fcr" type="number" inputmode="decimal" min="0" step="any"><span class="unit">kg/kg</span></div>
+          </div>
+          <div class="field">
+            <label for="feed">Feed rate</label>
+            <div class="input-row"><input id="feed" type="number" inputmode="decimal" min="0" step="any"><select class="unit-select" data-unit-group="feedrate" data-unit-for="feed" data-unit-default="kgd" aria-label="Feed rate unit"></select></div>
+          </div>
+        </div>
+        <div class="field-hint" style="margin:-4px 0 12px">Protein and phosphorus from the feed label. See the <a href="fcr.html">FCR calculator</a> for your own fish FCR.</div>
+
+        <details class="more">
+          <summary>Fish retention and solids</summary>
+          <div class="two-col">
+            <div class="field">
+              <label for="nret">N kept in fish gain</label>
+              <div class="input-row"><input id="nret" type="number" inputmode="decimal" min="0" step="any"><select class="unit-select" data-unit-group="gperkg" data-unit-for="nret" data-unit-default="gkg" aria-label="Nitrogen retained unit"></select></div>
+            </div>
+            <div class="field">
+              <label for="pret">P kept in fish gain</label>
+              <div class="input-row"><input id="pret" type="number" inputmode="decimal" min="0" step="any"><select class="unit-select" data-unit-group="gperkg" data-unit-for="pret" data-unit-default="gkg" aria-label="Phosphorus retained unit"></select></div>
+            </div>
+          </div>
+          <div class="field-hint" style="margin:-4px 0 12px">Per kg of fish weight gain. 28.8 g N (about 18% body protein ÷ 6.25) and 4.1 g P are the model's values; a 2025 aquaponic model uses the same figures, with ranges of 27–31 g N and 2–6 g P [3].</div>
+          <div class="field">
+            <label for="solids">N and P counted as available to plants</label>
+            <select id="solids">
+              <option value="total">All waste: solids captured and remineralised</option>
+              <option value="dissolved">Dissolved only: solids removed from the system</option>
+            </select>
+          </div>
+          <div class="two-col">
+            <div class="field">
+              <label for="sn">N in fish solids</label>
+              <div class="input-row"><input id="sn" type="number" inputmode="decimal" min="0" max="100" step="any"><span class="unit">% of N fed</span></div>
+            </div>
+            <div class="field">
+              <label for="sp">P in fish solids</label>
+              <div class="input-row"><input id="sp" type="number" inputmode="decimal" min="0" max="100" step="any"><span class="unit">% of P fed</span></div>
+            </div>
+          </div>
+          <div class="field-hint" style="margin:-4px 0 4px">Used only when solids are removed. 10% of feed N is the model's value, also used (range 5–30%) by Lobanov et al. [3]. 40% of feed P is a model assumption from sludge measurements of 35–45% (and 55% in cage culture) reported by Goddek [5].</div>
+        </details>
+
+        <div class="ion-group">Target nutrient ratio</div>
+        <div class="two-col stack">
+          <div class="field">
+            <label for="preset">Reference solution</label>
+            <select id="preset">
+              <option value="resh">Resh (2013), as in the Lennard model</option>
+              <option value="hoagland2">Hoagland &amp; Arnon No. 2</option>
+              <option value="custom">Custom</option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="basis">N, P and S values read as</label>
+            <select id="basis">
+              <option value="el">Elements: N (NO₃-N), P, S</option>
+              <option value="ion">Ions: NO₃, PO₄, SO₄ (original spreadsheet, not recommended)</option>
+            </select>
+          </div>
+        </div>
+        <div class="notice" id="basis-note" hidden>Compatibility setting. It reproduces the original spreadsheet, which treated the reference values as ion masses. Resh's values are elements, so use the element setting for real blends.</div>
+        <div class="three-col">
+          <div class="field">
+            <label for="r_n" id="lab-r_n">Nitrogen (N, as NO₃-N)</label>
+            <div class="input-row"><input id="r_n" type="number" inputmode="decimal" min="0" step="any"><select class="unit-select" data-unit-group="concentration" data-unit-for="r_n" data-unit-default="mgL" aria-label="Reference nitrogen unit"></select></div>
+          </div>
+          <div class="field">
+            <label for="r_p" id="lab-r_p">Phosphorus (P)</label>
+            <div class="input-row"><input id="r_p" type="number" inputmode="decimal" min="0" step="any"><select class="unit-select" data-unit-group="concentration" data-unit-for="r_p" data-unit-default="mgL" aria-label="Reference phosphorus unit"></select></div>
+          </div>
+          <div class="field">
+            <label for="r_k">Potassium (K)</label>
+            <div class="input-row"><input id="r_k" type="number" inputmode="decimal" min="0" step="any"><select class="unit-select" data-unit-group="concentration" data-unit-for="r_k" data-unit-default="mgL" aria-label="Reference potassium unit"></select></div>
+          </div>
+          <div class="field">
+            <label for="r_ca">Calcium (Ca)</label>
+            <div class="input-row"><input id="r_ca" type="number" inputmode="decimal" min="0" step="any"><select class="unit-select" data-unit-group="concentration" data-unit-for="r_ca" data-unit-default="mgL" aria-label="Reference calcium unit"></select></div>
+          </div>
+          <div class="field">
+            <label for="r_mg">Magnesium (Mg)</label>
+            <div class="input-row"><input id="r_mg" type="number" inputmode="decimal" min="0" step="any"><select class="unit-select" data-unit-group="concentration" data-unit-for="r_mg" data-unit-default="mgL" aria-label="Reference magnesium unit"></select></div>
+          </div>
+          <div class="field">
+            <label for="r_s" id="lab-r_s">Sulfur (S)</label>
+            <div class="input-row"><input id="r_s" type="number" inputmode="decimal" min="0" step="any"><select class="unit-select" data-unit-group="concentration" data-unit-for="r_s" data-unit-default="mgL" aria-label="Reference sulfur unit"></select></div>
+          </div>
+        </div>
+        <div class="field-hint" style="margin:-4px 0 12px">Only the ratios to nitrogen are used, not the concentrations: the fish waste sets the nitrogen and every other nutrient is matched to it.</div>
+
+        <details class="more">
+          <summary>Minerals in make-up water (optional)</summary>
+          <div class="field">
+            <label for="wvol">Make-up water added</label>
+            <div class="input-row"><input id="wvol" type="number" inputmode="decimal" min="0" step="any"><select class="unit-select" data-unit-group="waterrate" data-unit-for="wvol" data-unit-default="Ld" aria-label="Make-up water unit"></select></div>
+          </div>
+          <div class="two-col">
+            <div class="field">
+              <label for="w_ca">Calcium (Ca)</label>
+              <div class="input-row"><input id="w_ca" type="number" inputmode="decimal" min="0" step="any"><select class="unit-select" data-unit-group="concentration" data-unit-for="w_ca" data-unit-default="mgL" aria-label="Water calcium unit"></select></div>
+            </div>
+            <div class="field">
+              <label for="w_mg">Magnesium (Mg)</label>
+              <div class="input-row"><input id="w_mg" type="number" inputmode="decimal" min="0" step="any"><select class="unit-select" data-unit-group="concentration" data-unit-for="w_mg" data-unit-default="mgL" aria-label="Water magnesium unit"></select></div>
+            </div>
+            <div class="field">
+              <label for="w_k">Potassium (K)</label>
+              <div class="input-row"><input id="w_k" type="number" inputmode="decimal" min="0" step="any"><select class="unit-select" data-unit-group="concentration" data-unit-for="w_k" data-unit-default="mgL" aria-label="Water potassium unit"></select></div>
+            </div>
+            <div class="field">
+              <label for="w_s">Sulfur (S)</label>
+              <div class="input-row"><input id="w_s" type="number" inputmode="decimal" min="0" step="any"><select class="unit-select" data-unit-group="concentration" data-unit-for="w_s" data-unit-default="mgL" aria-label="Water sulfur unit"></select></div>
+            </div>
+          </div>
+          <div class="field-hint">From your water report. Hard water can bring much of the calcium and magnesium, so the blend needs less. Sulfate reported as SO₄ is ÷ 3.0 for S.</div>
+        </details>
+
+        <div class="ion-group">Buffer salts</div>
+        <p class="muted-note">Tick the salts to use. Purity is the assay on the bag (100% = pure compound). Prices are optional, in any one currency, for the blend cost.</p>
+        <div id="salt-list"></div>
+
+        <details class="more" style="margin-top:14px">
+          <summary>Crops, tolerance and alkalinity settings</summary>
+          <p class="muted-note">Nitrogen use per plant per day. Fruiting crops are at full fruiting. These are the Lennard model's values and have not been independently verified; replace them with your own.</p>
+          <div class="two-col" id="crop-list"></div>
+          <div class="two-col">
+            <div class="field">
+              <label for="tol">Ratio tolerance</label>
+              <div class="input-row"><input id="tol" type="number" inputmode="decimal" min="0" step="any"><span class="unit">± %</span></div>
+            </div>
+            <div class="field">
+              <label for="alkf">Alkalinity used by nitrification</label>
+              <div class="input-row"><input id="alkf" type="number" inputmode="decimal" min="0" step="any"><span class="unit">g CaCO₃/g N</span></div>
+            </div>
+          </div>
+          <div class="field-hint">7.14 is the usual figure; 7.05 when bacterial growth is counted [6].</div>
+        </details>
+
+        <hr class="divider">
+
+        <div class="notice" id="notice" hidden></div>
+
+        <div class="two-col">
+          <div class="field">
+            <label for="mout">Show salt amounts in</label>
+            <select id="mout" class="unit-select" data-unit-group="mass" data-unit-default="g" aria-label="Salt mass output unit"></select>
+          </div>
+          <div class="field">
+            <label for="perfeed">Per amount of feed</label>
+            <select id="perfeed">
+              <option value="kg">per kg of feed</option>
+              <option value="lb">per lb of feed</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="result-main" aria-live="polite">
+          <div class="label">Buffer blend to add</div>
+          <div class="value" id="r-main">–</div>
+          <div class="sub" id="r-main-sub"></div>
+        </div>
+
+        <div class="table-scroll">
+          <table class="calc-table">
+            <thead><tr><th>Salt</th><th id="th-perfeed">Per kg feed</th><th>Per day</th><th>Blend</th></tr></thead>
+            <tbody id="salt-table"></tbody>
+          </table>
+        </div>
+        <p class="muted-note" id="unused"></p>
+
+        <ul class="result-list">
+          <li><span>Plant-available N</span><span class="v" id="r-nfeed">–</span></li>
+          <li><span>N per kg fish gain</span><span class="v" id="r-nwaste">–</span></li>
+          <li><span>Plant-available P</span><span class="v" id="r-pfeed">–</span></li>
+          <li><span>N and P in fish solids</span><span class="v" id="r-solid">–</span></li>
+          <li><span>N reaching the plants per day</span><span class="v" id="r-nday">–</span></li>
+          <li><span>Chloride added</span><span class="v" id="r-cl">–</span></li>
+          <li><span>Blend cost</span><span class="v" id="r-cost">–</span></li>
+        </ul>
+
+        <p class="table-head">Nutrients per kg feed, g (as elements)</p>
+        <div class="table-scroll">
+          <table class="calc-table">
+            <thead><tr><th></th><th>Fish</th><th id="th-water">Water</th><th>Buffer</th><th>Total</th><th>Target</th><th>Diff.</th></tr></thead>
+            <tbody id="nut-table"></tbody>
+          </table>
+        </div>
+
+        <p class="table-head" id="ratio-head">Ratio check</p>
+        <div class="table-scroll">
+          <table class="calc-table">
+            <thead><tr><th>Ratio</th><th>Target</th><th>Produced</th><th>Within?</th></tr></thead>
+            <tbody id="ratio-table"></tbody>
+          </table>
+        </div>
+
+        <p class="table-head">Alkalinity balance (guide only: measure pH)</p>
+        <ul class="result-list">
+          <li><span>Base in the blend</span><span class="v" id="r-alk-sup">–</span></li>
+          <li><span>Used by nitrifying the waste N</span><span class="v" id="r-alk-use">–</span></li>
+          <li><span>Blend minus nitrification</span><span class="v" id="r-alk-bal">–</span></li>
+          <li><span>Returned by plant nitrate uptake</span><span class="v" id="r-alk-up">–</span></li>
+        </ul>
+        <p class="muted-note" style="margin-top:6px">Top up any shortfall with a base from the <a href="ph-up-adjustment.html">pH Up calculator</a>.</p>
+
+        <p class="table-head">Plants supported by the feed N</p>
+        <div class="table-scroll">
+          <table class="calc-table">
+            <thead><tr><th>Crop</th><th>N use/plant/day</th><th>Plants</th></tr></thead>
+            <tbody id="crop-table"></tbody>
+          </table>
+        </div>
+
+        <div class="share-bar">
+          <button class="btn btn-primary" type="button" id="btn-share">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="m8.6 13.5 6.8 4M15.4 6.5l-6.8 4"/></svg>
+            Share
+          </button>
+          <button class="btn" type="button" id="btn-link">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.5.5l3-3a5 5 0 0 0-7-7l-1.7 1.7"/><path d="M14 11a5 5 0 0 0-7.5-.5l-3 3a5 5 0 0 0 7 7l1.7-1.7"/></svg>
+            Copy link
+          </button>
+          <button class="btn" type="button" id="btn-copy">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h10a1 1 0 0 1 1 1v1"/></svg>
+            Copy results
+          </button>
+          <button class="btn" type="button" id="btn-reset">Reset</button>
+        </div>
+      </section>
+
+      <!-- Visualization -->
+      <section class="card viz-card" aria-labelledby="viz-heading">
+        <h2 id="viz-heading">Visualization</h2>
+        <svg class="viz" id="viz" viewBox="0 0 480 420" role="img" aria-label="Bars of each nutrient from fish waste, make-up water and the buffer blend against its target, a stacked bar of the blend composition, and bars of the alkalinity used and supplied"></svg>
+        <p class="viz-caption" id="viz-caption"></p>
+      </section>
+    </div>
+
+    <article class="article">
+      <h2>How the buffer blend calculator works</h2>
+      <p>This calculator is built on the <strong>Aquaponic System Sizing &amp; Buffer Formulation Model</strong> by Wilson Lennard (PhD) [1]. The idea is his: the fish feed is the system's nutrient input, so the nutrients the plants are short of can be added <em>in proportion to the feed</em>, as one dry blend of salts. Base salts (calcium hydroxide, potassium carbonate) in the same blend also replace the alkalinity that nitrifying bacteria use up, so the blend doubles as the system's pH buffer.</p>
+      <ol>
+        <li><strong>Nitrogen from the feed.</strong> Feed protein ÷ 6.25 is the feed's nitrogen. The fish keep part of it in their growth; the rest is waste that the biofilter turns into nitrate for the plants.</li>
+        <li><strong>Phosphorus from the feed</strong>, likewise: feed P minus the P kept in the fish.</li>
+        <li><strong>Solids.</strong> If the fish solids are captured and remineralised (digested and returned), all the waste counts. If they are removed, the N and P in them are taken off.</li>
+        <li><strong>Targets.</strong> A hydroponic reference solution gives the ratio of each nutrient to nitrogen. Multiplying the plant-available N by those ratios gives how much P, K, Ca, Mg and S the plants need per kg of feed.</li>
+        <li><strong>The blend.</strong> What the fish waste (and, optionally, the make-up water) does not supply is made up with the salts you tick. The calculator finds the salt amounts with a non-negative least-squares solver [10]. When the salts can match every target exactly, this gives the same answer as the spreadsheet's step-by-step sequence; when they cannot, it finds the closest fit and shows what is over or under.</li>
+        <li><strong>Checks.</strong> It reports the ratios produced, the chloride added, the alkalinity balance, and how many plants of each crop the plant-available N can feed at your feed rate.</li>
+      </ol>
+
+      <h3>Why it matters</h3>
+      <p>Fish feed is formulated for fish, not plants. Aquaponic water usually holds enough nitrate, phosphate and sulfate for good plant growth, but too little potassium and calcium, and sometimes too little magnesium; iron is also short [7, 8]. Fish need little potassium, so feeds contain little of it [11]. At the same time nitrification acidifies the water. The University of the Virgin Islands system solves both problems at once by adding potassium hydroxide and calcium hydroxide in equal amounts, alternately, several times a week to hold pH near 7 [7]. Lennard's model takes that practice one step further: instead of letting pH decide how much K and Ca go in, it sizes each salt to a plant nutrient ratio and ties the dose to the feed.</p>
+
+      <h3>Formulas</h3>
+      <p>Per kg of fish weight gain, with protein and P in % of the feed, FCR in kg feed per kg fish gain, and N<sub>ret</sub>, P<sub>ret</sub> the N and P kept in the fish (g/kg) [1, 3]:</p>
+      <div class="formula">N fed       = protein × 10 × FCR ÷ 6.25        (g N per kg fish)
+N waste     = N fed − N<sub>ret</sub>
+P waste     = P% × 10 × FCR − P<sub>ret</sub>             (g P per kg fish)
+per kg feed = per kg fish ÷ FCR</div>
+      <p>With solids removed, s<sub>N</sub> and s<sub>P</sub> = share of the feed N and P that leaves in the solids:</p>
+      <div class="formula">N available = N waste per kg feed − s<sub>N</sub> × protein × 10 ÷ 6.25
+P available = P waste per kg feed − s<sub>P</sub> × P% × 10</div>
+      <p>Targets per kg of feed from the reference solution (all as elements, mg/L):</p>
+      <div class="formula">target<sub>X</sub> = N available × ref<sub>X</sub> ÷ ref<sub>N</sub>        X = P, K, Ca, Mg, S
+needed<sub>X</sub> = target<sub>X</sub> − fish waste<sub>X</sub> − make-up water<sub>X</sub>
+water<sub>X</sub>  = C<sub>X</sub> (mg/L) × water (L/day) ÷ 1000 ÷ feed (kg/day)</div>
+      <p>Element share of each salt, from IUPAC atomic weights [9] (n = atoms per formula unit, M = molar mass with water of crystallisation):</p>
+      <div class="formula">fraction = n × A ÷ M × purity
+Ca(OH)₂ 74.09: Ca 54.1%     K₂CO₃ 138.20: K 56.6%     KH₂PO₄ 136.08: K 28.7%, P 22.8%
+MgSO₄·7H₂O 246.47: Mg 9.86%, S 13.0%     MgCl₂·6H₂O 203.30: Mg 12.0%, Cl 34.9%
+K₂SO₄ 174.25: K 44.9%, S 18.4%     KHCO₃ 100.11: K 39.1%     KOH 56.11: K 69.7%
+MgCl₂ 95.21: Mg 25.5%     CaCl₂·2H₂O 147.01: Ca 27.3%, Cl 48.2%</div>
+      <p>The solver picks salt amounts x ≥ 0 that minimise the squared relative error over P, K, Ca, Mg and S, each scaled by its target (the same Lawson–Hanson method as the <a href="nutrient-additions.html">nutrient additions calculator</a>). A very small penalty on chloride makes it prefer chloride-free salts when two combinations fit equally well.</p>
+      <p>Alkalinity, as g CaCO₃ per kg feed (1 equivalent = 50.04 g CaCO₃):</p>
+      <div class="formula">supplied    = Σ salt (g) × purity ÷ M × equivalents      Ca(OH)₂, K₂CO₃: 2   KOH, KHCO₃: 1
+nitrification = N available × 7.14                        (7.05 with bacterial growth [6])
+plant NO₃ uptake returns up to N × 50.04 ÷ 14.007 = 3.57 g per g N</div>
+      <p>Plants supported (the spreadsheet's crop table):</p>
+      <div class="formula">plants = N available (g/kg feed) × feed (kg/day) ÷ N use (g N/plant/day)</div>
+
+      <h3>Worked example (the defaults)</h3>
+      <p>32% protein feed with 0.8% P, FCR 1.5, 1 kg of feed a day, all solids remineralised, Resh reference read as elements, and the spreadsheet's five salts plus potassium sulfate ticked.</p>
+      <div class="formula">N fed = 32 × 10 × 1.5 ÷ 6.25 = 76.8 g/kg fish;  waste = 76.8 − 28.8 = 48.0;  ÷ 1.5 = 32.0 g N per kg feed
+P waste = 0.8 × 10 × 1.5 − 4.1 = 7.9 g/kg fish;  ÷ 1.5 = 5.267 g P per kg feed
+Targets (× ref ÷ 121): P 9.521, K 63.47, Ca 23.01, Mg 16.13, S 25.92 g per kg feed
+KH₂PO₄  = (9.521 − 5.267) × 136.084 ÷ 30.974 = 18.69 g   (brings 5.37 g K)
+Ca(OH)₂ = 23.01 × 74.092 ÷ 40.078            = 42.54 g
+K₂CO₃   = (63.47 − 5.37) × 138.204 ÷ 78.196   = 102.69 g</div>
+      <p>That leaves magnesium and sulfur. Taking all 25.92 g S from magnesium sulfate would bring 25.92 × 24.305 ÷ 32.06 = 19.65 g Mg against a target of 16.13 g, so part of the sulfur must come from a salt without magnesium. With potassium sulfate ticked, the solver takes all the Mg from <strong>163.59 g</strong> MgSO₄·7H₂O (16.13 g Mg, 21.28 g S) and the remaining 4.64 g S from <strong>25.21 g</strong> K₂SO₄, whose 11.31 g K lowers potassium carbonate to <strong>82.70 g</strong>. Magnesium chloride is not needed. Every target is met exactly. The blend is <strong>332.7 g per kg of feed</strong>: 12.8% Ca(OH)₂, 24.9% K₂CO₃, 49.2% MgSO₄·7H₂O, 7.6% K₂SO₄ and 5.6% KH₂PO₄. It supplies 117.3 g CaCO₃-equivalent of alkalinity per kg feed against 32.0 × 7.14 = 228.5 g used by nitrification (51%); plant nitrate uptake may return up to 114 g of the difference, so measure pH and top up with base if needed. The plant-available N is 32 g per day, enough for about 2,000 large lettuces or 213 tomato plants at the model's N-use values.</p>
+      <p>With only the spreadsheet's five salts (untick potassium sulfate), sulfur and magnesium cannot both be met. The solver settles on 177.95 g MgSO₄·7H₂O, which gives S 23.15 g (−10.7%) and Mg 17.55 g (+8.8%), with 102.69 g K₂CO₃ and no MgCl₂: a 341.9 g blend.</p>
+
+      <h3>Corrections to the original spreadsheet</h3>
+      <p>The spreadsheet's method is sound, and the page follows it. Checking it line by line turned up a few slips, which the page corrects:</p>
+      <ol type="A">
+        <li><strong>Element versus ion basis.</strong> Resh's reference values are elements: nitrogen as NO₃-N, phosphorus as P and sulfur as S [2]. The spreadsheet converted the fish-waste N to nitrate ion (× 62/14) and P to phosphate ion (× 95/31) before taking ratios against them, which treats the reference values as ions. That inflates K, Ca and Mg 4.4-fold relative to N (and P and S about 1.45-fold): 1,164 g of salts per kg feed instead of about 340 g. The page reads the values as elements. The "ions" setting is kept only so the spreadsheet can be reproduced, and is not recommended.</li>
+        <li><strong>Magnesium sulfate molar mass.</strong> MgSO₄·7H₂O is 246.47 g/mol, not 236; the page uses IUPAC atomic weights for every salt [9].</li>
+        <li><strong>Solid N per kg of feed.</strong> The "solid N waste (g/kg fish feed)" cell takes 10% of the N fed per kg of <em>fish</em> (7.68 g); per kg of feed it is 10% of 51.2 g = 5.12 g. The page also makes solids handling an explicit choice.</li>
+        <li><strong>Swapped labels.</strong> In the dry-blend composition, the labels "Monopotassium phosphate" and "Magnesium chloride" are swapped: 14.6% is magnesium chloride and 3.2% monopotassium phosphate.</li>
+        <li><strong>Magnesium chloride form.</strong> The sheet uses anhydrous MgCl₂ (95 g/mol). Most agricultural magnesium chloride is the hexahydrate (203.30 g/mol), which takes 2.1 times the weight for the same Mg; both are offered, and the chloride added is reported.</li>
+        <li><strong>Exact equality in the ratio check.</strong> The sheet flags SO₄:K as "No" only because of floating-point rounding; the page compares ratios within a tolerance.</li>
+        <li><strong>Infeasible targets.</strong> A fixed sequence can call for a negative amount, as magnesium chloride does with the element reading (see the example). The page uses a non-negative solver over the ticked salts, offers potassium sulfate and other salts so S and Mg can be met separately, and shows what ends up over or under.</li>
+      </ol>
+      <p>Reproduction check: with the ions setting and the sheet's simplified molar masses, an independent hand calculation gives exactly the spreadsheet's 188.50 g Ca(OH)₂, 478.41 g K₂CO₃, 282.16 g MgSO₄·7H₂O, 169.21 g MgCl₂ and 37.25 g KH₂PO₄ per kg feed. With IUPAC masses and anhydrous MgCl₂ the page gives 188.29, 477.66, 294.37, 166.02 and 37.25 g.</p>
+
+      <h3>Limitations and assumptions</h3>
+      <ul>
+        <li><strong>Fish waste minerals are not counted.</strong> Fish feed also contains K, Ca, Mg and S, part of which reaches the water. The model counts only its N and P, so the blend may slightly oversupply these elements. Enter hard make-up water under "Minerals in make-up water"; in one study more than 75% of the Ca, Mg and S came from tap water [12].</li>
+        <li><strong>No iron or micronutrients.</strong> Aquaponic water is usually short of iron; add it separately as a chelate (see the <a href="iron-addition.html">iron addition calculator</a>). Manganese and other micronutrients can also run short.</li>
+        <li><strong>No sodium</strong> is modelled; avoid sodium bicarbonate as a buffer in aquaponics, as sodium builds up.</li>
+        <li><strong>Ratios, not concentrations.</strong> The blend sets the <em>proportions</em> of nutrients entering the system. The concentrations the water reaches depend on plant uptake, water exchange, solids removal and denitrification. Measure EC and, every few weeks, the main ions, and adjust.</li>
+        <li><strong>No ion interactions.</strong> Calcium from the blend can precipitate phosphate as calcium phosphate, especially at higher pH [7]; nothing here models precipitation or uptake.</li>
+        <li><strong>Plant N use per plant</strong> are the Lennard model's figures, not independently verified. As a rough check for lettuce, a 200 g head at about 4.4% dry matter and 4.9% N in the dry matter holds about 0.43 g N, or about 14 mg per day over 30 days. Fruiting crops vary with stage and yield.</li>
+        <li><strong>Alkalinity is a guide.</strong> Nitrification uses about 7.1 g CaCO₃ per g N, but plant nitrate uptake gives some back and denitrification in anoxic zones gives more. Whether the blend's base is enough depends on your system; measure pH and alkalinity and adjust with the <a href="ph-up-adjustment.html">pH Up calculator</a>.</li>
+        <li><strong>Phosphate salt acidity.</strong> KH₂PO₄ is counted as neutral; near pH 7 it releases a little acid as it turns into HPO₄²⁻.</li>
+        <li><strong>Several salts with the same nutrients</strong> (for example K₂CO₃ and KOH) are interchangeable for the fit; the solver then uses one of them (or a mix). Untick the ones you do not want to use.</li>
+      </ul>
+
+      <h3>Safety</h3>
+      <ul>
+        <li>Calcium hydroxide and potassium hydroxide are caustic, and potassium carbonate is strongly alkaline. They burn skin and eyes. Wear goggles, gloves and a dust mask when weighing and mixing.</li>
+        <li>Dissolving KOH releases a lot of heat: add it slowly to cold water, never water to the solid.</li>
+        <li>Dose slowly into a well-mixed sump or biofilter outlet, away from the fish, and check pH before the next dose. Fish and nitrifying bacteria cope better with gradual change [8].</li>
+        <li>Keep the blend dry and sealed. With moisture, calcium hydroxide and potassium carbonate react to calcium carbonate and caustic potassium hydroxide, and the magnesium salts can form insoluble magnesium hydroxide. Many growers keep the base and the mineral salts in separate containers and dose them in the ratio shown.</li>
+        <li>Label the containers and store them away from acids, children and animals.</li>
+      </ul>
+      <p>See also: <a href="plant-fcr.html">Plant FCR</a> · <a href="plant-fish-ratio.html">Plant-Fish Mass Ratio</a> · <a href="nutrient-additions.html">Hydroponic Nutrient Additions</a> · <a href="ph-up-adjustment.html">pH Up Adjustment</a> · <a href="feed-rate-to-grow-space.html">Feed Rate to Grow Space</a> · <a href="iron-addition.html">Iron Addition</a></p>
+
+      <h2>Sources</h2>
+      <ol class="sources">
+        <li>Lennard, W. <em>Aquaponic System Sizing &amp; Buffer Formulation Model</em> (spreadsheet). Unpublished model supplied to this site; the method, default feed values, retention values and crop N-use table on this page are his.</li>
+        <li>Resh, H. M. (2013). <em>Hydroponic Food Production: A Definitive Guidebook for the Advanced Home Gardener and the Commercial Hydroponic Grower</em> (7th ed.). Boca Raton, FL: CRC Press. Reference solution N 121, P 36, K 240, Ca 87, Mg 61, S 98 mg/L as cited in the Lennard model (p. 53). The book itself was not consulted for this page; the elemental reading of these values was confirmed by the site owner, and matches how other Resh solutions are tabulated in the literature (NO₃-N, P-PO₄, S-SO₄) [4].</li>
+        <li>Lobanov, V., Pate, J., Latrille, F. &amp; Joyce, A. (2025). Aquaponics and the crossroads of profitability and sustainability viewed through sensitivity and risk modeling. <em>Journal of Cleaner Production</em>, 146674. <a href="https://doi.org/10.1016/j.jclepro.2025.146674" rel="noopener" target="_blank">doi:10.1016/j.jclepro.2025.146674</a> (Table 1: fish N assimilation 28.8 g N/kg fish, range 27–31; P 4.1 g P/kg fish, range 2–6; solid N waste 10%, range 5–30%; the same feed N model).</li>
+        <li>Goddek, S., Espinal, C. A., Delaide, B., Jijakli, M. H., Schmautz, Z., Wuertz, S. &amp; Keesman, K. J. (2016). Navigating towards decoupled aquaponic systems: a system dynamics design approach. <em>Water</em>, 8(7), 303. <a href="https://doi.org/10.3390/w8070303" rel="noopener" target="_blank">doi:10.3390/w8070303</a> (Table 4: Resh's lettuce solution as N-NO₃ 165, P-PO₄ 50, S-SO₄ 113 mg/L).</li>
+        <li>Goddek, S. (2017). <em>Opportunities and Challenges of Multi-Loop Aquaponic Systems</em>. PhD thesis, Wageningen University. Table 6.5: share of feed P in sludge, 55% (Neto &amp; Ostrensky, 2013) and 35–45% (own RAS observations).</li>
+        <li>Ebeling, J. M., Timmons, M. B. &amp; Bisogni, J. J. (2006). Engineering analysis of the stoichiometry of photoautotrophic, autotrophic, and heterotrophic removal of ammonia–nitrogen in aquaculture systems. <em>Aquaculture</em>, 257(1–4), 346–358. <a href="https://www.sciencedirect.com/science/article/pii/S004484860600216X" rel="noopener" target="_blank">sciencedirect.com</a> (7.05 g alkalinity per g N with bacterial growth; 7.14 g as normally reported, from Timmons et al., 2002).</li>
+        <li>Rakocy, J. E. (2012). Aquaponics—integrating fish and plant culture. In J. H. Tidwell (Ed.), <em>Aquaculture Production Systems</em> (pp. 344–386). Hoboken, NJ: Wiley-Blackwell (K and Ca usually insufficient; KOH and Ca(OH)₂ added in equal amounts, alternately, several times weekly; calcium phosphate precipitation).</li>
+        <li>Somerville, C., Cohen, M., Pantanella, E., Stankus, A. &amp; Lovatelli, A. (2014). <em>Small-scale aquaponic food production: Integrated fish and plant farming</em>. FAO Fisheries and Aquaculture Technical Paper No. 589. Rome: FAO. <a href="https://www.fao.org/3/i4021e/i4021e.pdf" rel="noopener" target="_blank">fao.org</a>; and Rakocy, J. E., Masser, M. P. &amp; Losordo, T. M. (2006). <em>Recirculating Aquaculture Tank Production Systems: Aquaponics—Integrating Fish and Plant Culture</em>. SRAC Publication No. 454. Stoneville, MS: Southern Regional Aquaculture Center (general background on nutrient deficiencies and base addition, as cited on the other aquaponic pages of this site; not re-read for this page).</li>
+        <li>Prohaska, T. et al. (2022). Standard atomic weights of the elements 2021 (IUPAC Technical Report). <em>Pure and Applied Chemistry</em>, 94(5), 573–600. <a href="https://www.ciaaw.org/atomic-weights.htm" rel="noopener" target="_blank">ciaaw.org</a></li>
+        <li>Lawson, C. L. &amp; Hanson, R. J. (1974). <em>Solving Least Squares Problems</em>. Englewood Cliffs, NJ: Prentice-Hall (non-negative least squares, chapter 23; reprinted by SIAM, 1995).</li>
+        <li>Eck, M., Körner, O. &amp; Jijakli, M. H. (2019). Nutrient cycling in aquaponics systems. Chapter 9 in S. Goddek, A. Joyce, B. Kotzen &amp; G. M. Burnell (Eds.), <em>Aquaponics Food Production Systems</em>. Cham: Springer (open access) (fish use up to 7% of feed K; feeds are low in K).</li>
+        <li>Delaide, B., Delhaye, G., Dermience, M., Gott, J., Soyeurt, H. &amp; Jijakli, M. H. (2017). Plant and fish production performance, nutrient mass balances, energy and water use of the PAFF Box, a small-scale aquaponic system. <em>Aquacultural Engineering</em>. <a href="https://doi.org/10.1016/j.aquaeng.2017.06.002" rel="noopener" target="_blank">doi:10.1016/j.aquaeng.2017.06.002</a> (more than 75% of Ca, Mg and S from tap water).</li>
+        <li>Hoagland, D. R. &amp; Arnon, D. I. (1950). <em>The water-culture method for growing plants without soil</em>. California Agricultural Experiment Station Circular 347. Berkeley: University of California.</li>
+      </ol>
+    </article>
+  </main>
+
+  <footer class="site-footer">
+    <div class="wrap">Calculations are estimates. Check the sources above before relying on a result.</div>
+  </footer>
+
+  <script src="../assets/share.js"></script>
+  <script src="../assets/units.js"></script>
+  <script src="../assets/buffer-blend.js"></script>
+</body>
+</html>
