@@ -55,6 +55,8 @@ window.CALCULATORS = [
     icon: '<path d="M3 9h18l-2 11H5z"/><circle cx="9" cy="14" r="1.5"/><circle cx="14" cy="15" r="1.5"/>' },
   { slug: 'sea-salt-mix', name: 'Low-Cost Sea Salt Mix', group: 'water', blurb: 'Cheap salt mix for inland shrimp water', cat: 'aquaculture', tags: ['aquaculture'], uses: ['water', 'fish', 'money'], status: 'live',
     icon: '<path d="M4 15c2-1.5 4-1.5 6 0s4 1.5 6 0 3-1.2 4-.8"/><path d="M4 19c2-1.5 4-1.5 6 0s4 1.5 6 0 3-1.2 4-.8"/><path d="M9 4h6l-1 6h-4z"/><path d="M11 10v2M13 10v2"/>' },
+  { slug: 'buffer-blend', name: 'Aquaponic Buffer Blend', group: 'water', blurb: 'Balance fish feed to plant needs', cat: 'aquaponics', tags: ['aquaponics'], uses: ['plants', 'water', 'fish'], status: 'soon',
+    icon: '<path d="M7 3h10M9 3v4l-4 9a3 3 0 0 0 2.7 4h8.6A3 3 0 0 0 19 16l-4-9V3"/><path d="M7.5 13h9"/><circle cx="10" cy="16.5" r="1"/><circle cx="14" cy="15.5" r="1"/>' },
   { slug: 'nutrient-additions', name: 'Nutrient Additions', group: 'water', blurb: 'Fertilizer salts to hit ppm targets', cat: 'hydroponics', tags: ['hydroponics', 'aquaponics'], uses: ['plants', 'water'], status: 'live',
     icon: '<path d="M8 3h8M9 3v5l-4 9a2 2 0 0 0 2 3h10a2 2 0 0 0 2-3l-4-9V3"/><path d="M8 14h8"/><circle cx="11" cy="17" r=".8"/><circle cx="14" cy="16" r=".8"/>' },
   { slug: 'iron-addition', name: 'Iron Addition', group: 'water', blurb: 'Chelated iron dose and pH', cat: 'aquaponics', tags: ['aquaponics', 'hydroponics'], uses: ['plants', 'water'], status: 'live',
