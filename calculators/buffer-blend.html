@@ -31,6 +31,8 @@
     .table-head { font-size: .85rem; font-weight: 600; margin: 14px 0 0; }
     .muted-note { font-size: .8rem; color: var(--text-muted); margin: 0 0 8px; }
     .viz .dim-text { font-size: 14px; }
+    .mix-notes { font-size: .8rem; color: var(--text-muted); margin: 4px 0 8px; padding-left: 18px; }
+    .mix-notes li { margin-bottom: 4px; }
     .three-col { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
     @media (max-width: 480px) {
       .two-col.stack { grid-template-columns: minmax(0, 1fr); gap: 0; }
@@ -243,6 +245,15 @@
         </div>
         <p class="muted-note" id="unused"></p>
 
+        <p class="table-head">How to mix it</p>
+        <div class="table-scroll">
+          <table class="calc-table">
+            <thead><tr><th>Container</th><th id="th-mix">Per kg feed</th><th>Per day</th><th>Of total</th></tr></thead>
+            <tbody id="mix-table"></tbody>
+          </table>
+        </div>
+        <ul class="mix-notes" id="mix-notes"></ul>
+
         <ul class="result-list">
           <li><span>Plant-available N</span><span class="v" id="r-nfeed">–</span></li>
           <li><span>N per kg fish gain</span><span class="v" id="r-nwaste">–</span></li>
@@ -344,10 +355,11 @@ water<sub>X</sub>  = C<sub>X</sub> (mg/L) × water (L/day) ÷ 1000 ÷ feed (kg/d
 Ca(OH)₂ 74.09: Ca 54.1%     K₂CO₃ 138.20: K 56.6%     KH₂PO₄ 136.08: K 28.7%, P 22.8%
 MgSO₄·7H₂O 246.47: Mg 9.86%, S 13.0%     MgCl₂·6H₂O 203.30: Mg 12.0%, Cl 34.9%
 K₂SO₄ 174.25: K 44.9%, S 18.4%     KHCO₃ 100.11: K 39.1%     KOH 56.11: K 69.7%
-MgCl₂ 95.21: Mg 25.5%     CaCl₂·2H₂O 147.01: Ca 27.3%, Cl 48.2%</div>
+MgCl₂ 95.21: Mg 25.5%     CaCl₂·2H₂O 147.01: Ca 27.3%, Cl 48.2%
+CaCO₃ 100.09: Ca 40.0%     CaMg(CO₃)₂ 184.40: Ca 21.7%, Mg 13.2%</div>
       <p>The solver picks salt amounts x ≥ 0 that minimise the squared relative error over P, K, Ca, Mg and S, each scaled by its target (the same Lawson–Hanson method as the <a href="nutrient-additions.html">nutrient additions calculator</a>). A very small penalty on chloride makes it prefer chloride-free salts when two combinations fit equally well.</p>
       <p>Alkalinity, as g CaCO₃ per kg feed (1 equivalent = 50.04 g CaCO₃):</p>
-      <div class="formula">supplied    = Σ salt (g) × purity ÷ M × equivalents      Ca(OH)₂, K₂CO₃: 2   KOH, KHCO₃: 1
+      <div class="formula">supplied    = Σ salt (g) × purity ÷ M × equivalents      Ca(OH)₂, K₂CO₃, CaCO₃: 2   CaMg(CO₃)₂: 4   KOH, KHCO₃: 1
 nitrification = N available × 7.14                        (7.05 with bacterial growth [6])
 plant NO₃ uptake returns up to N × 50.04 ÷ 14.007 = 3.57 g per g N</div>
       <p>Plants supported (the spreadsheet's crop table):</p>
@@ -377,6 +389,16 @@ K₂CO₃   = (63.47 − 5.37) × 138.204 ÷ 78.196   = 102.69 g</div>
       </ol>
       <p>Reproduction check: with the ions setting and the sheet's simplified molar masses, an independent hand calculation gives exactly the spreadsheet's 188.50 g Ca(OH)₂, 478.41 g K₂CO₃, 282.16 g MgSO₄·7H₂O, 169.21 g MgCl₂ and 37.25 g KH₂PO₄ per kg feed. With IUPAC masses and anhydrous MgCl₂ the page gives 188.29, 477.66, 294.37, 166.02 and 37.25 g.</p>
 
+      <h3>Which salts can share a container</h3>
+      <p>The calculator groups the salts it uses into containers. Salts that do not react with each other are mixed into one blend, so they can be weighed and dosed together. The others get their own container:</p>
+      <ul>
+        <li><strong>Base blend:</strong> calcium hydroxide, potassium carbonate and potassium bicarbonate. These are all alkaline and can share a container if it is kept dry and sealed. With moisture, calcium hydroxide reacts with the carbonates to form calcium carbonate and caustic potassium hydroxide, and the blend cakes. An equal mixture of potassium bicarbonate and calcium hydroxide has been used as a single buffer in a research aquaponic system, with good lettuce yields [15].</li>
+        <li><strong>Mineral blend:</strong> monopotassium phosphate, potassium sulfate and magnesium sulfate. These are neutral salts with no calcium, so they can be mixed and dissolved together. They are kept apart from the base blend because calcium with phosphate forms insoluble calcium phosphate [7], and because the water of crystallisation in Epsom salt would let the bases turn the magnesium into insoluble magnesium hydroxide.</li>
+        <li><strong>Slow-release carbonates:</strong> calcium carbonate (limestone) and dolomite. Both are used to add calcium (and, from dolomite, magnesium) and alkalinity to aquaponic systems [14, 16]. They barely dissolve at neutral pH and dissolve faster as nitrification makes the water more acidic, so they act as a self-limiting buffer rather than a dose. Their low solubility also means the calcium arrives slowly: in one long-term system, daily lime additions still left the tomatoes short of calcium and magnesium [17]. Place them in a mesh bag, media bed or reactor in the water flow, and do not count on them alone to meet a calcium target.</li>
+        <li><strong>Kept separate:</strong> potassium hydroxide (very hygroscopic and caustic, and it heats as it dissolves); magnesium chloride and calcium chloride (they absorb moisture and cake a blend, and the calcium in calcium chloride would react with the phosphate and sulfate).</li>
+      </ul>
+      <p>These are handling rules based on the chemistry of the salts. Always add each container's salts slowly and check pH.</p>
+
       <h3>Limitations and assumptions</h3>
       <ul>
         <li><strong>Fish waste minerals are not counted.</strong> Fish feed also contains K, Ca, Mg and S, part of which reaches the water. The model counts only its N and P, so the blend may slightly oversupply these elements. Enter hard make-up water under "Minerals in make-up water"; in one study more than 75% of the Ca, Mg and S came from tap water [12].</li>
@@ -387,7 +409,7 @@ K₂CO₃   = (63.47 − 5.37) × 138.204 ÷ 78.196   = 102.69 g</div>
         <li><strong>Plant N use per plant</strong> are the Lennard model's figures, not independently verified. As a rough check for lettuce, a 200 g head at about 4.4% dry matter and 4.9% N in the dry matter holds about 0.43 g N, or about 14 mg per day over 30 days. Fruiting crops vary with stage and yield.</li>
         <li><strong>Alkalinity is a guide.</strong> Nitrification uses about 7.1 g CaCO₃ per g N, but plant nitrate uptake gives some back and denitrification in anoxic zones gives more. Whether the blend's base is enough depends on your system; measure pH and alkalinity and adjust with the <a href="ph-up-adjustment.html">pH Up calculator</a>.</li>
         <li><strong>Phosphate salt acidity.</strong> KH₂PO₄ is counted as neutral; near pH 7 it releases a little acid as it turns into HPO₄²⁻.</li>
-        <li><strong>Several salts with the same nutrients</strong> (for example K₂CO₃ and KOH) are interchangeable for the fit; the solver then uses one of them (or a mix). Untick the ones you do not want to use.</li>
+        <li><strong>Several salts with the same nutrients</strong> (for example K₂CO₃ and KOH, or Ca(OH)₂ and CaCO₃) are interchangeable for the fit; the solver then uses one of them (or a mix). Untick the ones you do not want to use.</li>
       </ul>
 
       <h3>Safety</h3>
@@ -395,7 +417,7 @@ K₂CO₃   = (63.47 − 5.37) × 138.204 ÷ 78.196   = 102.69 g</div>
         <li>Calcium hydroxide and potassium hydroxide are caustic, and potassium carbonate is strongly alkaline. They burn skin and eyes. Wear goggles, gloves and a dust mask when weighing and mixing.</li>
         <li>Dissolving KOH releases a lot of heat: add it slowly to cold water, never water to the solid.</li>
         <li>Dose slowly into a well-mixed sump or biofilter outlet, away from the fish, and check pH before the next dose. Fish and nitrifying bacteria cope better with gradual change [8].</li>
-        <li>Keep the blend dry and sealed. With moisture, calcium hydroxide and potassium carbonate react to calcium carbonate and caustic potassium hydroxide, and the magnesium salts can form insoluble magnesium hydroxide. Many growers keep the base and the mineral salts in separate containers and dose them in the ratio shown.</li>
+        <li>Keep each container dry and sealed, and keep the containers apart as shown under "How to mix it": the base blend, the mineral blend, the carbonates and any separate salts.</li>
         <li>Label the containers and store them away from acids, children and animals.</li>
       </ul>
       <p>See also: <a href="plant-fcr.html">Plant FCR</a> · <a href="plant-fish-ratio.html">Plant-Fish Mass Ratio</a> · <a href="nutrient-additions.html">Hydroponic Nutrient Additions</a> · <a href="ph-up-adjustment.html">pH Up Adjustment</a> · <a href="feed-rate-to-grow-space.html">Feed Rate to Grow Space</a> · <a href="iron-addition.html">Iron Addition</a></p>
@@ -415,6 +437,10 @@ K₂CO₃   = (63.47 − 5.37) × 138.204 ÷ 78.196   = 102.69 g</div>
         <li>Eck, M., Körner, O. &amp; Jijakli, M. H. (2019). Nutrient cycling in aquaponics systems. Chapter 9 in S. Goddek, A. Joyce, B. Kotzen &amp; G. M. Burnell (Eds.), <em>Aquaponics Food Production Systems</em>. Cham: Springer (open access) (fish use up to 7% of feed K; feeds are low in K).</li>
         <li>Delaide, B., Delhaye, G., Dermience, M., Gott, J., Soyeurt, H. &amp; Jijakli, M. H. (2017). Plant and fish production performance, nutrient mass balances, energy and water use of the PAFF Box, a small-scale aquaponic system. <em>Aquacultural Engineering</em>. <a href="https://doi.org/10.1016/j.aquaeng.2017.06.002" rel="noopener" target="_blank">doi:10.1016/j.aquaeng.2017.06.002</a> (more than 75% of Ca, Mg and S from tap water).</li>
         <li>Hoagland, D. R. &amp; Arnon, D. I. (1950). <em>The water-culture method for growing plants without soil</em>. California Agricultural Experiment Station Circular 347. Berkeley: University of California.</li>
+        <li>Thorarinsdottir, R. I. (Ed.) (2015). <em>Aquaponics Guidelines</em>. ISBN 978-9935-9283-1-3 (calcium carbonate, calcium hydroxide and potassium hydroxide as bases to hold pH near 7; calcium carbonate or calcium hydroxide supplements to raise pH buffer capacity).</li>
+        <li>A comparison of buffering species and regimes applied within a research-scale, recirculating aquaponics system (2020). <em>Aquaculture and Fisheries</em>. <a href="https://doi.org/10.1016/j.aaf.2020.07.001" rel="noopener" target="_blank">doi:10.1016/j.aaf.2020.07.001</a> (abstract: potassium bicarbonate, calcium hydroxide and an equal mixture of the two compared with sodium bicarbonate; authors not recorded in the copy consulted).</li>
+        <li>Al Tawaha, A. R., Megat Wahab, P. E. &amp; Jaafar, H. Z. E. Optimizing nutrient availability in decoupled recirculating aquaponic systems for enhanced plant productivity: a mini review (limestone and dolomite to supply Ca and Mg and raise pH; journal and year not shown in the copy consulted).</li>
+        <li>Rezaei, S., Spoor, M., Hohn, G., Schorer, R., Bender, G., Cline, D., Wells, D. E., de-Bashan, L. &amp; Higgins, B. (2026). Enhancing yields: the role of fish tank illumination and coupling/decoupling in biofloc aquaponics performance. <em>Aquaculture</em> (Ca and Mg deficiencies in tomato despite daily lime additions, attributed to precipitation and the low solubility of lime).</li>
       </ol>
     </article>
   </main>

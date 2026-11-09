@@ -89,8 +89,37 @@
     salt('khco3', 'Potassium bicarbonate', 'KHCO₃', { K: 1, H: 1, C: 1, O: 3 }, { k: 1 }, 1),
     salt('koh', 'Potassium hydroxide flakes', 'KOH', { K: 1, O: 1, H: 1 }, { k: 1 }, 1, 90),
     salt('mgcl0', 'Magnesium chloride, anhydrous', 'MgCl₂', { Mg: 1, Cl: 2 }, { mg: 1, cl: 2 }, 0),
-    salt('cacl2', 'Calcium chloride dihydrate', 'CaCl₂·2H₂O', hyd({ Ca: 1, Cl: 2 }, 2), { ca: 1, cl: 2 }, 0)
+    salt('cacl2', 'Calcium chloride dihydrate', 'CaCl₂·2H₂O', hyd({ Ca: 1, Cl: 2 }, 2), { ca: 1, cl: 2 }, 0),
+    salt('caco3', 'Calcium carbonate (agricultural limestone)', 'CaCO₃', { Ca: 1, C: 1, O: 3 }, { ca: 1 }, 2),
+    salt('dolo', 'Dolomite (dolomitic limestone)', 'CaMg(CO₃)₂', { Ca: 1, Mg: 1, C: 2, O: 6 }, { ca: 1, mg: 1 }, 4)
   ];
+  // Which salts can share a dry container. base: alkaline salts; min: neutral salts with no calcium;
+  // carb: slow-dissolving carbonates; sep: each in its own container.
+  const MIXGROUP = { caoh2: 'base', k2co3: 'base', khco3: 'base', mgs: 'min', mkp: 'min', sop: 'min',
+    caco3: 'carb', dolo: 'carb', koh: 'sep', mgcl6: 'sep', mgcl0: 'sep', cacl2: 'sep' };
+  const MIXINFO = {
+    base: { name: 'Base blend', note: 'Alkaline salts that can share one container. Keep it dry and sealed: with moisture, calcium hydroxide reacts with the carbonates to calcium carbonate and caustic potassium hydroxide, and the blend cakes. Dose slowly into the sump.' },
+    min: { name: 'Mineral blend', note: 'Neutral salts with no calcium, so the phosphate cannot precipitate as calcium phosphate. They can share one container; dissolve in water before adding.' },
+    carb: { name: 'Slow-release carbonates', note: 'Calcium carbonate and dolomite barely dissolve at neutral pH; they dissolve as nitrification acidifies the water, so they cannot push pH up the way hydroxides can. Put them in a mesh bag, media bed or reactor in the water flow rather than dosing them, and expect the calcium and magnesium to arrive slowly.' }
+  };
+  const SEPWHY = {
+    koh: 'very hygroscopic and caustic, and it gets hot as it dissolves; it would pull water into a blend.',
+    mgcl6: 'absorbs moisture from the air and would cake a blend.',
+    mgcl0: 'absorbs moisture from the air (and heats as it dissolves) and would cake a blend.',
+    cacl2: 'absorbs moisture, and its calcium would react with the phosphate and sulfate in the mineral blend.'
+  };
+  // Containers in use, in order: base, min, carb, then one per separate salt.
+  function mixPlan(used) {
+    const out = [];
+    ['base', 'min', 'carb'].forEach(function (g) {
+      const xs = used.filter(function (x) { return MIXGROUP[x.s.key] === g; });
+      if (xs.length) out.push({ name: MIXINFO[g].name + (xs.length > 1 ? '' : ' (' + xs[0].s.formula + ' only)'), note: MIXINFO[g].note, salts: xs });
+    });
+    used.filter(function (x) { return MIXGROUP[x.s.key] === 'sep'; }).forEach(function (x) {
+      out.push({ name: x.s.formula + ', separate', note: 'Keep ' + x.s.formula + ' in its own container: it ' + SEPWHY[x.s.key], salts: [x] });
+    });
+    return out;
+  }
   // The spreadsheet's five salts plus potassium sulfate, so S and Mg can both be met on the element basis.
   const DEFAULT_USE = ['caoh2', 'k2co3', 'mgs', 'mgcl6', 'mkp', 'sop'];
   const COLORS = ['var(--accent)', 'var(--water-deep)', 'var(--c-hydroponics)', 'var(--warn-text)', 'var(--c-aquaculture)',
@@ -498,7 +527,7 @@
     $('r-main').textContent = ok ? massOut(r.blend * pf) + ' per ' + pfl : '–';
     $('r-main-sub').textContent = ok
       ? (r.feed > 0 ? massOut(r.blend * r.feed) + ' of blend per day at ' + sig(CalcUnits.convert('feedrate', r.feed, 'kgd', CalcUnits.unit('feed'))) + ' ' + CalcUnits.unitLabel('feed') + ' of feed · ' : '') +
-        sig(r.blend / 10) + '% of the feed weight'
+        sig(r.blend / 10) + '% of the feed weight · ' + mixPlan(r.salts.filter(function (x) { return x.g > 1e-9; })).length + ' container(s), see "How to mix it"'
       : '';
 
     // Salt table
@@ -512,6 +541,21 @@
     if (used.length) addRow(tb, ['Total blend', massOut(r.blend * pf), r.feed > 0 ? massOut(r.blend * r.feed) : '–', '100%'], 'sum');
     const unused = ok ? r.salts.filter(function (x) { return !(x.g > 1e-9); }).map(function (x) { return x.s.formula; }) : [];
     $('unused').textContent = unused.length ? 'Not needed with these targets: ' + unused.join(', ') + '.' : '';
+
+    // Mixing plan: which salts share a container
+    const mt = $('mix-table'), mn = $('mix-notes');
+    clear(mt); clear(mn);
+    $('th-mix').textContent = 'Per ' + pfl;
+    mixPlan(used).forEach(function (c, i) {
+      const tot = c.salts.reduce(function (a, x) { return a + x.g; }, 0);
+      addRow(mt, [(i + 1) + '. ' + c.name, massOut(tot * pf), r.feed > 0 ? massOut(tot * r.feed) : '–', fixed(tot / r.blend * 100, 1) + '%'], 'sum');
+      if (c.salts.length > 1) c.salts.forEach(function (x) {
+        addRow(mt, ['   ' + x.s.formula + ' (' + fixed(x.g / tot * 100, 1) + '% of this container)', massOut(x.g * pf), r.feed > 0 ? massOut(x.g * r.feed) : '–', fixed(x.g / r.blend * 100, 1) + '%']);
+      });
+      const li = document.createElement('li');
+      li.textContent = (i + 1) + '. ' + c.name + ': ' + c.note;
+      mn.appendChild(li);
+    });
 
     // Nutrient table (elements, g per kg feed)
     const nt = $('nut-table');
@@ -731,6 +775,11 @@
       L.push('  ' + x.s.name + ' (' + x.s.formula + '): ' + massOut(x.g * pf) + (r.feed > 0 ? ', ' + massOut(x.g * r.feed) + '/day' : '') + ', ' + fixed(x.g / r.blend * 100, 1) + '% of blend');
     });
     L.push('  Total: ' + massOut(r.blend * pf) + (r.feed > 0 ? ', ' + massOut(r.blend * r.feed) + '/day' : ''));
+    L.push('How to mix it:');
+    mixPlan(r.salts.filter(function (x) { return x.g > 1e-9; })).forEach(function (c, i) {
+      const tot = c.salts.reduce(function (a, x) { return a + x.g; }, 0);
+      L.push('  ' + (i + 1) + '. ' + c.name + ' (' + massOut(tot * pf) + ' per ' + pfl + '): ' + c.salts.map(function (x) { return x.s.formula; }).join(' + '));
+    });
     L.push('Supplied vs target, g per kg feed (elements):');
     NUT.forEach(function (e) { L.push('  ' + e.el + ': ' + g2(r.total[e.id]) + ' / ' + g2(r.target[e.id])); });
     L.push('Chloride added: ' + g2(r.cl) + ' g per kg feed');
