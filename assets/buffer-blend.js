@@ -314,7 +314,7 @@
       pr.appendChild(pin); pr.appendChild(ps);
       opts.appendChild(ir); opts.appendChild(pr);
       row.appendChild(opts);
-      if (s.kind === 'silicate') { ir.hidden = true; row.appendChild($('ks-box')); }
+      if (s.kind === 'silicate') { ir.hidden = true; opts.style.gridTemplateColumns = 'minmax(0, 1fr)'; row.appendChild($('ks-box')); }
       box.appendChild(row);
     });
   }
