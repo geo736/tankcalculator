@@ -7,7 +7,7 @@
   // ---------- Constants ----------
   // IUPAC 2021 standard atomic weights (abridged), Prohaska et al. 2022.
   const AW = { H: 1.008, B: 10.81, N: 14.007, O: 15.999, Na: 22.990, Mg: 24.305, P: 30.974, S: 32.06,
-    Cl: 35.45, K: 39.098, Ca: 40.078, Mn: 54.938, Fe: 55.845, Cu: 63.546, Zn: 65.38, Mo: 95.95 };
+    Cl: 35.45, K: 39.098, Ca: 40.078, Mn: 54.938, Fe: 55.845, Cu: 63.546, Zn: 65.38, Mo: 95.95, C: 12.011, Si: 28.085 };
   const H2O = { H: 2, O: 1 };
   function molar(comp) {
     return Object.keys(comp).reduce(function (s, k) { return s + AW[k] * comp[k]; }, 0);
@@ -20,7 +20,8 @@
   }
   // Mass of one "element unit" as reported (NO3-N and NH4-N as N, P as P, S as S ...).
   const ELMASS = { no3: AW.N, nh4: AW.N, p: AW.P, k: AW.K, ca: AW.Ca, mg: AW.Mg, s: AW.S,
-    fe: AW.Fe, mn: AW.Mn, zn: AW.Zn, cu: AW.Cu, b: AW.B, mo: AW.Mo, na: AW.Na, cl: AW.Cl };
+    fe: AW.Fe, mn: AW.Mn, zn: AW.Zn, cu: AW.Cu, b: AW.B, mo: AW.Mo, na: AW.Na, cl: AW.Cl, si: AW.Si,
+    hco3: AW.H + AW.C + 3 * AW.O }; // alkalinity is carried as mg/L of HCO3 equivalent (1 per equivalent)
 
   // Elements that have targets. w = solver weight on the relative error, floor = smallest
   // concentration (mg/L) used to scale the error so a zero target still has a scale.
@@ -37,12 +38,14 @@
     { id: 'zn', sym: 'Zn', name: 'Zinc', w: 1, floor: 0.01, micro: true },
     { id: 'cu', sym: 'Cu', name: 'Copper', w: 1, floor: 0.01, micro: true },
     { id: 'b', sym: 'B', name: 'Boron', w: 1, floor: 0.01, micro: true },
-    { id: 'mo', sym: 'Mo', name: 'Molybdenum', w: 1, floor: 0.01, micro: true }
+    { id: 'mo', sym: 'Mo', name: 'Molybdenum', w: 1, floor: 0.01, micro: true },
+    { id: 'si', sym: 'Si', name: 'Silicon', w: 1, floor: 5 } // optional beneficial element; 0 = none
   ];
   // Unwanted ions: no target, a small penalty so the solver prefers salts without them.
   const EXTRA = [
     { id: 'na', sym: 'Na', name: 'Sodium', w: 0.3, scale: 100 },
-    { id: 'cl', sym: 'Cl', name: 'Chloride', w: 0.3, scale: 100 }
+    { id: 'cl', sym: 'Cl', name: 'Chloride', w: 0.3, scale: 100 },
+    { id: 'hco3', sym: 'HCO₃', name: 'Alkalinity (as HCO₃)', w: 0.3, scale: 100 } // from carbonates and silicate
   ];
   const WATER_IDS = EL.map(function (e) { return e.id; }).concat(['na', 'cl', 'hco3']);
   // 1 mg/L alkalinity as CaCO3 = 2 × 61.017 / 100.086 mg/L HCO3 (1.2193).
@@ -87,7 +90,12 @@
     salt('zns', 'Zinc sulfate heptahydrate', 'ZnSO₄·7H₂O', plus({ Zn: 1, S: 1, O: 4 }, H2O, 7), { zn: 1, s: 1 }, 'B'),
     salt('cus', 'Copper sulfate pentahydrate', 'CuSO₄·5H₂O', plus({ Cu: 1, S: 1, O: 4 }, H2O, 5), { cu: 1, s: 1 }, 'B'),
     salt('namo', 'Sodium molybdate dihydrate', 'Na₂MoO₄·2H₂O', plus({ Na: 2, Mo: 1, O: 4 }, H2O, 2), { na: 2, mo: 1 }, 'B'),
-    { key: 'cf', name: 'Custom fertilizer', formula: 'from label analysis', tank: 'A', kind: 'custom' }
+    { key: 'cf', name: 'Custom fertilizer', formula: 'from label analysis', tank: 'A', kind: 'custom' },
+    // Bases and silicate: add separately (tank 'C'), not to either concentrate. hco3 = equivalents of alkalinity.
+    salt('caco3', 'Calcium carbonate', 'CaCO₃', { Ca: 1, C: 1, O: 3 }, { ca: 1, hco3: 2 }, 'C'),
+    salt('k2co3', 'Potassium carbonate', 'K₂CO₃', { K: 2, C: 1, O: 3 }, { k: 2, hco3: 2 }, 'C'),
+    salt('khco3', 'Potassium bicarbonate', 'KHCO₃', { K: 1, H: 1, C: 1, O: 3 }, { k: 1, hco3: 1 }, 'C'),
+    { key: 'ksil', name: 'Potassium silicate', formula: 'label analysis (K₂O, SiO₂)', tank: 'C', kind: 'silicate' }
   ];
   const SALT = {};
   SALTS.forEach(function (s) { SALT[s.key] = s; });
@@ -123,6 +131,8 @@
     mode: 'new', preset: DEFAULT_PRESET, vol: 100, vol_u: 'L', alk: 'hco3', mout: 'g',
     cn_no3: 14.4, cn_nh4: 1.1, cn_ca: 19,
     cf_no3: 0, cf_nh4: 0, cf_p2o5: 0, cf_k2o: 0, cf_ca: 0, cf_mg: 0, cf_s: 0, cf_ox: 'el',
+    // Potassium silicate: stoichiometric K2SiO3 (61.06% K2O, 38.94% SiO2); products vary, so the label wins.
+    ks_k2o: 61.06, ks_sio2: 38.94,
     dil: 100, sv: 10, sv_u: 'L'
   };
 
@@ -133,6 +143,7 @@
   function analysisText(s) {
     if (s.kind === 'pure') {
       return s.formula + ' · M ' + fixed(s.mw, 2) + ' · ' + Object.keys(s.frac).map(function (k) {
+        if (k === 'hco3') return 'alkalinity ' + fixed(s.frac[k] / ALK_FACTOR * 100, 0) + '% as CaCO₃';
         return symOf(k) + ' ' + fixed(s.frac[k] * 100, 1) + '%';
       }).join(', ');
     }
@@ -178,6 +189,7 @@
       box.appendChild(row);
       if (s.key === 'cnc') box.appendChild($('cn-box'));
       if (s.key === 'cf') box.appendChild($('cf-box'));
+      if (s.key === 'ksil') box.appendChild($('ks-box'));
     });
   }
 
@@ -315,6 +327,15 @@
       out.no3 = no3 / 100; out.nh4 = nh4 / 100; out.ca = ca / 100;
       return out;
     }
+    if (s.kind === 'silicate') {
+      const k2o = Math.max(0, num('ks_k2o') || 0), sio2 = Math.max(0, num('ks_sio2') || 0);
+      if (k2o + sio2 > 100) notes.bad = true;
+      if (k2o + sio2 <= 0) return null;
+      out.k = k2o / 100 * OX.k;
+      out.si = sio2 / 100 * AW.Si / (AW.Si + 2 * AW.O);
+      out.hco3 = out.k / AW.K * ELMASS.hco3; // each K from silicate comes with one equivalent of alkalinity
+      return out;
+    }
     // custom fertilizer
     const ox = $('cf_ox').value === 'ox';
     const v = function (id) { return Math.max(0, num(id) || 0) / 100; };
@@ -384,7 +405,6 @@
       r.added[e.id] = r.salts.reduce(function (a, x) { return a + (x.frac[e.id] || 0) * x.mgL; }, 0);
       r.total[e.id] = r.water[e.id] + r.added[e.id];
     });
-    r.total.hco3 = r.water.hco3;
     r.supplied = {};
     EL.concat(EXTRA).forEach(function (e) {
       r.supplied[e.id] = r.salts.some(function (x) { return (x.frac[e.id] || 0) > 0; });
@@ -440,6 +460,8 @@
       (topup ? ' Dilute with fresh water or replace the solution if this keeps building up.' : ''));
     const kclUsed = r.salts.some(function (x) { return x.s.key === 'kcl' && x.mgL > 1e-9; });
     if (kclUsed || r.added.cl > 1) msgs.push('The ticked salts add ' + conc(r.added.cl) + ' mg/L chloride' + (kclUsed ? ', mostly from potassium chloride' : '') + '. Plants need chloride only in traces, it builds up in recirculating systems, and some crops are sensitive to it. Prefer potassium nitrate, sulfate or phosphate where you can.');
+    if (r.added.hco3 > 5) msgs.push('The carbonates or silicate add ' + conc(r.added.hco3 / ALK_FACTOR) + ' mg/L alkalinity (as CaCO₃), which raises pH. Measure pH after mixing and bring it back down with acid (see the pH Down calculator) if needed.');
+    if (r.salts.some(function (x) { return x.s.key === 'caco3' && x.mgL > 1e-9; })) msgs.push('Calcium carbonate hardly dissolves in water at the pH of a nutrient solution. It dissolves only in acid (for example the nitric or phosphoric acid used to lower pH) or slowly in a media bed; the amounts here assume it all dissolves.');
     if (r.added.na > 1) msgs.push('The ticked salts add ' + conc(r.added.na) + ' mg/L sodium, which plants hardly use and which builds up in recirculating systems.');
     const cf = r.salts.filter(function (x) { return x.s.key === 'cf'; })[0];
     if (cf && cf.frac.ca > 0 && (cf.frac.p > 0 || cf.frac.s > 0) && cf.mgL > 0) msgs.push('The custom fertilizer contains calcium together with phosphate or sulfate, so it cannot be kept safely in either concentrated stock tank. Dissolve it in the final solution.');
@@ -476,7 +498,6 @@
       addRow(et, [e.sym, conc(r.water[e.id]), conc(r.added[e.id]), conc(r.total[e.id]), t > 0 ? conc(t) : '–',
         t > 0 ? (Math.abs(diff) < 0.05 ? '0.0' : (diff > 0 ? '+' : '') + fixed(diff, 1)) + '%' : '–'], t > 0 && Math.abs(diff) > TOL * 100 ? 'off' : '');
     });
-    if (r.water.hco3 > 0) addRow(et, ['HCO₃', conc(r.water.hco3), '0', conc(r.water.hco3), '–', '–']);
 
     // results list
     const macros = EL.filter(function (e) { return !e.micro && r.target[e.id] > 0; });
@@ -485,7 +506,7 @@
     $('r-ec').textContent = ok || r.ecWater > 0 ? fixed(r.ec, 2) + ' mS/cm' : '–';
     $('r-ecw').textContent = r.ecWater > 0 ? fixed(r.ecWater, 2) + ' mS/cm' : '0';
     $('r-bal').textContent = r.cat + r.an > 0 ? fixed(r.cat, 2) + ' / ' + fixed(r.an, 2) + ' meq/L' : '–';
-    $('r-extra').textContent = ok ? 'Na ' + conc(r.added.na) + ', Cl ' + conc(r.added.cl) + ', S over target ' +
+    $('r-extra').textContent = ok ? 'Na ' + conc(r.added.na) + ', Cl ' + conc(r.added.cl) + (r.added.hco3 > 0.05 ? ', alkalinity ' + conc(r.added.hco3 / ALK_FACTOR) + ' as CaCO₃' : '') + ', S over target ' +
       conc(Math.max(0, r.total.s - r.target.s)) + ' mg/L' : '–';
     $('ec-link').href = ecLink(r);
 
@@ -510,12 +531,14 @@
     if (!(sv > 0)) m.push('Enter the volume of each stock tank.');
     if (dil > 500) m.push('Above about 1:200 the stocks become very concentrated; check every salt dissolves completely.');
     let sumA = 0, sumB = 0, k2so4 = 0;
+    const sepNames = [];
     if (ok && dil >= 2) {
       r.salts.forEach(function (x) {
         if (!(x.mgL > 1e-9)) return;
         const gL = x.mgL * dil / 1000; // g per L of stock
-        if (x.s.tank === 'A') sumA += gL; else sumB += gL;
+        if (x.s.tank === 'A') sumA += gL; else if (x.s.tank === 'B') sumB += gL; else sepNames.push(shortName(x.s));
         if (x.s.key === 'sop') k2so4 = gL / (num('pct_sop') / 100 || 1);
+        if (x.s.tank === 'C') { addRow(tb, [shortName(x.s), 'separate', '–', r.vol > 0 ? massOut(x.mgL * r.vol / 1000) + ' per batch' : '–']); return; }
         addRow(tb, [shortName(x.s), x.s.tank, sig(gL) + ' g/L', sv > 0 ? massOut(gL * sv) : '–']);
       });
     }
@@ -525,6 +548,7 @@
       $('r-stockmake').textContent = sv > 0 && dil >= 2 ? sig(CalcUnits.convert('volume', sv * dil, 'L', CalcUnits.unit('sv'))) + ' ' + CalcUnits.unitLabel('sv') + ' of final solution' : '–';
       $('r-stockdose').textContent = dil >= 2 ? (r.vol > 0 ? sig(CalcUnits.convert('volume', r.vol / dil, 'L', CalcUnits.unit('vol'))) + ' ' + CalcUnits.unitLabel('vol') + ' of A and of B per batch' : sig(1000 / dil) + ' mL of each per L') : '–';
     } else ['r-stockA', 'r-stockB', 'r-stockmake', 'r-stockdose'].forEach(function (id) { $(id).textContent = '–'; });
+    if (sepNames.length) m.push('Keep ' + sepNames.join(', ') + ' out of both concentrates and add ' + (sepNames.length > 1 ? 'them' : 'it') + ' to the final solution separately: carbonates and silicate are alkaline and would precipitate calcium, magnesium and phosphate in a concentrate.');
     if (k2so4 > 100) m.push('Potassium sulfate at ' + sig(k2so4) + ' g/L is close to or above its solubility in cold water (roughly 110 g/L at 20 °C); use a weaker stock or replace part of it with potassium nitrate.');
     if (sumA > 0 || sumB > 0) m.push('Solubility drops in cold water and when several salts share a tank. If anything stays undissolved, use a lower ratio (for example 1:50).');
     st.textContent = m.join(' ');
@@ -635,12 +659,12 @@
     svg.setAttribute('viewBox', '0 0 ' + VW + ' ' + Math.max(end, sTop + 50));
   }
   function shortName(s) {
-    return s.kind === 'pure' ? s.formula : { cnc: 'Ca nitrate (comm.)', fedtpa: 'Fe-DTPA', feeddha: 'Fe-EDDHA', feedta: 'Fe-EDTA', cf: 'Custom fert.' }[s.key];
+    return s.kind === 'pure' ? s.formula : { cnc: 'Ca nitrate (comm.)', fedtpa: 'Fe-DTPA', feeddha: 'Fe-EDDHA', feedta: 'Fe-EDTA', cf: 'Custom fert.', ksil: 'K silicate' }[s.key];
   }
 
   // ---------- State ----------
   const UNIT_INPUTS = ['vol', 'sv'].concat(EL.map(function (e) { return 't_' + e.id; }), WATER_IDS.map(function (id) { return 'w_' + id; }));
-  const PLAIN_INPUTS = ['cn_no3', 'cn_nh4', 'cn_ca', 'cf_no3', 'cf_nh4', 'cf_p2o5', 'cf_k2o', 'cf_ca', 'cf_mg', 'cf_s', 'dil'];
+  const PLAIN_INPUTS = ['cn_no3', 'cn_nh4', 'cn_ca', 'cf_no3', 'cf_nh4', 'cf_p2o5', 'cf_k2o', 'cf_ca', 'cf_mg', 'cf_s', 'ks_k2o', 'ks_sio2', 'dil'];
   const SELECTS = ['mode', 'preset', 'alk', 'cf_ox'];
   function getState() {
     const st = {};
@@ -657,7 +681,7 @@
   function applyPreset(name) {
     const p = PRESETS[name];
     if (!p) return;
-    EL.forEach(function (e) { CalcUnits.set('t_' + e.id, p[e.id], 'mgL'); });
+    EL.forEach(function (e) { CalcUnits.set('t_' + e.id, p[e.id] || 0, 'mgL'); });
   }
   function applyDefaults() {
     $('mode').value = DEFAULTS.mode; $('preset').value = DEFAULTS.preset; $('alk').value = DEFAULTS.alk; $('cf_ox').value = DEFAULTS.cf_ox;
@@ -691,7 +715,7 @@
     EL.forEach(function (e) {
       if (r.target[e.id] > 0 || r.total[e.id] > 0) lines.push('  ' + e.sym + ': ' + conc(r.total[e.id]) + ' / ' + conc(r.target[e.id]));
     });
-    lines.push('Extra ions added: Na ' + conc(r.added.na) + ', Cl ' + conc(r.added.cl) + ' mg/L');
+    lines.push('Extra ions added: Na ' + conc(r.added.na) + ', Cl ' + conc(r.added.cl) + ' mg/L' + (r.added.hco3 > 0.05 ? ', alkalinity ' + conc(r.added.hco3 / ALK_FACTOR) + ' mg/L as CaCO3' : ''));
     lines.push('Estimated EC (Kohlrausch × 0.90, 25 °C): ' + fixed(r.ec, 2) + ' mS/cm');
     lines.push('Check the salts against your labels and measure EC and pH after mixing.');
     lines.push(CalcShare.buildUrl(getState()));

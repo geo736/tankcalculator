@@ -91,12 +91,16 @@
     salt('mgcl0', 'Magnesium chloride, anhydrous', 'MgCl₂', { Mg: 1, Cl: 2 }, { mg: 1, cl: 2 }, 0),
     salt('cacl2', 'Calcium chloride dihydrate', 'CaCl₂·2H₂O', hyd({ Ca: 1, Cl: 2 }, 2), { ca: 1, cl: 2 }, 0),
     salt('caco3', 'Calcium carbonate (agricultural limestone)', 'CaCO₃', { Ca: 1, C: 1, O: 3 }, { ca: 1 }, 2),
-    salt('dolo', 'Dolomite (dolomitic limestone)', 'CaMg(CO₃)₂', { Ca: 1, Mg: 1, C: 2, O: 6 }, { ca: 1, mg: 1 }, 4)
+    salt('dolo', 'Dolomite (dolomitic limestone)', 'CaMg(CO₃)₂', { Ca: 1, Mg: 1, C: 2, O: 6 }, { ca: 1, mg: 1 }, 4),
+    // Potassium silicate: composition from the label (K2O, SiO2); dosed for silicon, not fitted.
+    { key: 'ksil', name: 'Potassium silicate', formula: 'K silicate', kind: 'silicate', frac: {}, alk: 0, pct: 100 }
   ];
+  const SI_PER_SIO2 = 28.085 / (28.085 + 2 * AW.O);           // 0.4674
+  const K_PER_K2O = 2 * AW.K / (2 * AW.K + AW.O);              // 0.8301
   // Which salts can share a dry container. base: alkaline salts; min: neutral salts with no calcium;
   // carb: slow-dissolving carbonates; sep: each in its own container.
   const MIXGROUP = { caoh2: 'base', k2co3: 'base', khco3: 'base', mgs: 'min', mkp: 'min', sop: 'min',
-    caco3: 'carb', dolo: 'carb', koh: 'sep', mgcl6: 'sep', mgcl0: 'sep', cacl2: 'sep' };
+    caco3: 'carb', dolo: 'carb', koh: 'sep', mgcl6: 'sep', mgcl0: 'sep', cacl2: 'sep', ksil: 'sep' };
   const MIXINFO = {
     base: { name: 'Base blend', note: 'Alkaline salts that can share one container. Keep it dry and sealed: with moisture, calcium hydroxide reacts with the carbonates to calcium carbonate and caustic potassium hydroxide, and the blend cakes. Dose slowly into the sump.' },
     min: { name: 'Mineral blend', note: 'Neutral salts with no calcium, so the phosphate cannot precipitate as calcium phosphate. They can share one container; dissolve in water before adding.' },
@@ -106,7 +110,8 @@
     koh: 'very hygroscopic and caustic, and it gets hot as it dissolves; it would pull water into a blend.',
     mgcl6: 'absorbs moisture from the air and would cake a blend.',
     mgcl0: 'absorbs moisture from the air (and heats as it dissolves) and would cake a blend.',
-    cacl2: 'absorbs moisture, and its calcium would react with the phosphate and sulfate in the mineral blend.'
+    cacl2: 'absorbs moisture, and its calcium would react with the phosphate and sulfate in the mineral blend.',
+    ksil: 'is strongly alkaline and forms insoluble silicates with calcium and magnesium; dissolve and dose it on its own.'
   };
   // Containers in use, in order: base, min, carb, then one per separate salt.
   function mixPlan(used) {
@@ -145,6 +150,7 @@
   const RATIOS = [['n', 'p'], ['n', 'k'], ['n', 'ca'], ['n', 'mg'], ['n', 's'], ['ca', 'k'], ['ca', 'mg'], ['ca', 's'], ['ca', 'p'], ['mg', 'k'], ['s', 'k']];
 
   const DEFAULTS = {
+    ks_k2o: 61.06, ks_sio2: 38.94, ks_si: 2, // pure K2SiO3; enter your label. Si dose in g per kg feed (example)
     prot: 32, pfeed: 0.8, fcr: 1.5, feed: [1, 'kgd'], nret: [28.8, 'gkg'], pret: [4.1, 'gkg'],
     solids: 'total', sn: 10, sp: 40, preset: 'resh', basis: 'el', tol: 5, alkf: 7.14,
     wvol: [0, 'Ld'], perfeed: 'kg', mout: 'g'
@@ -276,7 +282,8 @@
       nm.textContent = s.name;
       const an = document.createElement('span');
       an.className = 'salt-an';
-      an.textContent = s.formula + ' · M ' + fixed(s.mw, 2) + ' · ' + Object.keys(s.frac).map(function (k) {
+      if (s.kind === 'silicate') an.textContent = 'composition from your label (K₂O, SiO₂) · dosed for silicon · base';
+      else an.textContent = s.formula + ' · M ' + fixed(s.mw, 2) + ' · ' + Object.keys(s.frac).map(function (k) {
         return (k === 'cl' ? 'Cl' : sym(k, 'el')) + ' ' + fixed(s.frac[k] * 100, 1) + '%';
       }).join(', ') + (s.alk ? ' · base' : '');
       nm.appendChild(an);
@@ -307,6 +314,7 @@
       pr.appendChild(pin); pr.appendChild(ps);
       opts.appendChild(ir); opts.appendChild(pr);
       row.appendChild(opts);
+      if (s.kind === 'silicate') { ir.hidden = true; row.appendChild($('ks-box')); }
       box.appendChild(row);
     });
   }
@@ -414,6 +422,14 @@
     r.salts = []; r.zero = [];
     SALTS.forEach(function (s) {
       if (!$('use_' + s.key).checked) return;
+      if (s.kind === 'silicate') {
+        const k2o = Math.max(0, num('ks_k2o') || 0), sio2 = Math.max(0, num('ks_sio2') || 0), dose = Math.max(0, num('ks_si') || 0);
+        if (k2o + sio2 > 100) r.badPct = true;
+        if (!(sio2 > 0) || !(dose > 0)) { r.msgs.push('Potassium silicate is ticked: enter its SiO₂ content and a silicon dose (g Si per kg feed), or untick it.'); return; }
+        const fr = { k: k2o / 100 * K_PER_K2O, si: sio2 / 100 * SI_PER_SIO2 };
+        r.salts.push({ s: s, frac: fr, pct: 100, fixed: true, g: dose / fr.si, alkPerG: fr.k / AW.K * CACO3_EQ, price: CalcUnits.base('price_' + s.key) });
+        return;
+      }
       let p = num('pct_' + s.key);
       if (!(p > 0)) { r.zero.push(s.name); return; }
       if (p > 100) { r.badPct = true; p = 100; }
@@ -424,17 +440,20 @@
 
     // Weighted NNLS on relative error; tiny chloride penalty picks the low-chloride solution
     // when several salt combinations fit equally well.
-    const n = r.salts.length;
+    const fit = r.salts.filter(function (x) { return !x.fixed; });
+    const fixedC = {};
+    FIT.forEach(function (k) { fixedC[k] = r.salts.reduce(function (a, x) { return a + (x.fixed ? (x.frac[k] || 0) * x.g : 0); }, 0); });
+    const n = fit.length;
     if (r.ok && n) {
       const rows = [], b = [];
       const floor = 0.02 * r.nAvail;
       FIT.forEach(function (k) {
         const sc = 1 / Math.max(r.target[k], floor);
-        rows.push(r.salts.map(function (x) { return (x.frac[k] || 0) * sc; }));
-        b.push((r.target[k] - r.fish[k] - r.water[k]) * sc);
+        rows.push(fit.map(function (x) { return (x.frac[k] || 0) * sc; }));
+        b.push((r.target[k] - r.fish[k] - r.water[k] - fixedC[k]) * sc);
       });
       const clw = 1e-3 / r.nAvail;
-      rows.push(r.salts.map(function (x) { return (x.frac.cl || 0) * clw; }));
+      rows.push(fit.map(function (x) { return (x.frac.cl || 0) * clw; }));
       b.push(0);
       const norms = [];
       for (let j = 0; j < n; j++) { let s = 0; rows.forEach(function (row) { s += row[j] * row[j]; }); norms.push(Math.sqrt(s) || 1); }
@@ -463,17 +482,19 @@
           act.forEach(function (j, k) { y[j] = z[k]; });
         }
       }
-      r.salts.forEach(function (x, j) { x.g = y[j] / norms[j]; });
-    } else r.salts.forEach(function (x) { x.g = 0; });
+      fit.forEach(function (x, j) { x.g = y[j] / norms[j]; });
+    } else fit.forEach(function (x) { x.g = 0; });
+    if (!r.ok) r.salts.forEach(function (x) { x.g = 0; });
 
     r.buffer = {}; r.total = {};
-    NUT.concat([{ id: 'cl' }]).forEach(function (e) {
+    NUT.concat([{ id: 'cl' }, { id: 'si' }]).forEach(function (e) {
       r.buffer[e.id] = r.salts.reduce(function (a, x) { return a + (x.frac[e.id] || 0) * x.g; }, 0);
     });
     NUT.forEach(function (e) { r.total[e.id] = r.fish[e.id] + r.water[e.id] + r.buffer[e.id]; });
     r.blend = r.salts.reduce(function (a, x) { return a + x.g; }, 0);
     r.cl = r.buffer.cl;
-    r.alkSupplied = r.salts.reduce(function (a, x) { return a + x.g * x.pct / 100 / x.s.mw * x.s.alk * CACO3_EQ; }, 0);
+    r.si = r.buffer.si;
+    r.alkSupplied = r.salts.reduce(function (a, x) { return a + (x.fixed ? x.g * x.alkPerG : x.g * x.pct / 100 / x.s.mw * x.s.alk * CACO3_EQ); }, 0);
     r.alkUsed = r.nAvail * r.alkf;
     r.alkUptake = r.nAvail * UPTAKE_ALK;
     const priced = r.salts.filter(function (x) { return x.g > 1e-9; });
@@ -486,6 +507,7 @@
   // ---------- Render ----------
   function render() {
     relabel();
+    $('ks-box').hidden = !$('use_ksil').checked;
     const r = compute();
     const msgs = r.msgs.slice();
     const pf = perFeedFactor(), pfl = perFeedLabel();
@@ -597,6 +619,7 @@
     $('r-solid').textContent = r.prot > 0 ? fixed(r.nSolid * pf, 2) + ' g N, ' + fixed(r.pSolid * pf, 2) + ' g P per ' + pfl + (r.solids === 'total' ? ' (counted: remineralised)' : ' (removed)') : '–';
     $('r-nday').textContent = r.ok && r.feed > 0 ? sig(r.nAvail * r.feed) + ' g N/day' : '–';
     $('r-cl').textContent = ok ? massOut(r.cl * pf) + ' per ' + pfl : '–';
+    $('r-si').textContent = ok && r.si > 0 ? massOut(r.si * pf) + ' Si per ' + pfl + (r.feed > 0 ? ' · ' + massOut(r.si * r.feed) + '/day' : '') : 'none (tick potassium silicate)';
     $('r-cost').textContent = ok && r.costAny
       ? (r.costKnown ? '' : 'priced salts only: ') + fixed(r.cost * pf, 2) + ' per ' + pfl + (r.feed > 0 ? ' · ' + fixed(r.cost * r.feed, 2) + ' per day' : '') + (r.blend > 0 ? ' · ' + fixed(r.cost / r.blend * 1000, 2) + ' per kg blend' : '')
       : 'enter prices to see';
@@ -727,7 +750,7 @@
 
   // ---------- State ----------
   const UNIT_INPUTS = ['feed', 'nret', 'pret', 'wvol'].concat(NUT.map(function (e) { return 'r_' + e.id; }), WATER.map(function (k) { return 'w_' + k; }), CROPS.map(function (c) { return 'cn_' + c.id; }));
-  const PLAIN_INPUTS = ['prot', 'pfeed', 'fcr', 'sn', 'sp', 'tol', 'alkf'];
+  const PLAIN_INPUTS = ['prot', 'pfeed', 'fcr', 'sn', 'sp', 'tol', 'alkf', 'ks_k2o', 'ks_sio2', 'ks_si'];
   const SELECTS = ['solids', 'preset', 'basis', 'perfeed'];
   function getState() {
     const st = {};
@@ -783,6 +806,7 @@
     L.push('Supplied vs target, g per kg feed (elements):');
     NUT.forEach(function (e) { L.push('  ' + e.el + ': ' + g2(r.total[e.id]) + ' / ' + g2(r.target[e.id])); });
     L.push('Chloride added: ' + g2(r.cl) + ' g per kg feed');
+    if (r.si > 0) L.push('Silicon dosed: ' + g2(r.si) + ' g Si per kg feed (potassium silicate)');
     L.push('Alkalinity: blend ' + sig(r.alkSupplied) + ', nitrification uses ' + sig(r.alkUsed) + ' g CaCO3 per kg feed (plant nitrate uptake may return up to ' + sig(r.alkUptake) + '). Measure pH.');
     L.push(CalcShare.buildUrl(getState()));
     return L.join('\n');

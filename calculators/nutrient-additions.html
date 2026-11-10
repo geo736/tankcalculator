@@ -117,7 +117,7 @@
           </div>
         </div>
         <details class="more">
-          <summary>Micronutrient targets</summary>
+          <summary>Micronutrient and silicon targets</summary>
           <div class="two-col">
           <div class="field">
             <label for="t_fe">Iron (Fe)</label>
@@ -143,8 +143,12 @@
             <label for="t_mo">Molybdenum (Mo)</label>
             <div class="input-row"><input id="t_mo" type="number" inputmode="decimal" min="0" step="any"><select class="unit-select" data-unit-group="concentration" data-unit-for="t_mo" data-unit-default="mgL" aria-label="Target molybdenum unit"></select></div>
           </div>
+          <div class="field">
+            <label for="t_si">Silicon (Si), optional</label>
+            <div class="input-row"><input id="t_si" type="number" inputmode="decimal" min="0" step="any"><select class="unit-select" data-unit-group="concentration" data-unit-for="t_si" data-unit-default="mgL" aria-label="Target silicon unit"></select></div>
           </div>
-          <div class="field-hint">Set a micronutrient to 0 to leave it out.</div>
+          </div>
+          <div class="field-hint">Set a micronutrient to 0 to leave it out. Silicon is not part of the standard recipes; enter a target only if you dose potassium silicate for it.</div>
         </details>
 
         <div class="ion-group" id="water-head">Source water analysis</div>
@@ -199,7 +203,7 @@
           </select>
         </div>
         <details class="more">
-          <summary>Micronutrients in the water</summary>
+          <summary>Micronutrients and silicon in the water</summary>
           <div class="two-col">
           <div class="field">
             <label for="w_fe">Iron (Fe)</label>
@@ -224,6 +228,10 @@
           <div class="field">
             <label for="w_mo">Molybdenum (Mo)</label>
             <div class="input-row"><input id="w_mo" type="number" inputmode="decimal" min="0" step="any"><select class="unit-select" data-unit-group="concentration" data-unit-for="w_mo" data-unit-default="mgL" aria-label="Water molybdenum unit"></select></div>
+          </div>
+          <div class="field">
+            <label for="w_si">Silicon (Si)</label>
+            <div class="input-row"><input id="w_si" type="number" inputmode="decimal" min="0" step="any"><select class="unit-select" data-unit-group="concentration" data-unit-for="w_si" data-unit-default="mgL" aria-label="Water silicon unit"></select></div>
           </div>
           </div>
         </details>
@@ -261,6 +269,14 @@
           <div class="field-hint" style="margin:-4px 0 10px">Phosphate and potash are converted from the label oxides: P = P₂O₅ × 0.4364, K = K₂O × 0.8301. Urea-N and micronutrients in the product are not counted.</div>
         </div>
 
+        <div class="sub-box" id="ks-box">
+          <div class="two-col">
+            <div class="field"><label for="ks_k2o">K₂O</label><div class="input-row"><input id="ks_k2o" type="number" inputmode="decimal" min="0" max="100" step="any"><span class="unit">%</span></div></div>
+            <div class="field"><label for="ks_sio2">SiO₂</label><div class="input-row"><input id="ks_sio2" type="number" inputmode="decimal" min="0" max="100" step="any"><span class="unit">%</span></div></div>
+          </div>
+          <div class="field-hint" style="margin:-4px 0 10px">Enter the guaranteed analysis from your label. The defaults are pure potassium metasilicate (K₂SiO₃); powdered products are hydrated and have different SiO₂:K₂O ratios. K = K₂O × 0.8301, Si = SiO₂ × 0.4674. Potassium silicate is strongly alkaline.</div>
+        </div>
+
         <details class="more" style="margin-top:14px">
           <summary>A/B concentrated stock tanks</summary>
           <div class="two-col stack">
@@ -287,7 +303,7 @@
             <li><span>Each pair of tanks makes</span><span class="v" id="r-stockmake">–</span></li>
             <li><span>Dose</span><span class="v" id="r-stockdose">–</span></li>
           </ul>
-          <div class="field-hint">Tank A: calcium and iron. Tank B: phosphates, sulfates and the other micronutrients. Never mix the two concentrates directly; add each to the water separately.</div>
+          <div class="field-hint">Tank A: calcium and iron. Tank B: phosphates, sulfates and the other micronutrients. Calcium carbonate, potassium carbonate, potassium bicarbonate and potassium silicate go in neither: add them to the final solution separately. Never mix the two concentrates directly; add each to the water separately.</div>
         </details>
 
         <hr class="divider">
@@ -417,6 +433,10 @@ HCO₃ = alkalinity as CaCO₃ × 1.2193</div>
           <tr><td>Zinc sulfate heptahydrate</td><td>ZnSO₄·7H₂O</td><td>287.54</td><td>22.7% Zn, 11.1% S</td><td>B</td></tr>
           <tr><td>Copper sulfate pentahydrate</td><td>CuSO₄·5H₂O</td><td>249.68</td><td>25.5% Cu, 12.8% S</td><td>B</td></tr>
           <tr><td>Sodium molybdate dihydrate</td><td>Na₂MoO₄·2H₂O</td><td>241.96</td><td>39.7% Mo, 19.0% Na</td><td>B</td></tr>
+          <tr><td>Calcium carbonate</td><td>CaCO₃</td><td>100.09</td><td>40.0% Ca; alkalinity 100% as CaCO₃</td><td>separate</td></tr>
+          <tr><td>Potassium carbonate</td><td>K₂CO₃</td><td>138.21</td><td>56.6% K; alkalinity 72% as CaCO₃</td><td>separate</td></tr>
+          <tr><td>Potassium bicarbonate</td><td>KHCO₃</td><td>100.11</td><td>39.1% K; alkalinity 50% as CaCO₃</td><td>separate</td></tr>
+          <tr><td>Potassium silicate</td><td>label</td><td>–</td><td>K₂O and SiO₂ from the label (pure K₂SiO₃: 61.1% K₂O, 38.9% SiO₂)</td><td>separate</td></tr>
         </tbody>
       </table>
       </div>
@@ -434,6 +454,9 @@ P    31.0 mg/L ÷ 30.974 = 1.001 mmol/L NH₄H₂PO₄       × 115.03 = 115.1 m
 Mg   48.6 mg/L ÷ 24.305 = 2.000 mmol/L MgSO₄·7H₂O     × 246.47 = 492.8 mg/L</div>
       <p>These salts then also supply NO₃-N = (2 × 4.000 + 6.000) × 14.007 = 196.1 mg/L, NH₄-N = 14.0 mg/L and S = 64.1 mg/L, exactly the remaining targets. For 100 L that is <strong>94.45 g</strong> calcium nitrate, <strong>60.66 g</strong> potassium nitrate, <strong>11.51 g</strong> MAP and <strong>49.27 g</strong> magnesium sulfate (357.5, 229.6, 43.6 and 186.5 g per 100 US gallons). By hand the magnesium sulfate comes to 49.28 g; the solver trims it by 0.01 g because the zinc and copper sulfates also add 0.03 mg/L sulfur. The micronutrients add 0.909 g Fe-DTPA (1 mg/L Fe at 11%), 0.286 g boric acid, 0.180 g manganese chloride, 0.022 g zinc sulfate, 0.0079 g copper sulfate and 0.0025 g sodium molybdate: the same amounts as Hoagland's micronutrient stock. In total, 217.3 g of product.</p>
       <p>The estimated EC is <strong>2.30 mS/cm</strong>, the same as the Nutrient EC calculator gives for this recipe: the manganese chloride adds 0.65 mg/L chloride and the molybdate 0.005 mg/L sodium. At 1:100 each 10 L stock tank holds 94.45 g/L calcium nitrate and 0.909 g/L Fe-DTPA in A, and 60.66 g/L KNO₃, 11.51 g/L MAP and 49.27 g/L MgSO₄·7H₂O plus micronutrients in B, enough for 1,000 L.</p>
+
+      <h3>Carbonates and potassium silicate</h3>
+      <p>Calcium carbonate, potassium carbonate, potassium bicarbonate and potassium silicate supply calcium or potassium together with alkalinity instead of a nutrient anion, so they raise pH. The calculator counts that alkalinity (shown as mg/L CaCO₃), includes it in the EC estimate as bicarbonate, and adds a small penalty so the solver uses these products only when they help. Use them when the solution also needs a base, or for silicon; otherwise nitrate, phosphate and sulfate salts supply the same nutrients without moving pH. Calcium carbonate barely dissolves at the pH of a nutrient solution: it dissolves only in acid or slowly in a media bed, so the amount shown assumes it is dissolved that way. None of these belongs in an A or B concentrate, because they would precipitate calcium, magnesium and phosphate there; add them to the final solution separately and check pH. Silicon is not one of the essential nutrients in the standard recipes; if you dose potassium silicate for it, enter a silicon target under "Micronutrient and silicon targets".</p>
 
       <h3>Source water and top-ups</h3>
       <p>Enter your water report in mg/L. Calcium, magnesium, sulfate and nitrate in the water count towards the targets. Sodium, chloride and bicarbonate count towards EC. Bicarbonate is not removed by fertilizer salts: water with high alkalinity drives the pH up, so neutralise it with acid (see the <a href="ph-adjustment.html">pH Down calculator</a>). Nitric, phosphoric or sulfuric acid then add nitrogen, phosphorus or sulfur; you can enter those amounts as part of the water analysis so the calculator adds less fertilizer. If the pH is too low, the <a href="ph-up-adjustment.html">pH Up calculator</a> works out a potassium or calcium base.</p>

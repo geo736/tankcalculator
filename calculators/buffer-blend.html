@@ -195,6 +195,14 @@
         <div class="ion-group">Buffer salts</div>
         <p class="muted-note">Tick the salts to use. Purity is the assay on the bag (100% = pure compound). Prices are optional, in any one currency, for the blend cost.</p>
         <div id="salt-list"></div>
+        <div class="salt-opts" id="ks-box" style="display:block">
+          <div class="two-col">
+            <div class="field"><label for="ks_k2o">K₂O on label</label><div class="input-row"><input id="ks_k2o" type="number" inputmode="decimal" min="0" max="100" step="any"><span class="unit">%</span></div></div>
+            <div class="field"><label for="ks_sio2">SiO₂ on label</label><div class="input-row"><input id="ks_sio2" type="number" inputmode="decimal" min="0" max="100" step="any"><span class="unit">%</span></div></div>
+          </div>
+          <div class="field"><label for="ks_si">Silicon dose</label><div class="input-row"><input id="ks_si" type="number" inputmode="decimal" min="0" step="any"><span class="unit">g Si per kg feed</span></div></div>
+          <div class="field-hint">Defaults are pure potassium metasilicate (K₂SiO₃); products are hydrated and differ, so use your label. The silicon dose is your choice (the default is only an example); the potassium it brings is counted first and the other salts make up the rest.</div>
+        </div>
 
         <details class="more" style="margin-top:14px">
           <summary>Crops, tolerance and alkalinity settings</summary>
@@ -261,6 +269,7 @@
           <li><span>N and P in fish solids</span><span class="v" id="r-solid">–</span></li>
           <li><span>N reaching the plants per day</span><span class="v" id="r-nday">–</span></li>
           <li><span>Chloride added</span><span class="v" id="r-cl">–</span></li>
+          <li><span>Silicon dosed</span><span class="v" id="r-si">–</span></li>
           <li><span>Blend cost</span><span class="v" id="r-cost">–</span></li>
         </ul>
 
@@ -356,7 +365,8 @@ Ca(OH)₂ 74.09: Ca 54.1%     K₂CO₃ 138.20: K 56.6%     KH₂PO₄ 136.08: K
 MgSO₄·7H₂O 246.47: Mg 9.86%, S 13.0%     MgCl₂·6H₂O 203.30: Mg 12.0%, Cl 34.9%
 K₂SO₄ 174.25: K 44.9%, S 18.4%     KHCO₃ 100.11: K 39.1%     KOH 56.11: K 69.7%
 MgCl₂ 95.21: Mg 25.5%     CaCl₂·2H₂O 147.01: Ca 27.3%, Cl 48.2%
-CaCO₃ 100.09: Ca 40.0%     CaMg(CO₃)₂ 184.40: Ca 21.7%, Mg 13.2%</div>
+CaCO₃ 100.09: Ca 40.0%     CaMg(CO₃)₂ 184.40: Ca 21.7%, Mg 13.2%
+potassium silicate (label): K = K₂O% × 0.8301, Si = SiO₂% × 0.4674, alkalinity 1 eq per K</div>
       <p>The solver picks salt amounts x ≥ 0 that minimise the squared relative error over P, K, Ca, Mg and S, each scaled by its target (the same Lawson–Hanson method as the <a href="nutrient-additions.html">nutrient additions calculator</a>). A very small penalty on chloride makes it prefer chloride-free salts when two combinations fit equally well.</p>
       <p>Alkalinity, as g CaCO₃ per kg feed (1 equivalent = 50.04 g CaCO₃):</p>
       <div class="formula">supplied    = Σ salt (g) × purity ÷ M × equivalents      Ca(OH)₂, K₂CO₃, CaCO₃: 2   CaMg(CO₃)₂: 4   KOH, KHCO₃: 1
@@ -395,9 +405,12 @@ K₂CO₃   = (63.47 − 5.37) × 138.204 ÷ 78.196   = 102.69 g</div>
         <li><strong>Base blend:</strong> calcium hydroxide, potassium carbonate and potassium bicarbonate. These are all alkaline and can share a container if it is kept dry and sealed. With moisture, calcium hydroxide reacts with the carbonates to form calcium carbonate and caustic potassium hydroxide, and the blend cakes. An equal mixture of potassium bicarbonate and calcium hydroxide has been used as a single buffer in a research aquaponic system, with good lettuce yields [15].</li>
         <li><strong>Mineral blend:</strong> monopotassium phosphate, potassium sulfate and magnesium sulfate. These are neutral salts with no calcium, so they can be mixed and dissolved together. They are kept apart from the base blend because calcium with phosphate forms insoluble calcium phosphate [7], and because the water of crystallisation in Epsom salt would let the bases turn the magnesium into insoluble magnesium hydroxide.</li>
         <li><strong>Slow-release carbonates:</strong> calcium carbonate (limestone) and dolomite. Both are used to add calcium (and, from dolomite, magnesium) and alkalinity to aquaponic systems [14, 16]. They barely dissolve at neutral pH and dissolve faster as nitrification makes the water more acidic, so they act as a self-limiting buffer rather than a dose. Their low solubility also means the calcium arrives slowly: in one long-term system, daily lime additions still left the tomatoes short of calcium and magnesium [17]. Place them in a mesh bag, media bed or reactor in the water flow, and do not count on them alone to meet a calcium target.</li>
-        <li><strong>Kept separate:</strong> potassium hydroxide (very hygroscopic and caustic, and it heats as it dissolves); magnesium chloride and calcium chloride (they absorb moisture and cake a blend, and the calcium in calcium chloride would react with the phosphate and sulfate).</li>
+        <li><strong>Kept separate:</strong> potassium hydroxide (very hygroscopic and caustic, and it heats as it dissolves); magnesium chloride and calcium chloride (they absorb moisture and cake a blend, and the calcium in calcium chloride would react with the phosphate and sulfate); potassium silicate (strongly alkaline, and it forms insoluble silicates with calcium and magnesium, so it is dissolved and dosed on its own).</li>
       </ul>
       <p>These are handling rules based on the chemistry of the salts. Always add each container's salts slowly and check pH.</p>
+
+      <h3>Potassium silicate</h3>
+      <p>Potassium silicate supplies potassium and silicon and, like the carbonates, is a base: each potassium it carries comes with one equivalent of alkalinity. Silicon is not part of the reference ratios, so the calculator does not fit it. Instead you choose a silicon dose per kg of feed; the calculator works out the product needed from the SiO₂ content on your label (Si = SiO₂ × 0.4674, K = K₂O × 0.8301), counts its potassium and alkalinity first, and lets the other salts make up the remaining targets. Products differ in their SiO₂:K₂O ratio and water content, so enter the label analysis; the defaults are pure potassium metasilicate.</p>
 
       <h3>Limitations and assumptions</h3>
       <ul>
