@@ -488,7 +488,7 @@ a.app-tile:hover {
 .input-row input {
   flex: 1;
   width: 100%;
-  min-width: 0;
+  min-width: 4.5em; /* always room for a number; the unit menu shrinks first */
   border: 0;
   background: transparent;
   color: var(--text);
@@ -499,7 +499,10 @@ a.app-tile:hover {
 
 .input-row .unit-select {
   width: auto;
-  flex: 0 0 auto;
+  flex: 0 1 auto;
+  min-width: 0;
+  max-width: 65%;
+  text-overflow: ellipsis;
   border: 0;
   border-left: 1px solid var(--border);
   border-radius: 0;
@@ -517,6 +520,11 @@ a.app-tile:hover {
 
 .input-row .unit {
   display: flex;
+  flex: 0 1 auto;
+  min-width: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
   align-items: center;
   padding: 0 12px;
   background: var(--surface-2);
@@ -561,6 +569,11 @@ select:focus {
 
 @media (max-width: 420px) {
   .segmented { grid-template-columns: repeat(2, 1fr); }
+}
+
+/* On phones, side-by-side inputs with unit menus leave too little room for the number. */
+@media (max-width: 480px) {
+  .two-col:has(.unit-select), .three-col:has(.unit-select) { grid-template-columns: minmax(0, 1fr); }
 }
 
 .segmented button {
