@@ -71,7 +71,7 @@
       var canopyPerFloor = tiers * fUse;
 
       /* Electricity per kilogram. */
-      var eLight = 1e6 / (3.6e6 * eff * lp);       /* kWh per kg fresh weight */
+      var eLight = 1e9 / (3.6e6 * eff * lp);       /* kWh per kg fresh weight: 1000 g kg⁻¹ / LP mol, × 10⁶ µmol mol⁻¹ / ε J, ÷ 3.6 × 10⁶ J kWh⁻¹ */
       var copEff = 1 / (latShare / copLat + (1 - latShare) / copSens);
       var eTotal = eLight * (1 + 1 / copEff);
       var yieldPerCanopyDay = dliTier * lp / 1000; /* kg m-2 canopy per day */
@@ -125,7 +125,7 @@
           { label: 'Light productivity', value: GFC.fixed(lp, 3), unit: 'g FW mol⁻¹', note: 'Yield per mole delivered' },
           { label: 'Yield per m² of canopy', value: GFC.fixed(yieldPerCanopyDay * 1000, 1), unit: 'g d⁻¹', note: 'DLI × light productivity' },
           { label: 'Yield per m² of floor', value: GFC.fixed(yieldPerFloorYear, 1), unit: 'kg y⁻¹', note: 'Across the stack, continuous production' },
-          { label: 'Electricity for light', value: GFC.fixed(eLight, 2), unit: 'kWh kg⁻¹', note: '10⁶ / (3.6 × 10⁶ ε LP)' },
+          { label: 'Electricity for light', value: GFC.fixed(eLight, 2), unit: 'kWh kg⁻¹', note: '10⁹ / (3.6 × 10⁶ ε LP), LP in g mol⁻¹' },
           { label: 'Effective plant coefficient', value: GFC.fixed(copEff, 3), unit: '–', note: 'Harmonic blend of the two duties at their own coefficients' },
           { label: 'Total electricity per kilogram', value: GFC.fixed(eTotal, 3), unit: 'kWh kg⁻¹', note: 'e_light (1 + 1/COP_eff)' },
           { label: 'Electrical load per m² of floor', value: GFC.fixed(elecFloorKw, 3), unit: 'kW m⁻²', note: 'Lamps plus plant, while lit' },
@@ -219,7 +219,7 @@
         math: 'A<sub>can</sub> = n<sub>tier</sub> A<sub>floor</sub> f<sub>use</sub>, &nbsp;&nbsp; '
             + 'DLI<sub>floor</sub> = n<sub>tier</sub> DLI<sub>tier</sub>' },
       { lead: 'Electricity per unit product, which is the number the business runs on:',
-        math: 'e<sub>light</sub> = 10⁶ / (3.6 × 10⁶ ε<sub>lamp</sub> LP), &nbsp;&nbsp; '
+        math: 'e<sub>light</sub> = 10⁹ / (3.6 × 10⁶ ε<sub>lamp</sub> LP), &nbsp;&nbsp; '
             + 'e<sub>total</sub> = e<sub>light</sub>(1 + 1/COP<sub>eff</sub>)',
         note: 'Light productivity LP is grams of fresh weight per mole of photons delivered, and '
             + 'it falls as yield rises because the extra light goes to leaves nearer saturation. '

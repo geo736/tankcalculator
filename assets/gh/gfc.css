@@ -144,6 +144,12 @@ table.gfc-tbl td.gfc-note { color: var(--gfc-ink-soft); font-size: 13px; }
 
 .gfc-sec { padding: 26px 0 0; }
 .gfc-sec > h2 { font-size: 19px; margin: 0 0 12px; }
+.gfc-article { max-width: 78ch; }
+.gfc-article > h3 { font-size: 16.5px; margin: 24px 0 10px; }
+.gfc-article > p { margin: 0 0 12px; }
+.gfc-article > ul { padding-left: 22px; margin: 0; font-size: 15px; }
+.gfc-article > ul li { margin-bottom: 8px; }
+.gfc-article .gfc-eq { max-width: none; }
 .gfc-eq {
   background: var(--gfc-panel); border: 1px solid var(--gfc-line);
   border-radius: 10px; padding: 14px 16px; margin: 0 0 12px;
