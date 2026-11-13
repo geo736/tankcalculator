@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Tank Calculator</title>
-  <meta name="description" content="Free aquaponics, aquaculture and hydroponics calculators with live visuals, explained formulas and sources.">
+  <meta name="description" content="Free aquaponics, aquaculture, hydroponics, greenhouse and indoor-farm calculators with live visuals, explained formulas and sources.">
   <link rel="stylesheet" href="assets/style.css">
 </head>
 <body>
@@ -22,8 +22,8 @@
 
   <main class="wrap">
     <section class="hero">
-      <h1>Calculators for fish, plants and water</h1>
-      <p>Aquaponics, aquaculture and hydroponics calculators. Each one shows a live picture of the result, explains the math, and lists its sources. Every result can be copied or shared as a link.</p>
+      <h1>Calculators for fish, plants, water and air</h1>
+      <p>Aquaponics, aquaculture, hydroponics, greenhouse and indoor-farm calculators. Each one shows a live picture of the result, explains the math, and lists its sources. Every result can be copied or shared as a link.</p>
     </section>
 
     <div class="toolbar">
@@ -32,6 +32,8 @@
         <button class="chip" type="button" data-filter="aquaponics" aria-pressed="false">Aquaponics</button>
         <button class="chip" type="button" data-filter="aquaculture" aria-pressed="false">Aquaculture</button>
         <button class="chip" type="button" data-filter="hydroponics" aria-pressed="false">Hydroponics</button>
+        <button class="chip" type="button" data-filter="greenhouse" aria-pressed="false">Greenhouse</button>
+        <button class="chip" type="button" data-filter="indoor" aria-pressed="false">Indoor farm</button>
       </div>
       <label class="search">
         <span class="visually-hidden">Search calculators</span>
@@ -62,7 +64,7 @@
   <script src="assets/catalog.js"></script>
   <script>
     (function () {
-      var CAT_LABEL = { aquaculture: 'Aquaculture', aquaponics: 'Aquaponics', hydroponics: 'Hydroponics' };
+      var CAT_LABEL = { aquaculture: 'Aquaculture', aquaponics: 'Aquaponics', hydroponics: 'Hydroponics', greenhouse: 'Greenhouse' };
       var groupsBox = document.getElementById('calc-groups');
       var GROUP_EL = {};
       (window.CALC_GROUPS || [{ id: 'all', label: '' }]).forEach(function (g) {
@@ -139,7 +141,7 @@
 
       function matches(c, q) {
         var uses = c.uses || [];
-        var text = c.name + ' ' + (c.blurb || '') + ' ' + c.tags.join(' ') + ' ' + uses.map(function (u) { return USE_LABEL[u]; }).join(' ');
+        var text = c.name + ' ' + (c.blurb || '') + ' ' + c.tags.join(' ') + ' ' + (c.keywords || []).join(' ') + ' ' + uses.map(function (u) { return USE_LABEL[u]; }).join(' ');
         return (filter === 'all' || c.tags.indexOf(filter) !== -1) &&
           (use === 'all' || uses.indexOf(use) !== -1) &&
           (!q || text.toLowerCase().indexOf(q) !== -1);
@@ -187,3 +189,5 @@
   </script>
 </body>
 </html>
+
+</body></html>
