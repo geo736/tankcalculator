@@ -24,6 +24,7 @@
   --c-aquaculture: #2b7fd1;
   --c-aquaponics: #0f8a6e;
   --c-hydroponics: #7a9a14;
+  --c-greenhouse: #c0761a;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -48,6 +49,7 @@
     --c-aquaculture: #5aa6ee;
     --c-aquaponics: #3cc49f;
     --c-hydroponics: #a9c93a;
+    --c-greenhouse: #e5a14f;
   }
 }
 
@@ -72,6 +74,7 @@
   --c-aquaculture: #5aa6ee;
   --c-aquaponics: #3cc49f;
   --c-hydroponics: #a9c93a;
+  --c-greenhouse: #e5a14f;
 }
 
 /* ---------- Base ---------- */
@@ -308,6 +311,7 @@ a.guide-card:hover { transform: translateY(-3px); border-color: var(--accent); c
 .guide-card[data-cat="aquaculture"] .app-icon { background: var(--c-aquaculture); }
 .guide-card[data-cat="aquaponics"] .app-icon { background: var(--c-aquaponics); }
 .guide-card[data-cat="hydroponics"] .app-icon { background: var(--c-hydroponics); }
+.guide-card[data-cat="greenhouse"] .app-icon { background: var(--c-greenhouse); }
 .guide-text { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
 .guide-kicker { font-size: .72rem; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; color: var(--accent-strong); }
 .guide-blurb { font-size: .85rem; color: var(--text-muted); line-height: 1.4; }
@@ -377,6 +381,7 @@ a.app-tile:hover {
 .app-tile[data-cat="aquaculture"] .app-icon { background: var(--c-aquaculture); }
 .app-tile[data-cat="aquaponics"] .app-icon { background: var(--c-aquaponics); }
 .app-tile[data-cat="hydroponics"] .app-icon { background: var(--c-hydroponics); }
+.app-tile[data-cat="greenhouse"] .app-icon { background: var(--c-greenhouse); }
 
 .app-name {
   font-weight: 600;

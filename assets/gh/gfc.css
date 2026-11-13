@@ -1,0 +1,192 @@
+
+/* Calculator chrome for the Tank Calculator greenhouse and NEEMO pack.
+ *
+ * Everything the calculator pages need is defined here under gfc- prefixed
+ * class names, so the pack renders correctly on its own and does not collide
+ * with the host site's own stylesheet when the pages are dropped into it.
+ * Colours are tokens on :root so the pages follow the viewer's theme. */
+
+:root {
+  --gfc-bg: #f6f7f5;
+  --gfc-panel: #ffffff;
+  --gfc-ink: #19201c;
+  --gfc-ink-soft: #5b6660;
+  --gfc-line: #dfe4e0;
+  --gfc-accent: #1f6f50;
+  --gfc-accent-soft: #e7f1ec;
+  --gfc-warn: #8a4b16;
+  --gfc-warn-soft: #fdf1e3;
+  --gfc-grid: #e9ece9;
+  --gfc-mono: ui-monospace, "SFMono-Regular", "Cascadia Mono", Menlo, Consolas, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --gfc-bg: #121714;
+    --gfc-panel: #1a211d;
+    --gfc-ink: #e8ece9;
+    --gfc-ink-soft: #9aa7a0;
+    --gfc-line: #2b3631;
+    --gfc-accent: #68c9a0;
+    --gfc-accent-soft: #1d2f27;
+    --gfc-warn: #e0a86a;
+    --gfc-warn-soft: #2c2318;
+    --gfc-grid: #26302b;
+  }
+}
+:root[data-theme="dark"] {
+  --gfc-bg: #121714;
+  --gfc-panel: #1a211d;
+  --gfc-ink: #e8ece9;
+  --gfc-ink-soft: #9aa7a0;
+  --gfc-line: #2b3631;
+  --gfc-accent: #68c9a0;
+  --gfc-accent-soft: #1d2f27;
+  --gfc-warn: #e0a86a;
+  --gfc-warn-soft: #2c2318;
+  --gfc-grid: #26302b;
+}
+
+body.gfc {
+  margin: 0;
+  background: var(--gfc-bg);
+  color: var(--gfc-ink);
+  font: 16px/1.55 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  -webkit-text-size-adjust: 100%;
+}
+.gfc-wrap { max-width: 1060px; margin: 0 auto; padding: 0 20px; }
+
+.gfc-top { border-bottom: 1px solid var(--gfc-line); background: var(--gfc-panel); }
+.gfc-top .gfc-wrap { display: flex; align-items: center; gap: 14px; min-height: 58px; }
+.gfc-home {
+  color: var(--gfc-ink); text-decoration: none; font-weight: 650;
+  display: inline-flex; align-items: center; gap: 9px;
+}
+.gfc-home svg { width: 20px; height: 20px; }
+.gfc-top nav { margin-left: auto; font-size: 14px; }
+.gfc-top nav a { color: var(--gfc-ink-soft); text-decoration: none; }
+.gfc-top nav a:hover { color: var(--gfc-accent); }
+
+.gfc-head { padding: 30px 0 8px; }
+.gfc-kicker {
+  font-size: 12.5px; letter-spacing: .09em; text-transform: uppercase;
+  color: var(--gfc-accent); font-weight: 650; margin: 0 0 7px;
+}
+.gfc-head h1 { font-size: clamp(25px, 3.6vw, 34px); line-height: 1.15; margin: 0 0 10px; letter-spacing: -.015em; }
+.gfc-lede { color: var(--gfc-ink-soft); max-width: 62ch; margin: 0; }
+
+.gfc-main { display: grid; grid-template-columns: minmax(0, 320px) minmax(0, 1fr); gap: 22px; padding: 24px 0 10px; align-items: start; }
+@media (max-width: 820px) { .gfc-main { grid-template-columns: minmax(0, 1fr); } }
+
+.gfc-card {
+  background: var(--gfc-panel); border: 1px solid var(--gfc-line);
+  border-radius: 12px; padding: 18px;
+}
+.gfc-card h2 { font-size: 15px; margin: 0 0 14px; letter-spacing: .01em; }
+.gfc-card h2 + .gfc-cardnote { margin-top: -8px; }
+.gfc-cardnote { font-size: 13px; color: var(--gfc-ink-soft); margin: 0 0 14px; }
+
+.gfc-field { margin-bottom: 14px; }
+.gfc-field > label { display: block; font-size: 13.5px; font-weight: 600; margin-bottom: 5px; }
+.gfc-field .gfc-unit { color: var(--gfc-ink-soft); font-weight: 400; }
+.gfc-field input[type="number"], .gfc-field select, .gfc-field textarea {
+  width: 100%; box-sizing: border-box; padding: 8px 10px;
+  border: 1px solid var(--gfc-line); border-radius: 8px;
+  background: var(--gfc-bg); color: var(--gfc-ink);
+  font: inherit; font-size: 15px;
+}
+.gfc-field textarea { font-family: var(--gfc-mono); font-size: 12.5px; min-height: 96px; resize: vertical; }
+.gfc-field input:focus, .gfc-field select:focus, .gfc-field textarea:focus {
+  outline: 2px solid var(--gfc-accent); outline-offset: 1px; border-color: var(--gfc-accent);
+}
+.gfc-help { display: block; font-size: 12.5px; color: var(--gfc-ink-soft); margin-top: 4px; }
+.gfc-group {
+  font-size: 11.5px; letter-spacing: .08em; text-transform: uppercase;
+  color: var(--gfc-ink-soft); font-weight: 650;
+  margin: 20px 0 10px; padding-top: 14px; border-top: 1px solid var(--gfc-line);
+}
+.gfc-group:first-child { margin-top: 0; padding-top: 0; border-top: 0; }
+
+.gfc-actions { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 16px; }
+.gfc-btn {
+  font: inherit; font-size: 13.5px; padding: 7px 13px; border-radius: 8px;
+  border: 1px solid var(--gfc-line); background: var(--gfc-bg);
+  color: var(--gfc-ink); cursor: pointer;
+}
+.gfc-btn:hover { border-color: var(--gfc-accent); color: var(--gfc-accent); }
+.gfc-btn[data-done="1"] { border-color: var(--gfc-accent); color: var(--gfc-accent); }
+
+.gfc-headline { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 16px; }
+.gfc-hl {
+  flex: 1 1 150px; background: var(--gfc-accent-soft);
+  border: 1px solid var(--gfc-line); border-radius: 11px; padding: 13px 15px;
+}
+.gfc-hl .gfc-hl-label { font-size: 12.5px; color: var(--gfc-ink-soft); display: block; margin-bottom: 3px; }
+.gfc-hl .gfc-hl-value { font-size: clamp(20px, 2.6vw, 27px); font-weight: 680; letter-spacing: -.02em; line-height: 1.1; display: block; }
+.gfc-hl .gfc-hl-unit { font-size: 14px; font-weight: 500; color: var(--gfc-ink-soft); margin-left: 3px; }
+.gfc-hl .gfc-hl-hint { font-size: 12.5px; color: var(--gfc-ink-soft); display: block; margin-top: 5px; }
+
+.gfc-figwrap { overflow-x: auto; margin: 0 0 16px; }
+.gfc-figwrap svg { display: block; width: 100%; height: auto; min-width: 300px; }
+.gfc-figcap { font-size: 12.5px; color: var(--gfc-ink-soft); margin: 7px 0 0; }
+
+.gfc-tablewrap { overflow-x: auto; }
+table.gfc-tbl { border-collapse: collapse; width: 100%; font-size: 14px; }
+table.gfc-tbl th, table.gfc-tbl td { text-align: left; padding: 7px 10px; border-bottom: 1px solid var(--gfc-line); vertical-align: top; }
+table.gfc-tbl th { font-weight: 600; color: var(--gfc-ink-soft); font-size: 12.5px; letter-spacing: .04em; text-transform: uppercase; }
+table.gfc-tbl td.gfc-num { font-variant-numeric: tabular-nums; white-space: nowrap; }
+table.gfc-tbl td.gfc-note { color: var(--gfc-ink-soft); font-size: 13px; }
+
+.gfc-flag {
+  border-left: 3px solid var(--gfc-warn); background: var(--gfc-warn-soft);
+  padding: 10px 13px; border-radius: 0 8px 8px 0; margin: 0 0 10px; font-size: 14px;
+}
+.gfc-flag strong { color: var(--gfc-warn); }
+
+.gfc-sec { padding: 26px 0 0; }
+.gfc-sec > h2 { font-size: 19px; margin: 0 0 12px; }
+.gfc-eq {
+  background: var(--gfc-panel); border: 1px solid var(--gfc-line);
+  border-radius: 10px; padding: 14px 16px; margin: 0 0 12px;
+}
+.gfc-eq .gfc-eq-math {
+  font-family: var(--gfc-mono); font-size: 14.5px; line-height: 1.75;
+  overflow-x: auto; white-space: nowrap; padding-bottom: 2px;
+}
+.gfc-eq .gfc-eq-note { font-size: 13.5px; color: var(--gfc-ink-soft); margin: 8px 0 0; }
+.gfc-eq .gfc-eq-note:first-child { margin-top: 0; }
+
+ol.gfc-refs { padding-left: 22px; margin: 0; font-size: 14px; }
+ol.gfc-refs li { margin-bottom: 9px; color: var(--gfc-ink-soft); }
+ol.gfc-refs .gfc-rt { color: var(--gfc-ink); }
+ol.gfc-refs a { color: var(--gfc-accent); }
+
+.gfc-foot {
+  margin-top: 34px; border-top: 1px solid var(--gfc-line);
+  background: var(--gfc-panel); padding: 18px 0; font-size: 13px; color: var(--gfc-ink-soft);
+}
+.gfc-foot p { margin: 0 0 6px; }
+.gfc-foot p:last-child { margin: 0; }
+.gfc-vis-hidden {
+  position: absolute; width: 1px; height: 1px; margin: -1px;
+  overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap;
+}
+
+/* Tank Calculator palette: the pack's tokens mapped onto the site's own colours
+   so the greenhouse pages read as part of the same site. */
+:root {
+  --gfc-bg: #f4f7f6; --gfc-panel: #ffffff; --gfc-ink: #13201d; --gfc-ink-soft: #5b6b67;
+  --gfc-line: #d9e2df; --gfc-accent: #0f8a6e; --gfc-accent-soft: #dff2ec;
+  --gfc-warn: #7a5300; --gfc-warn-soft: #fff4dc; --gfc-grid: #e7edeb;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --gfc-bg: #0f1514; --gfc-panel: #17201e; --gfc-ink: #e6eeec; --gfc-ink-soft: #9aaba7;
+    --gfc-line: #2b3936; --gfc-accent: #3cc49f; --gfc-accent-soft: #173a31;
+    --gfc-warn: #f3cf7d; --gfc-warn-soft: #3a2e12; --gfc-grid: #22302d;
+  }
+}
+:root[data-theme="dark"] {
+  --gfc-bg: #0f1514; --gfc-panel: #17201e; --gfc-ink: #e6eeec; --gfc-ink-soft: #9aaba7;
+  --gfc-line: #2b3936; --gfc-accent: #3cc49f; --gfc-accent-soft: #173a31;
+  --gfc-warn: #f3cf7d; --gfc-warn-soft: #3a2e12; --gfc-grid: #22302d;
+}

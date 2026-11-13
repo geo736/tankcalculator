@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Design a Greenhouse – Guided Design</title>
+  <meta name="description" content="Step-by-step guided greenhouse design: site climate, crop and set-points, house size, glazing and light, supplemental lighting, heating capacity and fuel, ventilation and evaporative cooling, night humidity, CO₂ and irrigation water, ending in a shareable design sheet.">
+  <link rel="stylesheet" href="../assets/style.css">
+  <link rel="stylesheet" href="../assets/guide.css">
+</head>
+<body>
+  <header class="site-header">
+    <div class="wrap">
+      <a class="brand" href="../">
+        <span class="brand-mark" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3c3 4 6 7 6 11a6 6 0 0 1-12 0c0-4 3-7 6-11z"/></svg>
+        </span>
+        Tank Calculator
+      </a>
+      <nav><a href="../">All calculators</a></nav>
+    </div>
+  </header>
+
+  <main class="wrap">
+    <div class="crumbs"><a href="../">Home</a> / Guides / Design a greenhouse</div>
+    <h1 class="page-title">Design a greenhouse</h1>
+    <p class="page-lede">A guided, step-by-step greenhouse design. Start from the climate and the crop and work through the house size, glazing and light, supplemental lamps, heating and fuel, ventilation and cooling, night humidity, CO₂ and irrigation water. Each step suggests values from the steps before it, and every value stays editable.</p>
+
+    <div id="guide">
+      <noscript><p class="notice">This guide needs JavaScript. The individual calculators on the <a href="../">home page</a> cover each step.</p></noscript>
+    </div>
+
+    <article class="article">
+      <h2>How this guide works</h2>
+      <p>The guide follows the order a greenhouse designer usually works in. The climate sets the three extremes the house must handle: the coldest night sizes the heater, the hottest bright afternoon sizes the fans and cooling, and the darkest month decides whether lamps are needed. The glazing trades heat loss against light, so it feeds all three. Humidity, CO₂ and water come last, because they depend on how tight the house is and how much light the crop gets.</p>
+      <ul>
+        <li><strong>Real hourly climate.</strong> Eight bundled sites carry a full typical year of hourly temperature, humidity and sunshine, so yearly heat, cooling hours and monthly light are worked out hour by hour. Pick “My own location” to enter design conditions instead.</li>
+        <li><strong>Suggestions carry forward.</strong> Inputs show a suggested value from earlier steps. Change any value and the later steps follow; <em>Use suggested</em> brings the suggestion back.</li>
+        <li><strong>Same formulas as the calculators.</strong> Each step copies the formulas of the matching greenhouse calculator, and its <em>Open the full calculator</em> button opens that calculator pre-filled with your numbers, with every equation and source written out.</li>
+        <li><strong>Rules of thumb are labelled.</strong> Where a value is a typical figure or a design choice rather than a published limit, the step says so. Replace those with your own data when you have it.</li>
+        <li><strong>Save and share.</strong> The page address holds your inputs and the step you are on. The last step is a design sheet with a yearly running-cost estimate that you can copy, share or print.</li>
+      </ul>
+      <p>The guide gives first-pass screening estimates. It does not size the structure for snow and wind loads, the heating pipework or air distribution, controls or the electrical service, and it does not replace equipment data, local codes or an experienced greenhouse engineer.</p>
+
+      <h2>Sources</h2>
+      <ol class="sources" id="guide-sources"></ol>
+    </article>
+  </main>
+
+  <footer class="site-footer">
+    <div class="wrap">Calculations are estimates. Check the sources above before relying on a result.</div>
+  </footer>
+
+  <script src="../assets/share.js"></script>
+  <script src="../assets/units.js"></script>
+  <script src="../assets/guide.js"></script>
+  <script src="../assets/gh/cites.js"></script>
+  <script src="../assets/gh/psychro.js"></script>
+  <script src="../assets/gh/crop.js"></script>
+  <script src="../assets/gh/climate-data.js"></script>
+  <script src="../assets/gh/climate.js"></script>
+  <script src="../assets/guide-greenhouse-design.js"></script>
+</body>
+</html>

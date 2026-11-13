@@ -1,11 +1,11 @@
 # Tank Calculator
 
-Aquaponics, aquaculture and hydroponics calculators as a static website. No build step: open `index.html` in a browser or serve the folder with any static host (e.g. GitHub Pages).
+Aquaponics, aquaculture, hydroponics, greenhouse and indoor-farm calculators as a static website. No build step: open `index.html` in a browser or serve the folder with any static host (e.g. GitHub Pages).
 
 ## Structure
 
 - `index.html` – home page with an app-style grid of calculators, search and filters
-- `assets/catalog.js` – the list of calculators on the home page (set `status: 'live'` when one is finished). `tags` drive the system filter (aquaponics, aquaculture, hydroponics) and `uses` drive the "I'm working on" task filter, whose options are listed in `CALC_USES`
+- `assets/catalog.js` – the list of calculators on the home page (set `status: 'live'` when one is finished). `tags` drive the system filter (aquaponics, aquaculture, hydroponics, greenhouse, indoor); optional `keywords` add search words only and `uses` drive the "I'm working on" task filter, whose options are listed in `CALC_USES`
 - `group` on each calculator places it in a home-page section listed in `CALC_GROUPS` (water quality, system design, equipment, fish management, plants & lighting, power & costs)
 - `window.GUIDES` in `assets/catalog.js` – step-by-step guided designs shown in the "Guided design" section of the home page (`guides/<slug>.html`)
 - `calculators/` – one HTML page per calculator
@@ -13,6 +13,17 @@ Aquaponics, aquaculture and hydroponics calculators as a static website. No buil
 - `assets/share.js` – shared helpers: inputs stored in the URL, copy link, copy results, native share
 - `assets/units.js` – per-input unit pickers (length, volume, mass) with automatic conversion
 - `assets/<calculator>.js` – logic and live SVG visualization for each calculator
+
+## Greenhouse & NEEMO pack (`assets/gh/`)
+
+23 calculators ported from the greenhouse/NEEMO pack run on their own small engine instead of the per-page markup above:
+
+- `assets/gh/gfc.js` + `gfc.css` – the engine: one spec object per page (`GFC.mount`) builds the form, headline, figure, equations and sources. Inputs are read from the URL fragment (`#a=1&b=2`) or, for links from guides, the query string (`?a=1&b=2`).
+- `assets/gh/calc/<slug>.js` – one spec per calculator; `calculators/<slug>.html` is a thin shell that loads it.
+- Shared physics: `psychro.js` (psychrometrics), `crop.js` (big-leaf transpiration and vapour balance), `dehumid*.js` (dehumidification routes), `climate-data.js` + `climate.js` (8 typical-year hourly climates from EnergyPlus), `cites.js` (references with DOIs).
+- These pages use fixed SI units per field, not the per-input unit pickers required above.
+
+`guides/greenhouse-design.html` (`assets/guide-greenhouse-design.js`) uses the CalcGuide framework and the pack's shared physics, with hourly climate for heating, lamp heat, fan electricity and pad water.
 
 ## Calculator page layout
 
