@@ -21,6 +21,7 @@ Aquaponics, aquaculture, hydroponics, greenhouse and indoor-farm calculators as 
 - `assets/gh/gfc.js` + `gfc.css` – the engine: one spec object per page (`GFC.mount`) builds the form, headline, figure, equations and sources. Inputs are read from the URL fragment (`#a=1&b=2`) or, for links from guides, the query string (`?a=1&b=2`).
 - `assets/gh/calc/<slug>.js` – one spec per calculator; `calculators/<slug>.html` is a thin shell that loads it.
 - Shared physics: `psychro.js` (psychrometrics), `crop.js` (big-leaf transpiration and vapour balance), `dehumid*.js` (dehumidification routes), `climate-data.js` + `climate.js` (8 typical-year hourly climates from EnergyPlus), `cites.js` (references with DOIs).
+- `assets/gh/narrative.js` – each page's narrative in the site's order (how it works, why it matters, then the page's formulas, a worked example and limitations). The example is a template filled from the calculator's own `compute()` at its default inputs, so its numbers always match the page.
 - These pages use fixed SI units per field, not the per-input unit pickers required above.
 
 `guides/greenhouse-design.html` (`assets/guide-greenhouse-design.js`) uses the CalcGuide framework and the pack's shared physics, with hourly climate for heating, lamp heat, fan electricity and pad water.

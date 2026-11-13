@@ -330,9 +330,10 @@
     ],
 
     caveats: [
-      'The hourly load here is the envelope and leakage loss against the set-point only. It '
-        + 'carries no solar credit, no soil flux and no latent term, so it is an upper bound on '
-        + 'the real hourly demand and the curve is correspondingly conservative.',
+      'The hourly load is the envelope and leakage loss against the set-point, less the sensible '
+        + 'share of the transmitted sun for the bundled climates (a pasted series has no irradiance, '
+        + 'so it gets no solar credit). It carries no soil flux, no latent term and one U-value for '
+        + 'every hour, so a screen that opens by day makes the real demand somewhat higher.',
       'A1 and A2 houses have no heating circuit, so the corresponding exercise is a cooling '
         + 'duration curve built from the same hourly balance solved for the ventilation '
         + 'requirement. A closed house needs three curves — heating, cooling and '

@@ -324,6 +324,41 @@
     } catch (e) { /* file:// in some browsers refuses replaceState; the page still works */ }
   }
 
+  /* Values at a page's default inputs, for the worked example. v(id) is an input,
+   * h(label) a headline figure and r(label) a result row, each with its unit; a label
+   * matches on its start. A missing label throws, so a stale example shows nothing
+   * rather than a wrong number. */
+  GFC.defaultsReader = function (spec) {
+    var d = {};
+    spec.inputs.forEach(function (f) { d[f.id] = f.value; });
+    var res = spec.compute(d);
+    function find(list, label) {
+      for (var j = 0; j < (list || []).length; j++) {
+        if (String(list[j].label) === label) return list[j];
+      }
+      for (var i = 0; i < (list || []).length; i++) {
+        if (String(list[i].label).indexOf(label) === 0) return list[i];
+      }
+      throw new Error('narrative: no result "' + label + '" on ' + spec.slug);
+    }
+    function withUnit(o) {
+      var u = o.unit && o.unit !== '–' ? (o.unit === '%' || o.unit.charAt(0) === '%' ? '' : ' ') + o.unit : '';
+      return '<strong>' + String(o.value).trim() + u + '</strong>';
+    }
+    return {
+      v: function (id, unit) {
+        var x = d[id];
+        if (typeof x === 'number') x = Number.isInteger(x) ? GFC.fixed(x, 0) : String(x);
+        return x + (unit ? (unit === '%' ? '%' : ' ' + unit) : '');
+      },
+      p: function (id) { return GFC.fixed(100 * d[id], (100 * d[id]) % 1 ? 1 : 0) + '%'; },
+      h: function (label) { return withUnit(find(res.headline, label)); },
+      r: function (label) { return withUnit(find(res.rows, label)); },
+      raw: res,
+      inputs: d
+    };
+  };
+
   /* ---------- mount --------------------------------------------------- */
 
   GFC.mount = function (spec) {
@@ -451,9 +486,29 @@
     var below = el('div', 'gfc-wrap');
     host.appendChild(below);
 
+    /* The site's narrative order: how it works, why it matters, formulas, a worked
+     * example at the default inputs, what it leaves out. The prose for each page lives
+     * in narrative.js (window.GFC_NARRATIVE[slug]); the example is written against the
+     * page's own compute() at its defaults, so its numbers always match the calculator. */
+    var nar = (root.GFC_NARRATIVE || {})[spec.slug] || null;
+    var art = el('section', 'gfc-sec gfc-article');
+    var topic = nar && nar.topic ? nar.topic : spec.name.toLowerCase();
+    art.appendChild(el('h2', null, 'How the ' + topic + ' calculator works'));
+    if (nar && nar.how) {
+      (Array.isArray(nar.how) ? nar.how : [nar.how]).forEach(function (h) {
+        var pp = el('p'); pp.innerHTML = h; art.appendChild(pp);     /* authored text */
+      });
+    } else if (spec.lede) {
+      art.appendChild(el('p', null, spec.lede));
+    }
+    if (nar && nar.why) {
+      art.appendChild(el('h3', null, nar.whyTitle || ('Why ' + topic + ' matters')));
+      (Array.isArray(nar.why) ? nar.why : [nar.why]).forEach(function (h) {
+        var pp = el('p'); pp.innerHTML = h; art.appendChild(pp);
+      });
+    }
     if (spec.math && spec.math.length) {
-      var mathSec = el('section', 'gfc-sec');
-      mathSec.appendChild(el('h2', null, 'How it works'));
+      art.appendChild(el('h3', null, 'Formulas'));
       spec.math.forEach(function (m) {
         var box = el('div', 'gfc-eq');
         if (m.lead) box.appendChild(el('p', 'gfc-eq-note', m.lead));
@@ -463,21 +518,26 @@
           box.appendChild(mm);
         }
         if (m.note) box.appendChild(el('p', 'gfc-eq-note', m.note));
-        mathSec.appendChild(box);
+        art.appendChild(box);
       });
-      below.appendChild(mathSec);
     }
-
+    if (nar && typeof nar.example === 'function') {
+      var exHtml = null;
+      try { exHtml = nar.example(GFC.defaultsReader(spec)); } catch (e) { exHtml = null; }
+      if (exHtml) {
+        art.appendChild(el('h3', null, 'Example'));
+        (Array.isArray(exHtml) ? exHtml : [exHtml]).forEach(function (h) {
+          var pp = el('p'); pp.innerHTML = h; art.appendChild(pp);
+        });
+      }
+    }
     if (spec.caveats && spec.caveats.length) {
-      var cSec = el('section', 'gfc-sec');
-      cSec.appendChild(el('h2', null, 'What this does not tell you'));
+      art.appendChild(el('h3', null, 'Things the calculator does not include'));
       var ul = el('ul');
-      ul.style.fontSize = '14.5px';
-      ul.style.color = 'var(--gfc-ink-soft)';
       spec.caveats.forEach(function (t) { ul.appendChild(el('li', null, t)); });
-      cSec.appendChild(ul);
-      below.appendChild(cSec);
+      art.appendChild(ul);
     }
+    below.appendChild(art);
 
     var rSec = el('section', 'gfc-sec');
     rSec.appendChild(el('h2', null, 'Sources'));
